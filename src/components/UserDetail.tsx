@@ -106,11 +106,11 @@ export function UserDetail({ userId }: UserDetailProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
       {/* 왼쪽 열 */}
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         {/* 기본 정보 */}
-        <Card className="h-fit">
+        <Card className="flex-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
               <Activity className="h-4 w-4" />
@@ -150,7 +150,7 @@ export function UserDetail({ userId }: UserDetailProps) {
         </Card>
 
         {/* 현재 상태 */}
-        <Card className="h-fit">
+        <Card className="flex-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
               <AlertTriangle className="h-4 w-4" />
@@ -220,9 +220,9 @@ export function UserDetail({ userId }: UserDetailProps) {
       </div>
 
       {/* 오른쪽 열 */}
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         {/* 진단 점수 추이 */}
-        <Card className="h-fit">
+        <Card className="flex-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
@@ -271,7 +271,7 @@ export function UserDetail({ userId }: UserDetailProps) {
         </Card>
 
         {/* 기능별 활동 패턴 */}
-        <Card className="h-fit">
+        <Card className="flex-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
               <Calendar className="h-4 w-4" />
