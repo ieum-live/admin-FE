@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Calendar, Activity, TrendingUp, AlertTriangle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getUserDetail } from "../API/userManagementAPI";
 
 interface User {
   id: string;
@@ -19,10 +21,40 @@ interface User {
 }
 
 interface UserDetailProps {
-  user: User;
+  userId: string;
 }
 
-export function UserDetail({ user }: UserDetailProps) {
+export function UserDetail({ userId }: UserDetailProps) {
+  const [user, setUser] = useState<User | null>(null);
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const detail = await getUserDetail(userId);
+        const basic = detail.basic;
+        const status = detail.status;
+        setUser({
+          id: basic.id,
+          name: basic.name || "알 수 없음",
+          age: new Date().getFullYear() - new Date(basic.birthDate).getFullYear(),
+          gender: basic.gender || "알 수 없음",
+          email: basic.email || "알 수 없음",
+          depressionStatus: (status.depression?.toLowerCase() || "low") as 'low' | 'medium' | 'high',
+          gamblingStatus: (status.gambling?.toLowerCase() || "low") as 'low' | 'medium' | 'high',
+          lastActive: basic.updatedAt || basic.createdAt,
+          registrationDate: basic.createdAt,
+          diagnosisCount: status.totalAssessments || 0,
+          lastDiagnosis: status.latestAssessmentDate || "-",
+          improvementRate: ((detail.status.improvementRate ?? 0).toFixed(2)) + '%',
+
+        });
+      } catch (err) {
+        console.error("유저 정보 불러오기 실패:", err);
+      }
+    };
+
+    loadUser();
+  }, [userId]);
+  if (!user) return <div>로딩 중...</div>;
   // 모의 데이터 - 실제로는 API에서 가져올 것
   const diagnosisHistory = [
     { date: '2024-08-15', depression: 5, gambling: 3 },
@@ -31,6 +63,8 @@ export function UserDetail({ user }: UserDetailProps) {
     { date: '2024-09-26', depression: 2, gambling: 4 },
     { date: '2024-10-05', depression: 2, gambling: 3 },
   ];
+  const lastActiveTime = user.lastActive ? new Date(user.lastActive).getTime() : 0;
+  const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
 
   const activityData = [
     { feature: '자가진단', sessions: 12, avgTime: 8.5 },
@@ -166,18 +200,20 @@ export function UserDetail({ user }: UserDetailProps) {
                   <span>도박 중독 고위험군</span>
                 </div>
               )}
-              {new Date() - new Date(user.lastActive) > 7 * 24 * 60 * 60 * 1000 && (
+
+              {lastActiveTime && Date.now() - lastActiveTime > oneWeekMs && (
                 <div className="flex items-center gap-1.5 text-orange-600 text-xs">
                   <AlertTriangle className="h-3.5 w-3.5" />
                   <span>장기간 비활성</span>
                 </div>
               )}
-              {user.depressionStatus !== 'high' && user.gamblingStatus !== 'high' && 
-               new Date() - new Date(user.lastActive) <= 7 * 24 * 60 * 60 * 1000 && (
-                <div className="text-green-600 text-xs">
-                  현재 위험 요소 없음
-                </div>
-              )}
+
+              {lastActiveTime && user.depressionStatus !== 'high' && user.gamblingStatus !== 'high' &&
+                Date.now() - lastActiveTime <= oneWeekMs && (
+                  <div className="text-green-600 text-xs">
+                    현재 위험 요소 없음
+                  </div>
+                )}
             </div>
           </CardContent>
         </Card>
@@ -197,34 +233,34 @@ export function UserDetail({ user }: UserDetailProps) {
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={diagnosisHistory}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  dataKey="date" 
+                <XAxis
+                  dataKey="date"
                   tick={{ fontSize: 11 }}
                   tickFormatter={(value) => value.slice(5)}
                 />
-                <YAxis 
-                  domain={[0, 10]} 
+                <YAxis
+                  domain={[0, 10]}
                   tick={{ fontSize: 11 }}
                 />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ fontSize: 12 }}
                   formatter={(value, name) => [
-                    `${value}점`, 
+                    `${value}점`,
                     name === 'depression' ? '우울증' : '도박'
-                  ]} 
+                  ]}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="depression" 
-                  stroke="#8884d8" 
+                <Line
+                  type="monotone"
+                  dataKey="depression"
+                  stroke="#8884d8"
                   strokeWidth={2}
                   name="depression"
                   dot={{ r: 3 }}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="gambling" 
-                  stroke="#82ca9d" 
+                <Line
+                  type="monotone"
+                  dataKey="gambling"
+                  stroke="#82ca9d"
                   strokeWidth={2}
                   name="gambling"
                   dot={{ r: 3 }}
@@ -246,17 +282,17 @@ export function UserDetail({ user }: UserDetailProps) {
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={activityData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  dataKey="feature" 
+                <XAxis
+                  dataKey="feature"
                   tick={{ fontSize: 11 }}
                 />
-                <YAxis 
-                  yAxisId="left" 
+                <YAxis
+                  yAxisId="left"
                   tick={{ fontSize: 11 }}
                 />
-                <YAxis 
-                  yAxisId="right" 
-                  orientation="right" 
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
                   tick={{ fontSize: 11 }}
                 />
                 <Tooltip contentStyle={{ fontSize: 12 }} />

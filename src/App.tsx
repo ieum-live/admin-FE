@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"; // Import useEffect
+import React, { useState, useEffect } from "react";
 import { AdminSidebar } from "./components/AdminSidebar";
 import { StatsOverview } from "./components/StatsOverview";
 import { UserAnalytics } from "./components/UserAnalytics";
@@ -6,6 +6,7 @@ import { DiagnosisResults } from "./components/DiagnosisResults";
 import { UserManagement } from "./components/UserManagement";
 import { Settings } from "./components/Settings";
 import { LoginPage } from "./components/LoginPage";
+import LoadingSpinner from "./components/LoadingSpinner"; // Import LoadingSpinner
 import {
   Card,
   CardContent,
@@ -18,7 +19,15 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const getAuthToken = () => localStorage.getItem("accessToken");
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!getAuthToken());
+  const [isAppLoading, setIsAppLoading] = useState(true);
+  const [isComponentLoading, setComponentLoading] = useState(false);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsAppLoading(false);
+    }, 1000); 
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleLogin = () => {
     setIsAuthenticated(true);
@@ -33,6 +42,10 @@ export default function App() {
       alert("로그아웃에 실패했습니다. 다시 시도해주세요.");
     }
   };
+
+  if (isAppLoading) {
+    return <LoadingSpinner />;
+  }
 
   if (!isAuthenticated) {
     return <LoginPage onLogin={handleLogin} />;
@@ -97,7 +110,7 @@ export default function App() {
                 사용자 정보 관리, 상태 모니터링 및 알림 발송
               </p>
             </div>
-            <UserManagement />
+            <UserManagement setComponentLoading={setComponentLoading}/>
           </div>
         );
 
@@ -120,16 +133,19 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-background">
-      <AdminSidebar
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onLogout={handleLogout}
-      />
-      <main className="flex-1 overflow-auto">
-        <div className="p-6">{renderContent()}</div>
-      </main>
-    </div>
+    <>
+      {isComponentLoading && <LoadingSpinner />}
+      <div className="flex h-screen bg-background">
+        <AdminSidebar
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onLogout={handleLogout}
+        />
+        <main className="flex-1 overflow-auto">
+          <div className="p-6">{renderContent()}</div>
+        </main>
+      </div>
+    </>
   );
 }
 
