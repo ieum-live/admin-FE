@@ -1,19 +1,42 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // Import useEffect
 import { AdminSidebar } from "./components/AdminSidebar";
 import { StatsOverview } from "./components/StatsOverview";
 import { UserAnalytics } from "./components/UserAnalytics";
 import { DiagnosisResults } from "./components/DiagnosisResults";
 import { UserManagement } from "./components/UserManagement";
 import { Settings } from "./components/Settings";
+import { LoginPage } from "./components/LoginPage";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "./components/ui/card";
+import { signOut } from "./API/authAPI";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const getAuthToken = () => localStorage.getItem("accessToken");
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!getAuthToken());
+
+
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      setIsAuthenticated(false);
+    } catch (err) {
+      console.error("로그아웃 실패:", err);
+      alert("로그아웃에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
+
+  if (!isAuthenticated) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
 
   const renderContent = () => {
     switch (activeTab) {
@@ -101,6 +124,7 @@ export default function App() {
       <AdminSidebar
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        onLogout={handleLogout}
       />
       <main className="flex-1 overflow-auto">
         <div className="p-6">{renderContent()}</div>
@@ -108,3 +132,5 @@ export default function App() {
     </div>
   );
 }
+
+
