@@ -346,7 +346,9 @@ return (
                       className="rounded cursor-pointer"
                     />
                   </TableCell>
-                  <TableCell className="font-medium">{user.id}</TableCell>
+                  <TableCell className="font-medium">
+                    {user.id.length > 10 ? `${user.id.substring(0, 10)}...` : user.id}
+                  </TableCell>
                   <TableCell>{user.name}</TableCell>
                   <TableCell>{user.age}세</TableCell>
                   <TableCell>{user.gender}</TableCell>
