@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { signIn } from "../API/authAPI";
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -15,19 +16,18 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setLoading(true);
     setError("");
 
-    // Simulate API call
-    setTimeout(() => {
-      if (username === "admin" && password === "password") {
-        onLogin();
-      } else {
-        setError("Invalid username or password");
-      }
+    try {
+      await signIn(username, password);
+      onLogin();
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred.");
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (

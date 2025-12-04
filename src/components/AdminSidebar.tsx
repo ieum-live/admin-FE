@@ -1,12 +1,12 @@
-import { 
-  BarChart3, 
-  Users, 
-  TrendingUp, 
+import {
+  BarChart3,
+  Users,
+  TrendingUp,
   Calendar,
   Activity,
   UserCheck,
   Settings,
-  LogOut 
+  LogOut
 } from "lucide-react";
 import { Button } from "./ui/button";
 
