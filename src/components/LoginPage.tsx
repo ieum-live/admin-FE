@@ -34,7 +34,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     <div className="flex items-center justify-center h-screen">
       <Card className="w-[350px]">
         <CardHeader>
-          <CardTitle>Login</CardTitle>
+          <CardTitle className="font-bold">이음 관리자</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
@@ -45,7 +45,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               </Alert>
             )}
             <div className="grid gap-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">Email</Label>
               <Input
                 id="username"
                 value={username}
