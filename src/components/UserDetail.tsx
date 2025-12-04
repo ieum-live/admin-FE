@@ -3,7 +3,18 @@ import { Badge } from "./ui/badge";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Calendar, Activity, TrendingUp, AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getUserDetail } from "../API/userManagementAPI";
+import { getUserAssessments, getUserDetail } from "../API/userManagementAPI";
+
+interface Assessment {
+  id: string;
+  userId: string;
+  type: 'Simple' | 'PHQ-9' | 'GAD-7' | 'BDI';
+  takenDate: string;
+  totalScore: number;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+  version: number;
+  createdAt: string;
+}
 
 interface User {
   id: string;
@@ -26,6 +37,8 @@ interface UserDetailProps {
 
 export function UserDetail({ userId }: UserDetailProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [assessmentsByDate, setAssessmentsByDate] = useState<Record<string, Record<string, number>>>({});
+
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -45,8 +58,24 @@ export function UserDetail({ userId }: UserDetailProps) {
           diagnosisCount: status.totalAssessments || 0,
           lastDiagnosis: status.latestAssessmentDate || "-",
           improvementRate: ((detail.status.improvementRate ?? 0).toFixed(2)) + '%',
-
         });
+
+        const assessments: Assessment[] = await getUserAssessments(userId);
+        // 날짜 기준으로 타입별 점수 구조 만들기
+        const byDate: Record<string, Record<string, number>> = {};
+        assessments.forEach(a => {
+          if (!byDate[a.takenDate]) byDate[a.takenDate] = {};
+          byDate[a.takenDate][a.type] = a.totalScore;
+        });
+
+        // 날짜순 정렬
+        const sortedByDate = Object.keys(byDate).sort().reduce((acc, date) => {
+          acc[date] = byDate[date];
+          return acc;
+        }, {} as Record<string, Record<string, number>>);
+
+        setAssessmentsByDate(sortedByDate);
+
       } catch (err) {
         console.error("유저 정보 불러오기 실패:", err);
       }
@@ -54,15 +83,21 @@ export function UserDetail({ userId }: UserDetailProps) {
 
     loadUser();
   }, [userId]);
+
   if (!user) return <div>로딩 중...</div>;
-  // 모의 데이터 - 실제로는 API에서 가져올 것
-  const diagnosisHistory = [
-    { date: '2024-08-15', depression: 5, gambling: 3 },
-    { date: '2024-08-29', depression: 4, gambling: 4 },
-    { date: '2024-09-12', depression: 3, gambling: 5 },
-    { date: '2024-09-26', depression: 2, gambling: 4 },
-    { date: '2024-10-05', depression: 2, gambling: 3 },
-  ];
+
+  const chartData = Object.entries(assessmentsByDate).map(([date, scores]) => ({
+    date,
+    ...scores
+  }));
+
+  const lineColors: Record<string, string> = {
+    'Simple': '#8884d8',
+    'PHQ-9': '#82ca9d',
+    'GAD-7': '#ffc658',
+    'BDI': '#ff6b6b'
+  };
+
   const lastActiveTime = user.lastActive ? new Date(user.lastActive).getTime() : 0;
   const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
 
@@ -97,12 +132,6 @@ export function UserDetail({ userId }: UserDetailProps) {
       default:
         return <Badge variant="outline" className={baseClasses}>알 수 없음</Badge>;
     }
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score <= 2) return '#10b981'; // green
-    if (score <= 4) return '#f59e0b'; // yellow
-    return '#ef4444'; // red
   };
 
   return (
@@ -200,14 +229,12 @@ export function UserDetail({ userId }: UserDetailProps) {
                   <span>도박 중독 고위험군</span>
                 </div>
               )}
-
               {lastActiveTime && Date.now() - lastActiveTime > oneWeekMs && (
                 <div className="flex items-center gap-1.5 text-orange-600 text-xs">
                   <AlertTriangle className="h-3.5 w-3.5" />
                   <span>장기간 비활성</span>
                 </div>
               )}
-
               {lastActiveTime && user.depressionStatus !== 'high' && user.gamblingStatus !== 'high' &&
                 Date.now() - lastActiveTime <= oneWeekMs && (
                   <div className="text-green-600 text-xs">
@@ -221,7 +248,6 @@ export function UserDetail({ userId }: UserDetailProps) {
 
       {/* 오른쪽 열 */}
       <div className="flex flex-col gap-4">
-        {/* 진단 점수 추이 */}
         <Card className="flex-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
@@ -230,45 +256,32 @@ export function UserDetail({ userId }: UserDetailProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-2">
-            <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={diagnosisHistory}>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis
                   dataKey="date"
                   tick={{ fontSize: 11 }}
-                  tickFormatter={(value) => value.slice(5)}
+                  tickFormatter={(v) => v.slice(5)}
                 />
-                <YAxis
-                  domain={[0, 10]}
-                  tick={{ fontSize: 11 }}
-                />
-                <Tooltip
-                  contentStyle={{ fontSize: 12 }}
-                  formatter={(value, name) => [
-                    `${value}점`,
-                    name === 'depression' ? '우울증' : '도박'
-                  ]}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="depression"
-                  stroke="#8884d8"
-                  strokeWidth={2}
-                  name="depression"
-                  dot={{ r: 3 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="gambling"
-                  stroke="#82ca9d"
-                  strokeWidth={2}
-                  name="gambling"
-                  dot={{ r: 3 }}
-                />
+                <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} />
+                <Tooltip contentStyle={{ fontSize: 12 }} />
+                {(['Simple', 'PHQ-9', 'GAD-7', 'BDI'] as const).map(type => (
+                  <Line
+                    key={type}
+                    type="monotone"
+                    dataKey={type}
+                    stroke={lineColors[type]}
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                    name={type}
+                  />
+                ))}
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
+
 
         {/* 기능별 활동 패턴 */}
         <Card className="flex-1">
@@ -282,19 +295,9 @@ export function UserDetail({ userId }: UserDetailProps) {
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={activityData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis
-                  dataKey="feature"
-                  tick={{ fontSize: 11 }}
-                />
-                <YAxis
-                  yAxisId="left"
-                  tick={{ fontSize: 11 }}
-                />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  tick={{ fontSize: 11 }}
-                />
+                <XAxis dataKey="feature" tick={{ fontSize: 11 }} />
+                <YAxis yAxisId="left" tick={{ fontSize: 11 }} />
+                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
                 <Tooltip contentStyle={{ fontSize: 12 }} />
                 <Bar yAxisId="left" dataKey="sessions" fill="#8884d8" name="세션 수" radius={[4, 4, 0, 0]} />
                 <Bar yAxisId="right" dataKey="avgTime" fill="#82ca9d" name="평균 시간 (분)" radius={[4, 4, 0, 0]} />
