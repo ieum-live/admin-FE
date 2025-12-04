@@ -75,7 +75,7 @@ export function UserManagement({ setComponentLoading }: { setComponentLoading: (
     const loadUsers = async (page: number) => {
       setComponentLoading(true);
       try {
-        const data = await getUsers({ page: page - 1, size: itemsPerPage }); 
+        const data = await getUsers({ page: page - 1, size: itemsPerPage });
         setTotalUsers(data.page.totalElements);
         setTotalPages(Math.ceil(data.page.totalElements / itemsPerPage));
         const mapped = await Promise.all(
@@ -352,7 +352,8 @@ export function UserManagement({ setComponentLoading }: { setComponentLoading: (
                   <TableHead className="text-center">최근 진단일</TableHead>
                   <TableHead className="text-center">개선율</TableHead>
                   <TableHead className="text-center">진단 횟수</TableHead>
-                  <TableHead className="text-center">상세</TableHead>                </TableRow>
+                  <TableHead className="text-center">상세</TableHead>
+                </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.map((user) => (
@@ -365,9 +366,7 @@ export function UserManagement({ setComponentLoading }: { setComponentLoading: (
                         className="rounded cursor-pointer"
                       />
                     </TableCell>
-                    <TableCell className="font-medium text-center">
-                      {user.id.length > 10 ? `${user.id.substring(0, 10)}...` : user.id}
-                    </TableCell>
+                    <TableCell className="font-medium text-center">{user.id.length > 10 ? `${user.id.substring(0, 10)}...` : user.id}</TableCell>
                     <TableCell className="text-center">{user.name}</TableCell>
                     <TableCell className="text-center">{user.age}세</TableCell>
                     <TableCell className="text-center">{user.gender}</TableCell>
@@ -375,17 +374,10 @@ export function UserManagement({ setComponentLoading }: { setComponentLoading: (
                     <TableCell className="text-center">{getStatusBadge(user.depressionStatus, 'depression')}</TableCell>
                     <TableCell className="text-center">{getStatusBadge(user.gamblingStatus, 'gambling')}</TableCell>
                     <TableCell className="text-center">{user.lastDiagnosis}</TableCell>
-                    <TableCell className={`text-center ${getImprovementColor(user.improvementRate)}`}>
-                      {user.improvementRate}
-                    </TableCell>
+                    <TableCell className={`text-center ${getImprovementColor(user.improvementRate)}`}>{user.improvementRate}</TableCell>
                     <TableCell className="text-center">{user.diagnosisCount}회</TableCell>
                     <TableCell className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleUserClick(user)}
-                        className="gap-2"
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => handleUserClick(user)} className="gap-2">
                         <Eye className="h-4 w-4" />
                         보기
                       </Button>
@@ -394,6 +386,7 @@ export function UserManagement({ setComponentLoading }: { setComponentLoading: (
                 ))}
               </TableBody>
             </Table>
+
             {totalPages > 1 && (
               <Pagination>
                 <PaginationContent>
