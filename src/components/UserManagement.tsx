@@ -199,7 +199,9 @@ export function UserManagement({ setComponentLoading }: { setComponentLoading: (
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-semibold">
-                {Math.round(users.reduce((sum, u) => sum + u.diagnosisCount, 0) / users.length)}
+                {users.length > 0
+                  ? Math.round(users.reduce((sum, u) => sum + u.diagnosisCount, 0) / users.length)
+                  : 0}
               </div>
               <p className="text-sm text-muted-foreground">사용자당</p>
             </CardContent>
