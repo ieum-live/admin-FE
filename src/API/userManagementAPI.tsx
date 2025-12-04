@@ -22,7 +22,7 @@ export const getUsers = async ({
             risk,
             status,
             page,
-            size:100,
+            size,
         },
     });
     return response.data.data;

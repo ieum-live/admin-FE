@@ -8,8 +8,16 @@ import { Badge } from "./ui/badge";
 import { Textarea } from "./ui/textarea";
 import { Search, MessageSquare, Bell, Mail, Eye, Filter, X } from "lucide-react";
 import { UserDetail } from "./UserDetail";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
-import { getUser, getUserAssessments, getUserDetail, getUsers } from "../API/userManagementAPI";
+import { getUserDetail, getUsers } from "../API/userManagementAPI";
 
 interface BasicUser {
   id: string;
@@ -59,13 +67,17 @@ export function UserManagement({ setComponentLoading }: { setComponentLoading: (
   const [notificationMessage, setNotificationMessage] = useState("");
   const [totalUsers, setTotalUsers] = useState(0);
   const [highRiskUsers, setHighRiskUsers] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const itemsPerPage = 30;
 
   useEffect(() => {
-    const loadUsers = async () => {
+    const loadUsers = async (page: number) => {
       setComponentLoading(true);
       try {
-        const data = await getUsers({});
-        setTotalUsers(data.page.totalElements)
+        const data = await getUsers({ page: page - 1, size: itemsPerPage }); 
+        setTotalUsers(data.page.totalElements);
+        setTotalPages(Math.ceil(data.page.totalElements / itemsPerPage));
         const mapped = await Promise.all(
           data.content.map(async (u: any) => {
             const detail: FullUser = await getUserDetail(u.id);
@@ -93,8 +105,8 @@ export function UserManagement({ setComponentLoading }: { setComponentLoading: (
         setComponentLoading(false);
       }
     };
-    loadUsers();
-  }, [setComponentLoading]);
+    loadUsers(currentPage);
+  }, [setComponentLoading, currentPage]);
 
   const getStatusBadge = (status: string, type: 'depression' | 'gambling') => {
     const baseClasses = "text-xs";
@@ -148,6 +160,12 @@ export function UserManagement({ setComponentLoading }: { setComponentLoading: (
 
   const handleUserClick = async (user: MappedUser) => {
     setSelectedUser(user);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
   };
 
 
@@ -312,7 +330,7 @@ export function UserManagement({ setComponentLoading }: { setComponentLoading: (
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -376,6 +394,29 @@ export function UserManagement({ setComponentLoading }: { setComponentLoading: (
                 ))}
               </TableBody>
             </Table>
+            {totalPages > 1 && (
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} size="default" />
+                  </PaginationItem>
+                  {[...Array(totalPages)].map((_, i) => (
+                    <PaginationItem key={i}>
+                      <PaginationLink
+                        size="default"
+                        isActive={currentPage === i + 1}
+                        onClick={() => handlePageChange(i + 1)}
+                      >
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext onClick={() => handlePageChange(currentPage + 1)} size="default" />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
           </CardContent>
         </Card>
       </div>
