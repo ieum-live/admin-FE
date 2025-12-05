@@ -28,6 +28,11 @@ export const getUsers = async ({
     return response.data.data;
 };
 
+export const getUserStatistics = async () => {
+    const response = await customAxios.get(`/api/users/statistics`, {});
+    return response.data.data;
+};
+
 export const getUser = async (userId: string) => {
     const response = await customAxios.get(`/api/users/${userId}`, {});
     return response.data.data;

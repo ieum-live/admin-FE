@@ -133,179 +133,193 @@ export function UserDetail({ userId }: UserDetailProps) {
         return <Badge variant="outline" className={baseClasses}>알 수 없음</Badge>;
     }
   };
-
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
-      {/* 왼쪽 열 */}
-      <div className="flex flex-col gap-4">
-        {/* 기본 정보 */}
-        <Card className="flex-1">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              기본 정보
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">사용자 ID</span>
-              <span className="font-medium">{user.id}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">이름</span>
-              <span className="font-medium">{user.name}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">나이</span>
-              <span className="font-medium">{user.age}세</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">성별</span>
-              <span className="font-medium">{user.gender}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">이메일</span>
-              <span className="font-medium truncate ml-2">{user.email}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">가입일</span>
-              <span className="font-medium">{user.registrationDate}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">최근 활동</span>
-              <span className="font-medium">{user.lastActive}</span>
-            </div>
-          </CardContent>
-        </Card>
+    <>
+      <style>
+        {`
+          .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            height: 100vh; /* 화면 전체 기준 */
+          }
+          .dashboard-column {
+            display: grid;
+            grid-template-rows: 1fr 1fr; /* 두 카드 균등 분할 */
+            gap: 1rem;
+          }
+          .dashboard-card {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+          }
+          .dashboard-card-content {
+            flex: 1;
+            overflow: auto;
+          }
+        `}
+      </style>
 
-        {/* 현재 상태 */}
-        <Card className="flex-1">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
-              현재 상태
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">우울증 상태</span>
-              {getStatusBadge(user.depressionStatus, 'depression')}
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">도박 위험도</span>
-              {getStatusBadge(user.gamblingStatus, 'gambling')}
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">총 진단 횟수</span>
-              <span className="font-medium">{user.diagnosisCount}회</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">최근 진단일</span>
-              <span className="font-medium">{user.lastDiagnosis}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">평균 진단 간격</span>
-              <span className="font-medium">8일</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">개선율</span>
-              <span className={`font-medium ${user.improvementRate.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                {user.improvementRate}
-              </span>
-            </div>
+      <div className="dashboard-grid">
+        <div className="dashboard-column">
+          <Card className="dashboard-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Activity className="h-4 w-4" />
+                기본 정보
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="dashboard-card-content space-y-2 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">사용자 ID</span>
+                <span className="font-medium">{user.id}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">이름</span>
+                <span className="font-medium">{user.name}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">나이</span>
+                <span className="font-medium">{user.age}세</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">성별</span>
+                <span className="font-medium">{user.gender}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">이메일</span>
+                <span className="font-medium truncate ml-2">{user.email}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">가입일</span>
+                <span className="font-medium">{user.registrationDate}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">최근 활동</span>
+                <span className="font-medium">{user.lastActive}</span>
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* 위험 요소 */}
-            <div className="pt-3 mt-3 border-t space-y-1.5">
-              <div className="font-medium text-sm mb-1.5">위험 요소</div>
-              {user.depressionStatus === 'high' && (
-                <div className="flex items-center gap-1.5 text-red-600 text-xs">
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                  <span>우울증 고위험군</span>
-                </div>
-              )}
-              {user.gamblingStatus === 'high' && (
-                <div className="flex items-center gap-1.5 text-red-600 text-xs">
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                  <span>도박 중독 고위험군</span>
-                </div>
-              )}
-              {lastActiveTime && Date.now() - lastActiveTime > oneWeekMs && (
-                <div className="flex items-center gap-1.5 text-orange-600 text-xs">
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                  <span>장기간 비활성</span>
-                </div>
-              )}
-              {lastActiveTime && user.depressionStatus !== 'high' && user.gamblingStatus !== 'high' &&
-                Date.now() - lastActiveTime <= oneWeekMs && (
-                  <div className="text-green-600 text-xs">
-                    현재 위험 요소 없음
+          <Card className="dashboard-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                현재 상태
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="dashboard-card-content space-y-2 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">우울증 상태</span>
+                {getStatusBadge(user.depressionStatus, 'depression')}
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">도박 위험도</span>
+                {getStatusBadge(user.gamblingStatus, 'gambling')}
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">총 진단 횟수</span>
+                <span className="font-medium">{user.diagnosisCount}회</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">최근 진단일</span>
+                <span className="font-medium">{user.lastDiagnosis}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">평균 진단 간격</span>
+                <span className="font-medium">8일</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">개선율</span>
+                <span className={`font-medium ${user.improvementRate.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                  {user.improvementRate}
+                </span>
+              </div>
+
+              <div className="pt-3 mt-3 border-t space-y-1.5">
+                <div className="font-medium text-sm mb-1.5">위험 요소</div>
+                {user.depressionStatus === 'high' && (
+                  <div className="flex items-center gap-1.5 text-red-600 text-xs">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    <span>우울증 고위험군</span>
                   </div>
                 )}
-            </div>
-          </CardContent>
-        </Card>
+                {user.gamblingStatus === 'high' && (
+                  <div className="flex items-center gap-1.5 text-red-600 text-xs">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    <span>도박 중독 고위험군</span>
+                  </div>
+                )}
+                {lastActiveTime && Date.now() - lastActiveTime > oneWeekMs && (
+                  <div className="flex items-center gap-1.5 text-orange-600 text-xs">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    <span>장기간 비활성</span>
+                  </div>
+                )}
+                {lastActiveTime && user.depressionStatus !== 'high' && user.gamblingStatus !== 'high' &&
+                  Date.now() - lastActiveTime <= oneWeekMs && (
+                    <div className="text-green-600 text-xs">
+                      현재 위험 요소 없음
+                    </div>
+                  )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="dashboard-column">
+          <Card className="dashboard-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                진단 점수 추이
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="dashboard-card-content">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
+                  <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} />
+                  <Tooltip contentStyle={{ fontSize: 12 }} />
+                  {(['Simple', 'PHQ-9', 'GAD-7', 'BDI'] as const).map(type => (
+                    <Line
+                      key={type}
+                      type="monotone"
+                      dataKey={type}
+                      stroke={lineColors[type]}
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                      name={type}
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                기능별 활동 패턴
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="dashboard-card-content">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={activityData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="feature" tick={{ fontSize: 11 }} />
+                  <YAxis yAxisId="left" tick={{ fontSize: 11 }} />
+                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
+                  <Tooltip contentStyle={{ fontSize: 12 }} />
+                  <Bar yAxisId="left" dataKey="sessions" fill="#8884d8" name="세션 수" radius={[4, 4, 0, 0]} />
+                  <Bar yAxisId="right" dataKey="avgTime" fill="#82ca9d" name="평균 시간 (분)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-
-      {/* 오른쪽 열 */}
-      <div className="flex flex-col gap-4">
-        <Card className="flex-1">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              진단 점수 추이
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-2">
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 11 }}
-                  tickFormatter={(v) => v.slice(5)}
-                />
-                <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} />
-                <Tooltip contentStyle={{ fontSize: 12 }} />
-                {(['Simple', 'PHQ-9', 'GAD-7', 'BDI'] as const).map(type => (
-                  <Line
-                    key={type}
-                    type="monotone"
-                    dataKey={type}
-                    stroke={lineColors[type]}
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    name={type}
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-
-        {/* 기능별 활동 패턴 */}
-        <Card className="flex-1">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              기능별 활동 패턴
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-2">
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={activityData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="feature" tick={{ fontSize: 11 }} />
-                <YAxis yAxisId="left" tick={{ fontSize: 11 }} />
-                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
-                <Tooltip contentStyle={{ fontSize: 12 }} />
-                <Bar yAxisId="left" dataKey="sessions" fill="#8884d8" name="세션 수" radius={[4, 4, 0, 0]} />
-                <Bar yAxisId="right" dataKey="avgTime" fill="#82ca9d" name="평균 시간 (분)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    </>
   );
 }

@@ -17,7 +17,7 @@ import {
   PaginationPrevious,
 } from "./ui/pagination";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
-import { getUserDetail, getUsers } from "../API/userManagementAPI";
+import { getUserStatistics, getUserDetail, getUsers } from "../API/userManagementAPI";
 
 interface BasicUser {
   id: string;
@@ -67,16 +67,32 @@ export function UserManagement({ setComponentLoading }: { setComponentLoading: (
   const [notificationMessage, setNotificationMessage] = useState("");
   const [totalUsers, setTotalUsers] = useState(0);
   const [highRiskUsers, setHighRiskUsers] = useState(0);
+  const [activeUsers, setActiveUsers] = useState(0);
+  const [averageDiagnoses, setAverageDiagnoses] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 30;
 
   useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+        const data = await getUserStatistics();
+        console.log('User statistics:', data);
+        setTotalUsers(data.totalUsers);
+        setHighRiskUsers(data.highRiskUsers);
+        setActiveUsers(data.activeUsersLastWeek);
+        setAverageDiagnoses(data.avgDiagnosisCount);
+      }
+      catch (error) {
+      }
+    };
+    fetchStatistics();
+  }, [])
+  useEffect(() => {
     const loadUsers = async (page: number) => {
       setComponentLoading(true);
       try {
         const data = await getUsers({ page: page - 1, size: itemsPerPage });
-        setTotalUsers(data.page.totalElements);
         setTotalPages(Math.ceil(data.page.totalElements / itemsPerPage));
         const mapped = await Promise.all(
           data.content.map(async (u: any) => {
@@ -98,7 +114,6 @@ export function UserManagement({ setComponentLoading }: { setComponentLoading: (
           })
         );
         setUsers(mapped);
-        setHighRiskUsers(mapped.filter(u => u.depressionStatus === 'high' || u.gamblingStatus === 'high').length);
       } catch (error) {
         console.error("유저 목록 불러오기 실패:", error);
       } finally {
@@ -205,7 +220,7 @@ export function UserManagement({ setComponentLoading }: { setComponentLoading: (
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-semibold text-green-600">
-                {users.filter(u => new Date(u.lastActive) > new Date('2024-10-01')).length}
+                {activeUsers}
               </div>
               <p className="text-sm text-muted-foreground">최근 1주일</p>
             </CardContent>
@@ -217,9 +232,7 @@ export function UserManagement({ setComponentLoading }: { setComponentLoading: (
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-semibold">
-                {users.length > 0
-                  ? Math.round(users.reduce((sum, u) => sum + u.diagnosisCount, 0) / users.length)
-                  : 0}
+                {averageDiagnoses}
               </div>
               <p className="text-sm text-muted-foreground">사용자당</p>
             </CardContent>
