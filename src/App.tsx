@@ -10,7 +10,6 @@ export default function App() {
   const getAuthToken = () => localStorage.getItem("accessToken");
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!getAuthToken());
   const [isAppLoading, setIsAppLoading] = useState(true);
-  const [isComponentLoading, setComponentLoading] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -43,7 +42,6 @@ export default function App() {
 
   return (
     <>
-      {isComponentLoading && <LoadingSpinner />}
       <div className="flex h-screen bg-background">
         <AdminSidebar onLogout={handleLogout} />
         <main className="flex-1 overflow-auto">

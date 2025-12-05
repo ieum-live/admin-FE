@@ -12,8 +12,9 @@ const LoadingSpinner: React.FC = () => {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      color: '#fff',
+      backgroundColor: 'rgba(0, 0, 0, 0.1)',
+      opacity: 0.5,
+      color: '#000000ff',
       zIndex: 50,
       fontFamily: 'Arial, sans-serif'
     }}>
@@ -22,7 +23,7 @@ const LoadingSpinner: React.FC = () => {
         width: '36px',
         height: '36px',
         borderRadius: '50%',
-        borderLeftColor: '#fff',
+        borderLeftColor: '#000000ff',
         animation: 'spin 1s ease infinite'
       }} />
       <p style={{ marginTop: '15px', fontSize: '18px' }}>Loading..</p>

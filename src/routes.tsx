@@ -70,7 +70,7 @@ export const routes = [
             사용자 정보 관리, 상태 모니터링 및 알림 발송
           </p>
         </div>
-        <UserManagement setComponentLoading={() => {}} />
+        <UserManagement />
       </div>
     ),
   },
