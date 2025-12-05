@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Button } from "./ui/button";
@@ -8,9 +8,41 @@ import { Badge } from "./ui/badge";
 import { Textarea } from "./ui/textarea";
 import { Search, MessageSquare, Bell, Mail, Eye, Filter, X } from "lucide-react";
 import { UserDetail } from "./UserDetail";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { getUserStatistics, getUserDetail, getUsers } from "../API/userManagementAPI";
+import LoadingSpinner from "./LoadingSpinner";
 
-interface User {
+interface BasicUser {
+  id: string;
+  name: string;
+  birthDate: string;
+  gender: string;
+  email: string;
+}
+
+interface UserDetailStatus {
+  depression: 'LOW' | 'MEDIUM' | 'HIGH';
+  gambling: 'LOW' | 'MEDIUM' | 'HIGH';
+  totalAssessments: number;
+  latestAssessmentDate: string;
+  improvementRate: number;
+  riskFactors: string[];
+}
+
+interface FullUser {
+  basic: BasicUser;
+  status: UserDetailStatus;
+}
+
+interface MappedUser {
   id: string;
   name: string;
   age: number;
@@ -18,190 +50,141 @@ interface User {
   email: string;
   depressionStatus: 'low' | 'medium' | 'high';
   gamblingStatus: 'low' | 'medium' | 'high';
-  lastActive: string;
-  registrationDate: string;
-  diagnosisCount: number;
   lastDiagnosis: string;
+  diagnosisCount: number;
   improvementRate: string;
+  registrationDate: string;
+  lastActive: string;
 }
 
 export function UserManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [depressionFilter, setDepressionFilter] = useState("all");
   const [gamblingFilter, setGamblingFilter] = useState("all");
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<MappedUser[]>([]);
+  const [selectedUser, setSelectedUser] = useState<MappedUser | null>(null);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [highRiskUsers, setHighRiskUsers] = useState(0);
+  const [activeUsers, setActiveUsers] = useState(0);
+  const [averageDiagnoses, setAverageDiagnoses] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const itemsPerPage = 30;
+  const [componentLoading, setComponentLoading] = useState(false);
 
-  const users: User[] = [
-    {
-      id: 'USR001',
-      name: '김민준',
-      age: 16,
-      gender: '남',
-      email: 'kmj2008@email.com',
-      depressionStatus: 'low',
-      gamblingStatus: 'medium',
-      lastActive: '2024-10-05',
-      registrationDate: '2024-08-15',
-      diagnosisCount: 8,
-      lastDiagnosis: '2024-10-05',
-      improvementRate: '+15%'
-    },
-    {
-      id: 'USR002',
-      name: '이서연',
-      age: 17,
-      gender: '여',
-      email: 'lsy2007@email.com',
-      depressionStatus: 'high',
-      gamblingStatus: 'high',
-      lastActive: '2024-10-04',
-      registrationDate: '2024-07-22',
-      diagnosisCount: 12,
-      lastDiagnosis: '2024-10-04',
-      improvementRate: '-8%'
-    },
-    {
-      id: 'USR003',
-      name: '박준호',
-      age: 15,
-      gender: '남',
-      email: 'pjh2009@email.com',
-      depressionStatus: 'medium',
-      gamblingStatus: 'low',
-      lastActive: '2024-10-03',
-      registrationDate: '2024-09-01',
-      diagnosisCount: 5,
-      lastDiagnosis: '2024-10-03',
-      improvementRate: '+22%'
-    },
-    {
-      id: 'USR004',
-      name: '정수빈',
-      age: 18,
-      gender: '여',
-      email: 'jsb2006@email.com',
-      depressionStatus: 'low',
-      gamblingStatus: 'low',
-      lastActive: '2024-10-02',
-      registrationDate: '2024-06-10',
-      diagnosisCount: 15,
-      lastDiagnosis: '2024-10-02',
-      improvementRate: '+30%'
-    },
-    {
-      id: 'USR005',
-      name: '최하은',
-      age: 16,
-      gender: '여',
-      email: 'che2008@email.com',
-      depressionStatus: 'medium',
-      gamblingStatus: 'medium',
-      lastActive: '2024-10-01',
-      registrationDate: '2024-08-28',
-      diagnosisCount: 7,
-      lastDiagnosis: '2024-10-01',
-      improvementRate: '+12%'
-    },
-    {
-      id: 'USR006',
-      name: '한지우',
-      age: 17,
-      gender: '남',
-      email: 'hjw2007@email.com',
-      depressionStatus: 'high',
-      gamblingStatus: 'low',
-      lastActive: '2024-09-30',
-      registrationDate: '2024-07-05',
-      diagnosisCount: 9,
-      lastDiagnosis: '2024-09-30',
-      improvementRate: '-3%'
-    }
-  ];
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+        const data = await getUserStatistics();
+        console.log('User statistics:', data);
+        setTotalUsers(data.totalUsers);
+        setHighRiskUsers(data.highRiskUsers);
+        setActiveUsers(data.activeUsersLastWeek);
+        setAverageDiagnoses(data.avgDiagnosisCount);
+      }
+      catch (error) {
+      }
+    };
+    fetchStatistics();
+  }, [])
+  useEffect(() => {
+    const loadUsers = async (page: number) => {
+      setComponentLoading(true);
+      try {
+        const data = await getUsers({ page: page - 1, size: itemsPerPage });
+        setTotalPages(Math.ceil(data.page.totalElements / itemsPerPage));
+        const mapped = await Promise.all(
+          data.content.map(async (u: any) => {
+            const detail: FullUser = await getUserDetail(u.id);
+            return {
+              id: u.id,
+              name: u.name,
+              age: new Date().getFullYear() - new Date(u.birthDate).getFullYear(),
+              gender: u.gender,
+              email: u.email,
+              depressionStatus: (detail.status.depression?.toLowerCase() ?? 'low') as 'low' | 'medium' | 'high',
+              gamblingStatus: (detail.status.depression?.toLowerCase() ?? 'low') as 'low' | 'medium' | 'high',
+              lastDiagnosis: detail.status.latestAssessmentDate,
+              diagnosisCount: detail.status.totalAssessments,
+              improvementRate: ((detail.status.improvementRate ?? 0).toFixed(2)) + '%',
+              registrationDate: u.createdAt,
+              lastActive: detail.status.latestAssessmentDate,
+            };
+          })
+        );
+        setUsers(mapped);
+      } catch (error) {
+        console.error("유저 목록 불러오기 실패:", error);
+      } finally {
+        setComponentLoading(false);
+      }
+    };
+    loadUsers(currentPage);
+  }, [setComponentLoading, currentPage]);
 
   const getStatusBadge = (status: string, type: 'depression' | 'gambling') => {
     const baseClasses = "text-xs";
     switch (status) {
       case 'low':
-        return (
-          <Badge variant="default" className={`${baseClasses} bg-green-100 text-green-800`}>
-            {type === 'depression' ? '안정' : '낮음'}
-          </Badge>
-        );
+        return <Badge variant="default" className={`${baseClasses} bg-green-100 text-green-800`}>{type === 'depression' ? '안정' : '낮음'}</Badge>;
       case 'medium':
-        return (
-          <Badge variant="secondary" className={`${baseClasses} bg-yellow-100 text-yellow-800`}>
-            {type === 'depression' ? '주의' : '중간'}
-          </Badge>
-        );
+        return <Badge variant="secondary" className={`${baseClasses} bg-yellow-100 text-yellow-800`}>{type === 'depression' ? '주의' : '중간'}</Badge>;
       case 'high':
-        return (
-          <Badge variant="destructive" className={baseClasses}>
-            {type === 'depression' ? '위험' : '높음'}
-          </Badge>
-        );
+        return <Badge variant="destructive" className={baseClasses}>{type === 'depression' ? '위험' : '높음'}</Badge>;
       default:
         return <Badge variant="outline" className={baseClasses}>알 수 없음</Badge>;
     }
   };
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.id.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesDepression = depressionFilter === "all" || user.depressionStatus === depressionFilter;
-    const matchesGambling = gamblingFilter === "all" || user.gamblingStatus === gamblingFilter;
-    
+    const matchesSearch = (user.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (user.email?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (user.id?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+    const matchesDepression = depressionFilter === 'all' || user.depressionStatus === depressionFilter;
+    const matchesGambling = gamblingFilter === 'all' || user.gamblingStatus === gamblingFilter;
     return matchesSearch && matchesDepression && matchesGambling;
   });
 
-  const handleUserClick = (user: User) => {
-    setSelectedUser(user);
-  };
-
-  const handleSendNotification = () => {
-    // 실제로는 API 호출이 이루어질 것입니다
-    console.log('알림 발송:', {
-      users: selectedUsers,
-      message: notificationMessage
-    });
-    setIsNotificationOpen(false);
-    setNotificationMessage("");
-    setSelectedUsers([]);
-    alert(`${selectedUsers.length}명의 사용자에게 알림이 발송되었습니다.`);
-  };
-
   const toggleUserSelection = (userId: string) => {
-    setSelectedUsers(prev => 
-      prev.includes(userId) 
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
-    );
-  };
-
-  const selectHighRiskUsers = () => {
-    const highRiskUsers = users
-      .filter(user => user.depressionStatus === 'high' || user.gamblingStatus === 'high')
-      .map(user => user.id);
-    setSelectedUsers(highRiskUsers);
+    setSelectedUsers(prev => prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]);
   };
 
   const toggleSelectAll = () => {
     if (selectedUsers.length === filteredUsers.length) {
       setSelectedUsers([]);
     } else {
-      setSelectedUsers(filteredUsers.map(user => user.id));
+      setSelectedUsers(filteredUsers.map(u => u.id));
     }
   };
 
-  const getImprovementColor = (rate: string) => {
-    const isPositive = rate.startsWith('+');
-    return isPositive ? 'text-green-600' : 'text-red-600';
+  const selectHighRiskUsers = () => {
+    const highRisk = users.filter(u => u.depressionStatus === 'high' || u.gamblingStatus === 'high').map(u => u.id);
+    setSelectedUsers(highRisk);
   };
+
+  const getImprovementColor = (rate: string) => rate.startsWith('+') ? 'text-green-600' : 'text-red-600';
+
+  const handleSendNotification = () => {
+    console.log('알림 발송:', { users: selectedUsers, message: notificationMessage });
+    alert(`${selectedUsers.length}명의 사용자에게 알림이 발송되었습니다.`);
+    setIsNotificationOpen(false);
+    setNotificationMessage("");
+    setSelectedUsers([]);
+  };
+
+  const handleUserClick = async (user: MappedUser) => {
+    setSelectedUser(user);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr,500px] gap-6">
@@ -214,7 +197,9 @@ export function UserManagement() {
               <CardTitle className="text-sm">전체 사용자</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-semibold">{users.length}</div>
+              <div className="text-2xl font-semibold">
+                {totalUsers}
+              </div>
               <p className="text-sm text-muted-foreground">등록된 사용자</p>
             </CardContent>
           </Card>
@@ -225,7 +210,7 @@ export function UserManagement() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-semibold text-red-600">
-                {users.filter(u => u.depressionStatus === 'high' || u.gamblingStatus === 'high').length}
+                {highRiskUsers}
               </div>
               <p className="text-sm text-muted-foreground">우울/도박 고위험</p>
             </CardContent>
@@ -237,7 +222,7 @@ export function UserManagement() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-semibold text-green-600">
-                {users.filter(u => new Date(u.lastActive) > new Date('2024-10-01')).length}
+                {activeUsers}
               </div>
               <p className="text-sm text-muted-foreground">최근 1주일</p>
             </CardContent>
@@ -249,7 +234,7 @@ export function UserManagement() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-semibold">
-                {Math.round(users.reduce((sum, u) => sum + u.diagnosisCount, 0) / users.length)}
+                {averageDiagnoses}
               </div>
               <p className="text-sm text-muted-foreground">사용자당</p>
             </CardContent>
@@ -263,8 +248,8 @@ export function UserManagement() {
               <div className="flex justify-between items-center">
                 <CardTitle>사용자 목록</CardTitle>
                 <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={selectHighRiskUsers}
                     className="gap-2"
                   >
@@ -273,8 +258,8 @@ export function UserManagement() {
                   </Button>
                   <Dialog open={isNotificationOpen} onOpenChange={setIsNotificationOpen}>
                     <DialogTrigger asChild>
-                      <Button 
-                        variant="default" 
+                      <Button
+                        variant="default"
                         className="gap-2"
                         disabled={selectedUsers.length === 0}
                       >
@@ -302,7 +287,7 @@ export function UserManagement() {
                           rows={4}
                         />
                         <div className="flex gap-2">
-                          <Button 
+                          <Button
                             onClick={handleSendNotification}
                             disabled={!notificationMessage.trim()}
                             className="gap-2"
@@ -310,7 +295,7 @@ export function UserManagement() {
                             <MessageSquare className="h-4 w-4" />
                             앱 알림 발송
                           </Button>
-                          <Button 
+                          <Button
                             variant="outline"
                             onClick={handleSendNotification}
                             disabled={!notificationMessage.trim()}
@@ -360,70 +345,92 @@ export function UserManagement() {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <input
-                      type="checkbox"
-                      checked={filteredUsers.length > 0 && selectedUsers.length === filteredUsers.length}
-                      onChange={toggleSelectAll}
-                      className="rounded cursor-pointer"
-                    />
-                  </TableHead>
-                  <TableHead>사용자 ID</TableHead>
-                  <TableHead>이름</TableHead>
-                  <TableHead>나이</TableHead>
-                  <TableHead>성별</TableHead>
-                  <TableHead>이메일</TableHead>
-                  <TableHead>우울증</TableHead>
-                  <TableHead>도박 위험도</TableHead>
-                  <TableHead>최근 진단일</TableHead>
-                  <TableHead>개선율</TableHead>
-                  <TableHead>진단 횟수</TableHead>
-                  <TableHead>상세</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
+          {
+            componentLoading ? (
+              <LoadingSpinner />
+            ) : (<CardContent className="overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12 text-center">
                       <input
                         type="checkbox"
-                        checked={selectedUsers.includes(user.id)}
-                        onChange={() => toggleUserSelection(user.id)}
+                        checked={filteredUsers.length > 0 && selectedUsers.length === filteredUsers.length}
+                        onChange={toggleSelectAll}
                         className="rounded cursor-pointer"
                       />
-                    </TableCell>
-                    <TableCell className="font-medium">{user.id}</TableCell>
-                    <TableCell>{user.name}</TableCell>
-                    <TableCell>{user.age}세</TableCell>
-                    <TableCell>{user.gender}</TableCell>
-                    <TableCell className="text-sm">{user.email}</TableCell>
-                    <TableCell>{getStatusBadge(user.depressionStatus, 'depression')}</TableCell>
-                    <TableCell>{getStatusBadge(user.gamblingStatus, 'gambling')}</TableCell>
-                    <TableCell>{user.lastDiagnosis}</TableCell>
-                    <TableCell className={getImprovementColor(user.improvementRate)}>
-                      {user.improvementRate}
-                    </TableCell>
-                    <TableCell>{user.diagnosisCount}회</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleUserClick(user)}
-                        className="gap-2"
-                      >
-                        <Eye className="h-4 w-4" />
-                        보기
-                      </Button>
-                    </TableCell>
+                    </TableHead>
+                    <TableHead className="text-center">사용자 ID</TableHead>
+                    <TableHead className="text-center">이름</TableHead>
+                    <TableHead className="text-center">나이</TableHead>
+                    <TableHead className="text-center">성별</TableHead>
+                    <TableHead className="text-center">이메일</TableHead>
+                    <TableHead className="text-center">우울증</TableHead>
+                    <TableHead className="text-center">도박 위험도</TableHead>
+                    <TableHead className="text-center">최근 진단일</TableHead>
+                    <TableHead className="text-center">개선율</TableHead>
+                    <TableHead className="text-center">진단 횟수</TableHead>
+                    <TableHead className="text-center">상세</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.includes(user.id)}
+                          onChange={() => toggleUserSelection(user.id)}
+                          className="rounded cursor-pointer"
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium text-center">{user.id.length > 10 ? `${user.id.substring(0, 10)}...` : user.id}</TableCell>
+                      <TableCell className="text-center">{user.name}</TableCell>
+                      <TableCell className="text-center">{user.age}세</TableCell>
+                      <TableCell className="text-center">{user.gender}</TableCell>
+                      <TableCell className="text-sm text-center">{user.email}</TableCell>
+                      <TableCell className="text-center">{getStatusBadge(user.depressionStatus, 'depression')}</TableCell>
+                      <TableCell className="text-center">{getStatusBadge(user.gamblingStatus, 'gambling')}</TableCell>
+                      <TableCell className="text-center">{user.lastDiagnosis}</TableCell>
+                      <TableCell className={`text-center ${getImprovementColor(user.improvementRate)}`}>{user.improvementRate}</TableCell>
+                      <TableCell className="text-center">{user.diagnosisCount}회</TableCell>
+                      <TableCell className="text-center">
+                        <Button variant="ghost" size="sm" onClick={() => handleUserClick(user)} className="gap-2">
+                          <Eye className="h-4 w-4" />
+                          보기
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {totalPages > 1 && (
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} size="default" />
+                    </PaginationItem>
+                    {[...Array(totalPages)].map((_, i) => (
+                      <PaginationItem key={i}>
+                        <PaginationLink
+                          size="default"
+                          isActive={currentPage === i + 1}
+                          onClick={() => handlePageChange(i + 1)}
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      <PaginationNext onClick={() => handlePageChange(currentPage + 1)} size="default" />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+            </CardContent>)
+          }
+
         </Card>
       </div>
 
@@ -435,7 +442,7 @@ export function UserManagement() {
           </CardHeader>
           <CardContent>
             {selectedUser ? (
-              <UserDetail user={selectedUser} />
+              <UserDetail userId={selectedUser.id} />
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <Eye className="h-12 w-12 text-muted-foreground mb-4" />
