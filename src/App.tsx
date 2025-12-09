@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Routes, Route, Outlet } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { AdminSidebar } from "./components/AdminSidebar";
 import { LoginPage } from "./components/LoginPage";
 import LoadingSpinner from "./components/LoadingSpinner";
@@ -32,6 +32,19 @@ export default function App() {
     }
   };
 
+  useEffect(() => {
+    const syncAuth = () => {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        localStorage.removeItem("refreshToken");
+      }
+      setIsAuthenticated(!!token);
+    };
+
+    window.addEventListener("storage", syncAuth);
+    return () => window.removeEventListener("storage", syncAuth);
+  }, []);
+
   if (isAppLoading) {
     return <LoadingSpinner />;
   }
@@ -41,21 +54,17 @@ export default function App() {
   }
 
   return (
-    <>
-      <div className="flex h-screen bg-background">
-        <AdminSidebar onLogout={handleLogout} />
-        <main className="flex-1 overflow-auto">
-          <div className="p-6">
-            <Routes>
-              {routes.map((route, index) => (
-                <Route key={index} path={route.path} element={route.element} />
-              ))}
-            </Routes>
-          </div>
-        </main>
-      </div>
-    </>
+    <div className="flex h-screen bg-background">
+      <AdminSidebar onLogout={handleLogout} />
+      <main className="flex-1 overflow-auto">
+        <div className="p-6">
+          <Routes>
+            {routes.map((route, index) => (
+              <Route key={index} path={route.path} element={route.element} />
+            ))}
+          </Routes>
+        </div>
+      </main>
+    </div>
   );
 }
-
-
