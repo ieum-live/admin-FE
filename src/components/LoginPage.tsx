@@ -17,16 +17,34 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    setLoading(true);
     setError("");
+
+    // 🔥 빈칸 체크
+    if (!username.trim() || !password.trim()) {
+      setError("모든 칸을 입력해주세요.");
+      return;
+    }
+
+    setLoading(true);
 
     try {
       await signIn(username, password);
       onLogin();
     } catch (err: any) {
-      setError(err.message || "An unexpected error occurred.");
+      const backendMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "로그인 중 오류가 발생했습니다.";
+
+      setError("입력 정보를 다시 확인해주세요.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !loading) {
+      handleLogin();
     }
   };
 
@@ -44,16 +62,19 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
+
             <div className="grid gap-2">
               <Label htmlFor="username">Email</Label>
               <Input
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                onKeyDown={handleKeyDown}
                 required
                 disabled={loading}
               />
             </div>
+
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>
               <Input
@@ -61,10 +82,12 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={handleKeyDown}
                 required
                 disabled={loading}
               />
             </div>
+
             <Button onClick={handleLogin} className="w-full" disabled={loading}>
               {loading ? "Logging in..." : "Login"}
             </Button>
