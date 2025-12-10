@@ -1,7 +1,7 @@
-import { customAxios } from "./axios";
+import instance from "./axios";
 
 export const getSettings = async () => {
-    const response = await customAxios.get(`/api/settings`);
+    const response = await instance.get(`/api/settings`);
     return response.data.data;
 }
 
@@ -18,6 +18,6 @@ export interface SettingsData {
 }
 
 export const updateSettings = async (settings: SettingsData) => {
-    const response = await customAxios.put(`/api/settings`, settings);
+    const response = await instance.put(`/api/settings`, settings);
     return response.data;
 };

@@ -6,6 +6,7 @@ import { Label } from "./ui/label";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { signIn } from "../API/authAPI";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -16,7 +17,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const navigate = useNavigate()
   const handleLogin = async () => {
     setError("");
 
@@ -31,6 +32,8 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     try {
       await signIn(email, password);
       onLogin();
+      navigate("/")
+
     } catch (err: any) {
       const backendMessage =
         err?.response?.data?.message ||

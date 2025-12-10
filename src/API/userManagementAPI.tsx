@@ -1,4 +1,4 @@
-import { customAxios } from "./axios";
+import instance from "./axios";
 
 export interface GetUsersParams {
     query?: string;
@@ -16,7 +16,7 @@ export const getUsers = async ({
     page,
     size,
 }: GetUsersParams) => {
-    const response = await customAxios.get(`/api/users`, {
+    const response = await instance.get(`/api/users`, {
         params: {
             query,
             risk,
@@ -29,17 +29,17 @@ export const getUsers = async ({
 };
 
 export const getUserStatistics = async () => {
-    const response = await customAxios.get(`/api/users/statistics`, {});
+    const response = await instance.get(`/api/users/statistics`, {});
     return response.data.data;
 };
 
 export const getUser = async (userId: string) => {
-    const response = await customAxios.get(`/api/users/${userId}`, {});
+    const response = await instance.get(`/api/users/${userId}`, {});
     return response.data.data;
 };
 
 export const getUserDetail = async (userId: string) => {
-    const response = await customAxios.get(`/api/users/${userId}/detail`, {});
+    const response = await instance.get(`/api/users/${userId}/detail`, {});
     return response.data.data;
 };
 
@@ -47,7 +47,7 @@ export const getUserAssessments = async (
     userId: string,
     type?: AssessmentType
 ) => {
-    const response = await customAxios.get(`/api/users/${userId}/assessments`, {
+    const response = await instance.get(`/api/users/${userId}/assessments`, {
         params: { type },
     });
     return response.data.data;
