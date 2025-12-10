@@ -9,6 +9,25 @@ import { Calendar, Download, Filter, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import React from "react";
 
+interface UserData {
+  id: string;
+  name: string;
+  email: string;
+  age?: number;
+  latestAssessment: {
+    id: string;
+    type: string;
+    completedAt: string;
+    totalScore: number;
+    riskLevel: "LOW" | "MID" | "HIGH";
+  };
+  user: {
+    email: string;
+    id: string;
+    name: string;
+  }
+}
+
 export function DiagnosisResults() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [summary, setSummary] = useState<any>({
@@ -18,6 +37,11 @@ export function DiagnosisResults() {
     avgAssessmentIntervalDays: 0,
   });
   const [loadingSummary, setLoadingSummary] = useState(true);
+
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
 
   // 📌 API 호출 - 진단 요약 지표
   const fetchSummary = async () => {
@@ -30,9 +54,7 @@ export function DiagnosisResults() {
       const from = threeMonthsAgo.toISOString().slice(0, 10);
 
       const res = await fetch(`/api/diagnostics/summary?from=${from}&to=${to}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
+        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });
       const data = await res.json();
       console.log("API Response:", data);
@@ -51,11 +73,43 @@ export function DiagnosisResults() {
     }
   };
 
+  // 📌 API 호출 - 최근 7일 설문 사용자
+  const fetchRecentUsers = async () => {
+    try {
+      const res = await fetch(`/api/diagnostics/recent?days=7`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
+      });
+      const data = await res.json();
+      console.log("최근 7일 설문 사용자 데이터:", data);
+      setUsers(data.data || []);
+    } catch (err) {
+      console.error("최근 설문 사용자 API 호출 실패:", err);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
   useEffect(() => {
     fetchSummary();
+    fetchRecentUsers();
   }, []);
 
-  // 임시 AreaChart 데이터 (위험도별 분포)
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'LOW': return <Badge variant="default" className="bg-green-100 text-green-800">안정</Badge>;
+      case 'MID': return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">주의</Badge>;
+      case 'HIGH': return <Badge variant="destructive">위험</Badge>;
+      default: return <Badge variant="outline">알 수 없음</Badge>;
+    }
+  };
+
+  const getImprovementColor = (rate: string) => rate.startsWith('+') ? 'text-green-600' : 'text-red-600';
+
+  // 페이지네이션
+  const paginatedUsers = users.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const totalPages = Math.ceil(users.length / pageSize);
+
+  // 임시 AreaChart 데이터
   const improvementData = [
     { month: '1월', low: 65, medium: 25, high: 10 },
     { month: '2월', low: 68, medium: 23, high: 9 },
@@ -65,26 +119,9 @@ export function DiagnosisResults() {
     { month: '6월', low: 82, medium: 13, high: 5 },
   ];
 
-  // 사용자 테이블 예시
-  const diagnosisData = [
-    { id: 'USR001', name: '김**', age: 16, lastDiagnosis: '2024-10-05', currentStatus: 'low', improvementRate: '+25%', diagnosisCount: 8 },
-    { id: 'USR002', name: '이**', age: 17, lastDiagnosis: '2024-10-04', currentStatus: 'medium', improvementRate: '+10%', diagnosisCount: 5 },
-    { id: 'USR003', name: '박**', age: 15, lastDiagnosis: '2024-10-03', currentStatus: 'high', improvementRate: '-5%', diagnosisCount: 12 },
-  ];
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'low': return <Badge variant="default" className="bg-green-100 text-green-800">안정</Badge>;
-      case 'medium': return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">주의</Badge>;
-      case 'high': return <Badge variant="destructive">위험</Badge>;
-      default: return <Badge variant="outline">알 수 없음</Badge>;
-    }
-  };
-
-  const getImprovementColor = (rate: string) => rate.startsWith('+') ? 'text-green-600' : 'text-red-600';
-
   return (
     <div className="space-y-6">
+
       {/* 통계 요약 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
@@ -138,9 +175,9 @@ export function DiagnosisResults() {
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip formatter={(value) => `${value}%`} />
-              <Area type="monotone" dataKey="low" stackId="1" stroke="#10b981" fill="#10b981" name="안정군"/>
-              <Area type="monotone" dataKey="medium" stackId="1" stroke="#f59e0b" fill="#f59e0b" name="주의군"/>
-              <Area type="monotone" dataKey="high" stackId="1" stroke="#ef4444" fill="#ef4444" name="위험군"/>
+              <Area type="monotone" dataKey="LOW" stackId="1" stroke="#10b981" fill="#10b981" name="안정군"/>
+              <Area type="monotone" dataKey="MID" stackId="1" stroke="#f59e0b" fill="#f59e0b" name="주의군"/>
+              <Area type="monotone" dataKey="HIGH" stackId="1" stroke="#ef4444" fill="#ef4444" name="위험군"/>
             </AreaChart>
           </ResponsiveContainer>
         </CardContent>
@@ -148,54 +185,63 @@ export function DiagnosisResults() {
 
       {/* 사용자 테이블 */}
       <Card>
-        <CardHeader><CardTitle>최근 설문 사용자</CardTitle></CardHeader>
+        <CardHeader><CardTitle>최근 7일 설문 사용자</CardTitle></CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>이름</TableHead>
-                <TableHead>연령</TableHead>
-                <TableHead>최근 진단일</TableHead>
-                <TableHead>현재 상태</TableHead>
-                <TableHead>개선율</TableHead>
-                <TableHead>진단 횟수</TableHead>
-                <TableHead>작업</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {diagnosisData.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.id}</TableCell>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.age}세</TableCell>
-                  <TableCell>{user.lastDiagnosis}</TableCell>
-                  <TableCell>{getStatusBadge(user.currentStatus)}</TableCell>
-                  <TableCell className={getImprovementColor(user.improvementRate)}>
-                    {user.improvementRate}
-                  </TableCell>
-                  <TableCell>{user.diagnosisCount}회</TableCell>
-                  <TableCell>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" onClick={() => setSelectedUser(user.id)}>
-                          <FileText className="h-4 w-4" /> 설문 내용
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>{user.name} ({user.id}) 설문 응답</DialogTitle>
-                        </DialogHeader>
-                        <div className="mt-4">설문 내용 표시 영역 (예시 데이터)</div>
-                      </DialogContent>
-                    </Dialog>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {loadingUsers ? (
+            <p>불러오는 중...</p>
+          ) : (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>EMAIL</TableHead>
+                    <TableHead>이름</TableHead>
+                    <TableHead>최근 진단일</TableHead>
+                    <TableHead>검사명</TableHead>
+                    <TableHead>점수</TableHead>
+                    <TableHead>위험도</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                {paginatedUsers.map((u) => (
+                  <TableRow key={u.user.id}>
+                    <TableCell>{u.user.email}</TableCell>
+                    <TableCell>{u.user.name}</TableCell>
+                    <TableCell>
+                      {new Date(u.latestAssessment.completedAt).toLocaleDateString('ko-KR')}
+                    </TableCell>
+                    <TableCell>{u.latestAssessment.type}</TableCell>
+                    <TableCell>{u.latestAssessment.totalScore}</TableCell>
+                    <TableCell>{getStatusBadge(u.latestAssessment.riskLevel)}</TableCell>
+                  </TableRow>
+                ))}
+                </TableBody>
+              </Table>
+
+              {/* 페이지네이션 */}
+              <div className="flex justify-end mt-2 gap-2">
+                <Button
+                  size="sm"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                >
+                  이전
+                </Button>
+                <span className="flex items-center">{currentPage} / {totalPages}</span>
+                <Button
+                  size="sm"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                >
+                  다음
+                </Button>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
+
+    
     </div>
   );
 }
