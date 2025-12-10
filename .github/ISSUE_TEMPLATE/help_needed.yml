@@ -1,0 +1,87 @@
+name: 도움 요청 (Help Needed)
+description: 앱 또는 어드민 페이지 개발 중 발생한 문제나 궁금한 점을 해결하기 위한 템플릿입니다.
+title: "[HELP] "
+labels: [help wanted]
+assignees: []
+
+body:
+  - type: textarea
+    id: help-question
+    attributes:
+      label: ❓ 어떤 도움이 필요하신가요? (What do you need help with?)
+      description: 겪고 있는 문제 또는 궁금한 점을 가능한 한 구체적으로 작성해주세요.
+      placeholder: |
+        예) React Native VisionCamera에서 프레임 처리 시 렌더링이 끊깁니다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: relevant-code
+    attributes:
+      label: 💻 관련 코드 (Relevant code)
+      description: 문제가 발생한 코드가 있다면 여기에 작성해주세요.
+      placeholder: |
+        예) React Native, Expo Router, Spring Boot API, Python 모델 로직 등
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ### 📘 참고용 예시 코드
+
+        #### **React Native (TypeScript, Expo)**
+        ```tsx
+        import { useState } from 'react';
+
+        export default function Counter() {
+          const [count, setCount] = useState(0);
+
+          return (
+            <Button 
+              title={`Count: ${count}`} 
+              onPress={() => setCount(prev => prev + 1)} 
+            />
+          );
+        }
+        ```
+
+        #### **Spring Boot (Kotlin)**
+        ```kotlin
+        @RestController
+        @RequestMapping("/api")
+        class UserController {
+            @GetMapping("/users")
+            fun getUsers(): List<User> = userService.findAll()
+        }
+        ```
+
+        #### **Python (CV / TensorFlow / Model Serving)**
+        ```python
+        from keras.models import load_model
+        import cv2
+
+        model = load_model('emotion_model.h5')
+        frame = cv2.imread('sample.png')
+        # TODO: 전처리 후 감정 예측
+        ```
+
+  - type: textarea
+    id: tried-methods
+    attributes:
+      label: 🧪 시도해본 방법 (What have you tried?)
+      description: 해결을 위해 직접 시도해본 방법을 작성해주세요.
+      placeholder: |
+        예) VisionCamera Worker로 분리했지만 FPS가 여전히 낮습니다.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 💬 추가 내용 (Additional context)
+      description: 문제 파악에 도움이 될 추가 정보를 자유롭게 작성해주세요.
+      placeholder: |
+        예) 콘솔 에러 로그, 네트워크 응답, 디바이스 환경(iOS/Android) 등
+    validations:
+      required: false

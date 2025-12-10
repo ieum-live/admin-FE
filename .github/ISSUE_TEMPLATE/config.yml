@@ -1,0 +1,19 @@
+blank_issues_enabled: true
+contact_links: []
+
+issue_templates:
+  - name: 🐞 버그 리포트 (Bug Report)
+    description: 오류나 예상치 못한 동작을 보고해주세요.
+    file: bug_report.yml
+
+  - name: 🔄 코드 리팩토링 (Code Refactoring)
+    description: 더 나은 코드 구조나 성능 개선을 위한 리팩토링을 제안해주세요.
+    file: code_refactoring.yml
+
+  - name: ❓ 도움 요청 (Help Needed)
+    description: 구현 중 문제를 겪고 있다면 여기에 질문을 남겨주세요.
+    file: help_needed.yml
+
+  - name: 🌟 기능 요청 (Feature Request)
+    description: 새로운 기능이나 개선 아이디어를 제안해주세요.
+    file: feature_request.yml

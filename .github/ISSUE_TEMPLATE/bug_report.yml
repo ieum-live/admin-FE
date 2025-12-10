@@ -1,0 +1,68 @@
+name: 버그 리포트 (Bug Report)
+description: 오류나 예상치 못한 동작을 보고해주세요.
+title: "[BUG] "
+labels: [bug]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🐞 버그 설명 (Describe the bug)
+        어떤 버그가 발생했는지 명확하고 간단하게 설명해주세요.
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: 🐞 버그 설명 (Describe the bug)
+      description: 어떤 버그가 발생했는지 명확하고 간단하게 설명해주세요.
+      placeholder: 예) 버튼을 눌러도 아무 반응이 없습니다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: 📍 재현 방법 (Steps to Reproduce)
+      description: 버그를 어떻게 재현할 수 있는지 단계별로 설명해주세요.
+      placeholder: |
+        1. 로그인 버튼을 클릭합니다.
+        2. 충돌이 발생합니다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: 🖥️ 기대 동작 (Expected behavior)
+      description: 정상적으로 동작했을 때 어떤 결과가 나와야 하는지 설명해주세요.
+      placeholder: 예) 로그인 성공 후 관리자 대시보드로 이동해야 합니다.
+    validations:
+      required: false
+
+  - type: input
+    id: environment-os
+    attributes:
+      label: 🧾 운영체제 (OS)
+      description: 예) Windows 11, macOS 14 등
+      placeholder: Windows 11
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 📸 스크린샷 (Screenshots)
+      description: 가능하다면 스크린샷을 첨부해주세요. (드래그하여 업로드 가능)
+      placeholder: drag and drop here or click to upload
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 💬 추가 내용 (Additional context)
+      description: 이슈와 관련해 공유할 내용이 있다면 작성해주세요.
+      placeholder: 기타 관련 로그나 배경 설명이 있다면 여기에 작성하세요.
+    validations:
+      required: false
