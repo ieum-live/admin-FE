@@ -12,7 +12,7 @@ interface LoginPageProps {
 }
 
 export function LoginPage({ onLogin }: LoginPageProps) {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     setError("");
 
     // 🔥 빈칸 체크
-    if (!username.trim() || !password.trim()) {
+    if (!email.trim() || !password.trim()) {
       setError("모든 칸을 입력해주세요.");
       return;
     }
@@ -29,7 +29,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     setLoading(true);
 
     try {
-      await signIn(username, password);
+      await signIn(email, password);
       onLogin();
     } catch (err: any) {
       const backendMessage =
@@ -65,11 +65,11 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             )}
 
             <div className="grid gap-2">
-              <Label htmlFor="username">Email</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={handleKeyDown}
                 required
                 disabled={loading}
