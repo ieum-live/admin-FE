@@ -21,7 +21,8 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getSettings } from "../API/settingAPI";
+import { getSettings, SettingsData, updateSettings } from "../API/settingAPI";
+import NotiBar from "./ui/notiBar";
 
 export function Settings() {
   const [email, setEmail] = useState("");
@@ -29,29 +30,62 @@ export function Settings() {
   const [phone, setPhone] = useState("");
   const [sessionTimeoutMinutes, setSessionTimeoutMinutes] = useState(30);
   const [retentionDays, setRetentionDays] = useState(90);
+  const [initialSettings, setInitialSettings] = useState<SettingsData | null>(null)
+  const [msg, setMsg] = useState("");
+
+  const setFieldsFromData = (data: SettingsData) => {
+    setSessionTimeoutMinutes(data.sessionTimeoutMinutes);
+    setRetentionDays(data.retentionDays);
+    setEmail(data.contact.email);
+    setOrgName(data.contact.orgName);
+    setPhone(data.contact.phone);
+  };
 
   useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const response = await getSettings();
-        console.log("설정 불러오기 성공:", response);
-        setSessionTimeoutMinutes(response.sessionTimeoutMinutes);
-        setRetentionDays(response.retentionDays);
-        setEmail(response.contact.email);
-        setOrgName(response.contact.orgName);
-        setPhone(response.contact.phone);
-
-      } catch (error) {
-        console.error("설정 불러오기 실패:", error);
-      }
+    const load = async () => {
+      const data = await getSettings();
+      setInitialSettings(data);
+      setFieldsFromData(data);
     };
-
-    fetchSettings();
+    load();
   }, []);
+
+  const onClickCancel = async () => {
+
+    if (initialSettings) {
+      await setFieldsFromData(initialSettings);
+      setMsg("변경이 취소되었습니다.");
+
+      setTimeout(() => setMsg(""), 2000);
+    }
+  };
+
+  const onClickSave = async () => {
+    try {
+      const payload = {
+        sessionTimeoutMinutes,
+        retentionDays,
+        contact: {
+          orgName,
+          email,
+          phone,
+        },
+      };
+
+      await updateSettings(payload);
+      setMsg("저장되었습니다.");
+      setTimeout(() => setMsg(""), 2000);
+      console.log("설정 자동 저장 완료:", payload);
+    } catch (error) {
+      console.error("설정 자동 저장 실패:", error);
+    }
+  };
+
+
 
   return (
     <div className="space-y-6">
-
+      <NotiBar message={msg} />
       <ThemeSettings />
 
       {/* 시스템 설정 */}
@@ -98,7 +132,7 @@ export function Settings() {
             <Label htmlFor="session-timeout">세션 타임아웃 (분)</Label>
             <Select
               value={String(sessionTimeoutMinutes)}
-              onValueChange={(value: number) => setSessionTimeoutMinutes(Number(value))}
+              onValueChange={(value: string) => setSessionTimeoutMinutes(Number(value))}
             >
               <SelectTrigger className="w-full">
                 <SelectValue />
@@ -190,7 +224,7 @@ export function Settings() {
               <Label>데이터 보존 기간</Label>
               <Select
                 value={String(retentionDays / 30)}
-                onValueChange={(value: number) => setRetentionDays(Number(value) * 30)}
+                onValueChange={(value: string) => setRetentionDays(Number(value) * 30)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -305,8 +339,8 @@ export function Settings() {
 
       {/* 저장 버튼 */}
       <div className="flex justify-end gap-2">
-        <Button variant="outline">취소</Button>
-        <Button className="gap-2">
+        <Button variant="outline" onClick={onClickCancel}>취소</Button>
+        <Button className="gap-2" onClick={onClickSave}>
           <Save className="h-4 w-4" />
           설정 저장
         </Button>

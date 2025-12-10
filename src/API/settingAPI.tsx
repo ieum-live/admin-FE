@@ -5,7 +5,19 @@ export const getSettings = async () => {
     return response.data.data;
 }
 
-export const updateSettings = async (settings: Record<string, any>) => {
+export interface ContactInfo {
+    orgName: string;
+    email: string;
+    phone: string;
+}
+
+export interface SettingsData {
+    sessionTimeoutMinutes: number;
+    retentionDays: number;
+    contact: ContactInfo;
+}
+
+export const updateSettings = async (settings: SettingsData) => {
     const response = await customAxios.put(`/api/settings`, settings);
     return response.data;
-}
+};
