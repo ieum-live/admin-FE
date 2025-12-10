@@ -8,26 +8,52 @@ import { Textarea } from "./ui/textarea";
 import { Separator } from "./ui/separator";
 import { Badge } from "./ui/badge";
 import { ThemeSettings } from "./ThemeSettings";
-import { 
-  Save, 
-  Download, 
-  Upload, 
-  RefreshCw, 
-  Shield, 
-  Database, 
-  Bell, 
+import {
+  Save,
+  Download,
+  Upload,
+  RefreshCw,
+  Shield,
+  Database,
+  Bell,
   Mail,
   Clock,
   AlertTriangle
 } from "lucide-react";
-import React from "react";
+import { useEffect, useState } from "react";
+import { getSettings } from "../API/settingAPI";
 
 export function Settings() {
+  const [email, setEmail] = useState("");
+  const [orgName, setOrgName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [sessionTimeoutMinutes, setSessionTimeoutMinutes] = useState(30);
+  const [retentionDays, setRetentionDays] = useState(90);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await getSettings();
+        console.log("설정 불러오기 성공:", response);
+        setSessionTimeoutMinutes(response.sessionTimeoutMinutes);
+        setRetentionDays(response.retentionDays);
+        setEmail(response.contact.email);
+        setOrgName(response.contact.orgName);
+        setPhone(response.contact.phone);
+
+      } catch (error) {
+        console.error("설정 불러오기 실패:", error);
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
   return (
     <div className="space-y-6">
-      {/* 테마 설정 */}
+
       <ThemeSettings />
-      
+
       {/* 시스템 설정 */}
       <Card>
         <CardHeader>
@@ -40,23 +66,24 @@ export function Settings() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="app-name">애플리케이션 이름</Label>
-              <Input 
-                id="app-name" 
+              <Input
+                id="app-name"
                 defaultValue="청소년 진단 프로그램"
                 placeholder="애플리케이션 이름"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="admin-email">관리자 이메일</Label>
-              <Input 
-                id="admin-email" 
+              <Input
+                id="admin-email"
                 type="email"
-                defaultValue="admin@diagnosis.kr"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@example.com"
               />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="maintenance-mode">점검 모드</Label>
             <div className="flex items-center space-x-2">
@@ -69,7 +96,10 @@ export function Settings() {
 
           <div className="space-y-2">
             <Label htmlFor="session-timeout">세션 타임아웃 (분)</Label>
-            <Select defaultValue="30">
+            <Select
+              value={String(sessionTimeoutMinutes)}
+              onValueChange={(value: number) => setSessionTimeoutMinutes(Number(value))}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -80,6 +110,7 @@ export function Settings() {
                 <SelectItem value="120">2시간</SelectItem>
               </SelectContent>
             </Select>
+
           </div>
         </CardContent>
       </Card>
@@ -129,21 +160,18 @@ export function Settings() {
 
           <div className="space-y-2">
             <Label htmlFor="notification-email">알림 수신 이메일</Label>
-            <Input 
-              id="notification-email" 
+            <Input
+              id="notification-email"
               type="email"
-              defaultValue="admin@diagnosis.kr"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="알림을 받을 이메일"
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="sms-number">SMS 수신 번호</Label>
-            <Input 
-              id="sms-number" 
-              defaultValue="010-1234-5678"
-              placeholder="010-0000-0000"
-            />
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>
         </CardContent>
       </Card>
@@ -160,16 +188,19 @@ export function Settings() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>데이터 보존 기간</Label>
-              <Select defaultValue="12">
+              <Select
+                value={String(retentionDays / 30)}
+                onValueChange={(value: number) => setRetentionDays(Number(value) * 30)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="1">1개월</SelectItem>
                   <SelectItem value="3">3개월</SelectItem>
                   <SelectItem value="6">6개월</SelectItem>
-                  <SelectItem value="12">1년</SelectItem>
-                  <SelectItem value="24">2년</SelectItem>
-                  <SelectItem value="60">5년</SelectItem>
+                  <SelectItem value="12">12개월 (1년)</SelectItem>
+                  <SelectItem value="24">24개월 (2년)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
