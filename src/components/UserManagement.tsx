@@ -19,6 +19,7 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { getUserStatistics, getUserDetail, getUsers } from "../API/userManagementAPI";
 import LoadingSpinner from "./LoadingSpinner";
+import { AlertType, sendBulkAlert } from "../API/alertAPI";
 
 interface BasicUser {
   id: string;
@@ -64,8 +65,6 @@ export function UserManagement() {
   const [users, setUsers] = useState<MappedUser[]>([]);
   const [selectedUser, setSelectedUser] = useState<MappedUser | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [notificationMessage, setNotificationMessage] = useState("");
   const [totalUsers, setTotalUsers] = useState(0);
   const [highRiskUsers, setHighRiskUsers] = useState(0);
   const [activeUsers, setActiveUsers] = useState(0);
@@ -74,6 +73,13 @@ export function UserManagement() {
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 30;
   const [componentLoading, setComponentLoading] = useState(false);
+
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notificationTitle, setNotificationTitle] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [notificationType, setNotificationType] = useState<AlertType>("GENERAL");
+  const [allRawUsers, setAllRawUsers] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchStatistics = async () => {
@@ -90,40 +96,99 @@ export function UserManagement() {
     };
     fetchStatistics();
   }, [])
+
   useEffect(() => {
-    const loadUsers = async (page: number) => {
+    const fetchAllUsers = async () => {
       setComponentLoading(true);
       try {
-        const data = await getUsers({ page: page - 1, size: itemsPerPage });
-        setTotalPages(Math.ceil(data.page.totalElements / itemsPerPage));
-        const mapped = await Promise.all(
-          data.content.map(async (u: any) => {
-            const detail: FullUser = await getUserDetail(u.id);
-            return {
-              id: u.id,
-              name: u.name,
-              age: new Date().getFullYear() - new Date(u.birthDate).getFullYear(),
-              gender: u.gender,
-              email: u.email,
-              depressionStatus: (detail.status.depression?.toLowerCase() ?? 'low') as 'low' | 'medium' | 'high',
-              gamblingStatus: (detail.status.depression?.toLowerCase() ?? 'low') as 'low' | 'medium' | 'high',
-              lastDiagnosis: detail.status.latestAssessmentDate,
-              diagnosisCount: detail.status.totalAssessments,
-              improvementRate: ((detail.status.improvementRate ?? 0).toFixed(2)) + '%',
-              registrationDate: u.createdAt,
-              lastActive: detail.status.latestAssessmentDate,
-            };
-          })
-        );
-        setUsers(mapped);
+        const data = await getUsers({ page: 0, size: 10000 });
+
+        setAllRawUsers(data.content);
       } catch (error) {
-        console.error("유저 목록 불러오기 실패:", error);
+        console.error("전체 유저 목록 불러오기 실패:", error);
       } finally {
         setComponentLoading(false);
       }
     };
-    loadUsers(currentPage);
-  }, [setComponentLoading, currentPage]);
+    fetchAllUsers();
+  }, []);
+
+  useEffect(() => {
+    const processUsers = async () => {
+      if (allRawUsers.length === 0) return;
+
+      setComponentLoading(true);
+      try {
+        const filtered = allRawUsers.filter((u: any) =>
+          (u.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+          (u.email?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+        );
+
+        setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const slicedUsers = filtered.slice(startIndex, endIndex);
+
+        const mapped = await Promise.all(
+          slicedUsers.map(async (u: any) => {
+            try {
+              const detail: FullUser = await getUserDetail(u.id);
+              return {
+                id: u.id,
+                name: u.name,
+                age: new Date().getFullYear() - new Date(u.birthDate).getFullYear(),
+                gender: u.gender,
+                email: u.email,
+                depressionStatus: (detail.status.depression?.toLowerCase() ?? 'low') as 'low' | 'medium' | 'high',
+                gamblingStatus: (detail.status.gambling?.toLowerCase() ?? 'low') as 'low' | 'medium' | 'high',
+                lastDiagnosis: detail.status.latestAssessmentDate,
+                diagnosisCount: detail.status.totalAssessments,
+                improvementRate: ((detail.status.improvementRate ?? 0).toFixed(2)) + '%',
+                registrationDate: u.createdAt,
+                lastActive: detail.status.latestAssessmentDate,
+              };
+            } catch (err) {
+              // 상세 조회 실패 시 기본 정보만라도 반환
+              return {
+                id: u.id,
+                name: u.name,
+                age: 0,
+                gender: u.gender,
+                email: u.email,
+                depressionStatus: 'low',
+                gamblingStatus: 'low',
+                lastDiagnosis: '-',
+                diagnosisCount: 0,
+                improvementRate: '0%',
+                registrationDate: u.createdAt,
+                lastActive: '-',
+              } as MappedUser;
+            }
+          })
+        );
+
+        setUsers(mapped);
+      } catch (error) {
+        console.error("데이터 처리 중 오류:", error);
+      } finally {
+        setComponentLoading(false);
+      }
+    };
+
+    // 검색어가 바뀌거나 페이지가 바뀔 때 실행
+    const timer = setTimeout(() => {
+      processUsers();
+    }, 300);
+
+    return () => clearTimeout(timer);
+
+  }, [allRawUsers, searchTerm, currentPage])
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
 
   const getStatusBadge = (status: string, type: 'depression' | 'gambling') => {
     const baseClasses = "text-xs";
@@ -139,14 +204,15 @@ export function UserManagement() {
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = (user.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-      (user.email?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-      (user.id?.toLowerCase() || "").includes(searchTerm.toLowerCase());
-    const matchesDepression = depressionFilter === 'all' || user.depressionStatus === depressionFilter;
-    const matchesGambling = gamblingFilter === 'all' || user.gamblingStatus === gamblingFilter;
-    return matchesSearch && matchesDepression && matchesGambling;
-  });
+  const filteredUsers = users;
+  // .filter(user => {
+  //   const matchesSearch = (user.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+  //     (user.email?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+  //     (user.id?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+  //   const matchesDepression = depressionFilter === 'all' || user.depressionStatus === depressionFilter;
+  //   const matchesGambling = gamblingFilter === 'all' || user.gamblingStatus === gamblingFilter;
+  //   return matchesSearch && matchesDepression && matchesGambling;
+  // });
 
   const toggleUserSelection = (userId: string) => {
     setSelectedUsers(prev => prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]);
@@ -167,12 +233,41 @@ export function UserManagement() {
 
   const getImprovementColor = (rate: string) => rate.startsWith('+') ? 'text-green-600' : 'text-red-600';
 
-  const handleSendNotification = () => {
-    console.log('알림 발송:', { users: selectedUsers, message: notificationMessage });
-    alert(`${selectedUsers.length}명의 사용자에게 알림이 발송되었습니다.`);
-    setIsNotificationOpen(false);
-    setNotificationMessage("");
-    setSelectedUsers([]);
+  const handleSendNotification = async () => {
+    if (selectedUsers.length === 0) return;
+    if (!notificationTitle.trim() || !notificationMessage.trim()) {
+      alert("제목과 메시지를 모두 입력해주세요.");
+      return;
+    }
+
+    if (!confirm(`${selectedUsers.length}명에게 알림을 발송하시겠습니까?`)) return;
+
+    setIsSending(true);
+
+    try {
+      // 2. 일괄 발송 API 호출 (반복문 X)
+      await sendBulkAlert({
+        userIds: selectedUsers,
+        title: notificationTitle,
+        message: notificationMessage,
+        type: notificationType,
+      });
+
+      alert("성공적으로 알림이 발송되었습니다.");
+
+      // 3. 초기화 및 모달 닫기
+      setIsNotificationOpen(false);
+      setNotificationMessage("");
+      setNotificationTitle("");
+      setNotificationType("GENERAL");
+      setSelectedUsers([]);
+
+    } catch (error: any) {
+      console.error("알림 발송 실패:", error);
+      alert(error.message || "알림 전송에 실패했습니다.");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleUserClick = async (user: MappedUser) => {
@@ -188,9 +283,7 @@ export function UserManagement() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr,500px] gap-6">
-      {/* 왼쪽: 사용자 목록 */}
       <div className="space-y-6">
-        {/* 통계 요약 */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <Card>
             <CardHeader>
@@ -240,8 +333,6 @@ export function UserManagement() {
             </CardContent>
           </Card>
         </div>
-
-        {/* 사용자 목록 */}
         <Card>
           <CardHeader>
             <div className="space-y-4">
@@ -275,36 +366,50 @@ export function UserManagement() {
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4">
-                        <div>
-                          <p className="text-sm text-muted-foreground">
-                            {selectedUsers.length}명의 사용자에게 알림을 발송합니다.
-                          </p>
-                        </div>
-                        <Textarea
-                          placeholder="알림 메시지를 입력하세요..."
-                          value={notificationMessage}
-                          onChange={(e) => setNotificationMessage(e.target.value)}
-                          rows={4}
-                        />
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={handleSendNotification}
-                            disabled={!notificationMessage.trim()}
-                            className="gap-2"
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">알림 유형</label>
+                          <Select
+                            value={notificationType}
+                            onValueChange={(value: AlertType) => setNotificationType(value)}
                           >
-                            <MessageSquare className="h-4 w-4" />
-                            앱 알림 발송
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={handleSendNotification}
-                            disabled={!notificationMessage.trim()}
-                            className="gap-2"
-                          >
-                            <Mail className="h-4 w-4" />
-                            이메일 발송
-                          </Button>
+                            <SelectTrigger>
+                              <SelectValue placeholder="유형 선택" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="GENERAL">일반 알림</SelectItem>
+                              <SelectItem value="SYSTEM">시스템 공지</SelectItem>
+                              <SelectItem value="URGENT">긴급 알림</SelectItem>
+                              <SelectItem value="ASSESSMENT">검사 관련</SelectItem>
+                              <SelectItem value="ACHIEVEMENT">업적/달성</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
+
+                        {/* 제목 입력 */}
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">제목</label>
+                          <Input
+                            placeholder="알림 제목"
+                            value={notificationTitle}
+                            onChange={(e) => setNotificationTitle(e.target.value)}
+                          />
+                        </div>
+
+                        {/* 메시지 입력 */}
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">내용</label>
+                          <Textarea
+                            placeholder="내용을 입력하세요"
+                            value={notificationMessage}
+                            onChange={(e) => setNotificationMessage(e.target.value)}
+                            rows={4}
+                          />
+                        </div>
+
+                        {/* 버튼 연결 */}
+                        <Button onClick={handleSendNotification} disabled={isSending}>
+                          {isSending ? "발송 중..." : "전송하기"}
+                        </Button>
                       </div>
                     </DialogContent>
                   </Dialog>
