@@ -6,22 +6,23 @@ import { Label } from "./ui/label";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { signIn } from "../API/authAPI";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 interface LoginPageProps {
   onLogin: () => void;
 }
 
 export function LoginPage({ onLogin }: LoginPageProps) {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const navigate = useNavigate()
   const handleLogin = async () => {
     setError("");
 
     // 🔥 빈칸 체크
-    if (!username.trim() || !password.trim()) {
+    if (!email.trim() || !password.trim()) {
       setError("모든 칸을 입력해주세요.");
       return;
     }
@@ -29,8 +30,10 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     setLoading(true);
 
     try {
-      await signIn(username, password);
+      await signIn(email, password);
       onLogin();
+      navigate("/")
+
     } catch (err: any) {
       const backendMessage =
         err?.response?.data?.message ||
@@ -65,11 +68,11 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             )}
 
             <div className="grid gap-2">
-              <Label htmlFor="username">Email</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={handleKeyDown}
                 required
                 disabled={loading}

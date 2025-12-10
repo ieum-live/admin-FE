@@ -1,4 +1,4 @@
-import { customAxios } from "./axios";
+import instance from "./axios";
 
 export type AlertType = "GENERAL" | "ASSESSMENT" | "ACHIEVEMENT" | "SYSTEM" | "URGENT";
 
@@ -17,7 +17,7 @@ export interface BatchAlertPayload {
 }
 export const sendUserAlert = async (userId: string, payload: AlertPayload) => {
     try {
-        const response = await customAxios.post(`/api/alerts/users/${userId}`, payload);
+        const response = await instance.post(`/api/alerts/users/${userId}`, payload);
         return response.data;
     } catch (error: any) {
         console.error("개별 알림 발송 실패:", error);
@@ -27,7 +27,7 @@ export const sendUserAlert = async (userId: string, payload: AlertPayload) => {
 
 export const sendBulkAlert = async (payload: BatchAlertPayload) => {
     try {
-        const response = await customAxios.post(`/api/alerts/batch-send`, payload);
+        const response = await instance.post(`/api/alerts/batch-send`, payload);
         return response.data;
     } catch (error: any) {
         console.error("일괄 알림 발송 실패:", error);

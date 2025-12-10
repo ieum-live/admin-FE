@@ -11,7 +11,7 @@ const clearTokens = () => {
     localStorage.removeItem("refreshToken");
 };
 
-// 로그인
+
 export const signIn = async (email: string, password: string) => {
     try {
         const res = await axios.post<ApiResponseDTO<RefreshAccessTokenResponse>>(
@@ -36,15 +36,22 @@ export const signOut = async () => {
         const accessToken = localStorage.getItem("accessToken");
         const refreshToken = localStorage.getItem("refreshToken");
 
+        if (!accessToken && !refreshToken) {
+            return;
+        }
+
         await axios.post("/auth/logout", {
             accessToken,
             refreshToken,
         });
 
-        clearTokens();
-        console.log("🚪 로그아웃 완료");
+        console.log("🚪 서버 로그아웃 성공");
+
     } catch (err) {
-        console.error("❌ 로그아웃 실패:", err);
-        throw err;
+        console.error("⚠️ 서버 로그아웃 요청 실패 (클라이언트 강제 로그아웃 진행):", err);
+    } finally {
+
+        clearTokens();
+        window.location.href = "/login";
     }
 };

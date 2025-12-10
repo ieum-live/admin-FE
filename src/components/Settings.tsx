@@ -8,26 +8,86 @@ import { Textarea } from "./ui/textarea";
 import { Separator } from "./ui/separator";
 import { Badge } from "./ui/badge";
 import { ThemeSettings } from "./ThemeSettings";
-import { 
-  Save, 
-  Download, 
-  Upload, 
-  RefreshCw, 
-  Shield, 
-  Database, 
-  Bell, 
+import {
+  Save,
+  Download,
+  Upload,
+  RefreshCw,
+  Shield,
+  Database,
+  Bell,
   Mail,
   Clock,
   AlertTriangle
 } from "lucide-react";
-import React from "react";
+import { useEffect, useState } from "react";
+import { getSettings, SettingsData, updateSettings } from "../API/settingAPI";
+import NotiBar from "./ui/notiBar";
 
 export function Settings() {
+  const [email, setEmail] = useState("");
+  const [orgName, setOrgName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [sessionTimeoutMinutes, setSessionTimeoutMinutes] = useState(30);
+  const [retentionDays, setRetentionDays] = useState(90);
+  const [initialSettings, setInitialSettings] = useState<SettingsData | null>(null)
+  const [msg, setMsg] = useState("");
+
+  const setFieldsFromData = (data: SettingsData) => {
+    setSessionTimeoutMinutes(data.sessionTimeoutMinutes);
+    setRetentionDays(data.retentionDays);
+    setEmail(data.contact.email);
+    setOrgName(data.contact.orgName);
+    setPhone(data.contact.phone);
+  };
+
+  useEffect(() => {
+    const load = async () => {
+      const data = await getSettings();
+      setInitialSettings(data);
+      setFieldsFromData(data);
+    };
+    load();
+  }, []);
+
+  const onClickCancel = async () => {
+
+    if (initialSettings) {
+      await setFieldsFromData(initialSettings);
+      setMsg("변경이 취소되었습니다.");
+
+      setTimeout(() => setMsg(""), 2000);
+    }
+  };
+
+  const onClickSave = async () => {
+    try {
+      const payload = {
+        sessionTimeoutMinutes,
+        retentionDays,
+        contact: {
+          orgName,
+          email,
+          phone,
+        },
+      };
+
+      await updateSettings(payload);
+      setMsg("저장되었습니다.");
+      setTimeout(() => setMsg(""), 2000);
+      console.log("설정 자동 저장 완료:", payload);
+    } catch (error) {
+      console.error("설정 자동 저장 실패:", error);
+    }
+  };
+
+
+
   return (
     <div className="space-y-6">
-      {/* 테마 설정 */}
+      <NotiBar message={msg} />
       <ThemeSettings />
-      
+
       {/* 시스템 설정 */}
       <Card>
         <CardHeader>
@@ -40,23 +100,24 @@ export function Settings() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="app-name">애플리케이션 이름</Label>
-              <Input 
-                id="app-name" 
-                defaultValue="청소년 진단 프로그램"
+              <Input
+                id="app-name"
+                defaultValue="이음"
                 placeholder="애플리케이션 이름"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="admin-email">관리자 이메일</Label>
-              <Input 
-                id="admin-email" 
+              <Input
+                id="admin-email"
                 type="email"
-                defaultValue="admin@diagnosis.kr"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@example.com"
               />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="maintenance-mode">점검 모드</Label>
             <div className="flex items-center space-x-2">
@@ -67,9 +128,12 @@ export function Settings() {
             </div>
           </div>
 
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="session-timeout">세션 타임아웃 (분)</Label>
-            <Select defaultValue="30">
+            <Select
+              value={String(sessionTimeoutMinutes)}
+              onValueChange={(value: string) => setSessionTimeoutMinutes(Number(value))}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -80,7 +144,8 @@ export function Settings() {
                 <SelectItem value="120">2시간</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+
+          </div> */}
         </CardContent>
       </Card>
 
@@ -94,7 +159,7 @@ export function Settings() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <div>
                 <Label>고위험군 알림</Label>
                 <p className="text-sm text-muted-foreground">
@@ -102,8 +167,8 @@ export function Settings() {
                 </p>
               </div>
               <Switch defaultChecked />
-            </div>
-
+            </div> */}
+            {/* 
             <div className="flex items-center justify-between">
               <div>
                 <Label>일일 리포트</Label>
@@ -112,7 +177,7 @@ export function Settings() {
                 </p>
               </div>
               <Switch defaultChecked />
-            </div>
+            </div> */}
 
             <div className="flex items-center justify-between">
               <div>
@@ -129,27 +194,24 @@ export function Settings() {
 
           <div className="space-y-2">
             <Label htmlFor="notification-email">알림 수신 이메일</Label>
-            <Input 
-              id="notification-email" 
+            <Input
+              id="notification-email"
               type="email"
-              defaultValue="admin@diagnosis.kr"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="알림을 받을 이메일"
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="sms-number">SMS 수신 번호</Label>
-            <Input 
-              id="sms-number" 
-              defaultValue="010-1234-5678"
-              placeholder="010-0000-0000"
-            />
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>
         </CardContent>
       </Card>
 
       {/* 데이터 관리 */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Database className="h-5 w-5" />
@@ -160,16 +222,19 @@ export function Settings() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>데이터 보존 기간</Label>
-              <Select defaultValue="12">
+              <Select
+                value={String(retentionDays / 30)}
+                onValueChange={(value: string) => setRetentionDays(Number(value) * 30)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="1">1개월</SelectItem>
                   <SelectItem value="3">3개월</SelectItem>
                   <SelectItem value="6">6개월</SelectItem>
-                  <SelectItem value="12">1년</SelectItem>
-                  <SelectItem value="24">2년</SelectItem>
-                  <SelectItem value="60">5년</SelectItem>
+                  <SelectItem value="12">12개월 (1년)</SelectItem>
+                  <SelectItem value="24">24개월 (2년)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -217,10 +282,10 @@ export function Settings() {
             </Badge>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* 보안 설정 */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
@@ -270,12 +335,12 @@ export function Settings() {
             />
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* 저장 버튼 */}
       <div className="flex justify-end gap-2">
-        <Button variant="outline">취소</Button>
-        <Button className="gap-2">
+        <Button variant="outline" onClick={onClickCancel}>취소</Button>
+        <Button className="gap-2" onClick={onClickSave}>
           <Save className="h-4 w-4" />
           설정 저장
         </Button>
