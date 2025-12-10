@@ -102,7 +102,7 @@ export function Settings() {
               <Label htmlFor="app-name">애플리케이션 이름</Label>
               <Input
                 id="app-name"
-                defaultValue="청소년 진단 프로그램"
+                defaultValue="이음"
                 placeholder="애플리케이션 이름"
               />
             </div>
@@ -128,7 +128,7 @@ export function Settings() {
             </div>
           </div>
 
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="session-timeout">세션 타임아웃 (분)</Label>
             <Select
               value={String(sessionTimeoutMinutes)}
@@ -145,7 +145,7 @@ export function Settings() {
               </SelectContent>
             </Select>
 
-          </div>
+          </div> */}
         </CardContent>
       </Card>
 
@@ -159,7 +159,7 @@ export function Settings() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <div>
                 <Label>고위험군 알림</Label>
                 <p className="text-sm text-muted-foreground">
@@ -167,8 +167,8 @@ export function Settings() {
                 </p>
               </div>
               <Switch defaultChecked />
-            </div>
-
+            </div> */}
+            {/* 
             <div className="flex items-center justify-between">
               <div>
                 <Label>일일 리포트</Label>
@@ -177,7 +177,7 @@ export function Settings() {
                 </p>
               </div>
               <Switch defaultChecked />
-            </div>
+            </div> */}
 
             <div className="flex items-center justify-between">
               <div>
@@ -211,7 +211,7 @@ export function Settings() {
       </Card>
 
       {/* 데이터 관리 */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Database className="h-5 w-5" />
@@ -282,10 +282,10 @@ export function Settings() {
             </Badge>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* 보안 설정 */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
@@ -335,7 +335,7 @@ export function Settings() {
             />
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* 저장 버튼 */}
       <div className="flex justify-end gap-2">
