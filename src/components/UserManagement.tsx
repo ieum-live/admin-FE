@@ -20,6 +20,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { getUserStatistics, getUserDetail, getUsers } from "../API/userManagementAPI";
 import LoadingSpinner from "./LoadingSpinner";
 import { AlertType, sendBulkAlert } from "../API/alertAPI";
+import React from "react";
 
 interface BasicUser {
   id: string;

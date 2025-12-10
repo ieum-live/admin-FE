@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Users, Calendar, TrendingUp, Activity } from "lucide-react";
+import React from "react";
 
 export function StatsOverview() {
   const stats = [

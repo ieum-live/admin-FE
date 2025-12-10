@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Label } from "./ui/label";
 import { Monitor, Moon, Sun } from "lucide-react";
+import React from "react";
 
 type Theme = 'light' | 'dark' | 'system';
 

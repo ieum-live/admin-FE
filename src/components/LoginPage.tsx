@@ -5,6 +5,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { signIn } from "../API/authAPI";
+import React from "react";
 
 interface LoginPageProps {
   onLogin: () => void;
