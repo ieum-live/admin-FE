@@ -1,34 +1,116 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar
+} from "recharts";
+import React from "react";
 
 interface UserAnalyticsProps {
   showUsageChart?: boolean;
 }
 
 export function UserAnalytics({ showUsageChart = true }: UserAnalyticsProps) {
-  // 진단별 개선 지표 데이터 (지난 3개월, 주차별)
-  const diagnosisImprovementData = [
-    { week: '7/1주', phq9: 13.2, gad7: 11.5, cpgi: 9.8, totalUsers: 142 },
-    { week: '7/2주', phq9: 12.9, gad7: 11.1, cpgi: 9.4, totalUsers: 156 },
-    { week: '7/3주', phq9: 12.5, gad7: 10.7, cpgi: 9.0, totalUsers: 168 },
-    { week: '7/4주', phq9: 12.1, gad7: 10.3, cpgi: 8.6, totalUsers: 179 },
-    { week: '8/1주', phq9: 11.8, gad7: 10.0, cpgi: 8.3, totalUsers: 193 },
-    { week: '8/2주', phq9: 11.5, gad7: 9.7, cpgi: 8.1, totalUsers: 207 },
-    { week: '8/3주', phq9: 11.1, gad7: 9.4, cpgi: 7.8, totalUsers: 221 },
-    { week: '8/4주', phq9: 10.7, gad7: 9.0, cpgi: 7.5, totalUsers: 238 },
-    { week: '9/1주', phq9: 10.4, gad7: 8.7, cpgi: 7.2, totalUsers: 253 },
-    { week: '9/2주', phq9: 10.0, gad7: 8.4, cpgi: 6.9, totalUsers: 270 },
-    { week: '9/3주', phq9: 9.6, gad7: 8.1, cpgi: 6.6, totalUsers: 287 },
-    { week: '9/4주', phq9: 9.2, gad7: 7.8, cpgi: 6.3, totalUsers: 304 },
-  ];
 
-  // 기능별 사용시간 데이터
+  const [trendData, setTrendData] = useState<any[]>([]);
+  const [loadingTrend, setLoadingTrend] = useState(true);
+
+  // 📌 오늘 기준 최근 3개월 날짜 계산 함수
+  const getLast3MonthsRange = () => {
+    const today = new Date();
+    const to = today.toISOString().slice(0, 10);
+
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    const from = threeMonthsAgo.toISOString().slice(0, 10);
+
+    return { from, to };
+  };
+
+  // 📌 1. 진단 추세 API 호출
+  const fetchTrendData = async () => {
+    try {
+      const { from, to } = getLast3MonthsRange();
+      console.log("📌 조회 기간:", from, "~", to);
+  
+      const res = await fetch(
+        `/api/metrics/diagnostics/trend?from=${from}&to=${to}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+  
+      const json = await res.json();
+      console.log("📌 API 응답:", json);
+  
+      // 1️⃣ 최근 3개월 주차 리스트 생성
+      const generateWeekLabels = () => {
+        const labels: string[] = [];
+        const today = new Date();
+        const start = new Date();
+        start.setMonth(today.getMonth() - 3);
+  
+        let current = new Date(start);
+        while (current <= today) {
+          const month = current.getMonth() + 1;
+          const week = Math.ceil(current.getDate() / 7);
+          const label = `${month}/${week}주`;
+          if (!labels.includes(label)) labels.push(label);
+          current.setDate(current.getDate() + 7); // 1주 단위 증가
+        }
+        return labels;
+      };
+  
+      const weekLabels = generateWeekLabels();
+  
+      // 2️⃣ API 데이터 매핑
+      const dataArray = Array.isArray(json.data) ? json.data : [];
+      const dataMap: Record<string, any> = {};
+      dataArray.forEach((item) => {
+        dataMap[item.weekLabel] = item;
+      });
+  
+      // 3️⃣ 모든 주차에 대해 값 채우기, 없으면 0으로
+      const filledData = weekLabels.map((week) => {
+        const item = dataMap[week];
+        return {
+          week,
+          phq9: item?.phq9Avg ?? 0,
+          gad7: item?.gad7Avg ?? 0,
+          cpgi: item?.cpgiAvg ?? 0,
+          totalUsers: item?.totalUsers ?? 0,
+        };
+      });
+  
+      console.log("📌 주차별 평균 점수 (0 포함)");
+      filledData.forEach((w) => {
+        console.log(
+          `${w.week}: PHQ-9=${w.phq9}, GAD-7=${w.gad7}, CPGI=${w.cpgi}, 사용자수=${w.totalUsers}`
+        );
+      });
+  
+      setTrendData(filledData);
+    } catch (err) {
+      console.error("진단 추세 불러오기 실패:", err);
+    } finally {
+      setLoadingTrend(false);
+    }
+  };
+  
+
+  useEffect(() => {
+    fetchTrendData();
+  }, []);
+
+  // 기능별 사용시간 (나중에 API 연결 가능)
   const usageTimeData = [
-    { feature: '자가진단', time: 245, sessions: 1420 },
-    { feature: '교육 콘텐츠', time: 320, sessions: 890 },
-    { feature: '상담 예약', time: 120, sessions: 345 },
-    { feature: '진단 결과', time: 180, sessions: 1230 },
-    { feature: '커뮤니티', time: 95, sessions: 567 },
+    { feature: "자가진단", time: 245, sessions: 1420 },
+    { feature: "교육 콘텐츠", time: 320, sessions: 890 },
+    { feature: "상담 예약", time: 120, sessions: 345 },
+    { feature: "진단 결과", time: 180, sessions: 1230 },
+    { feature: "커뮤니티", time: 95, sessions: 567 },
   ];
 
   return (
@@ -36,122 +118,55 @@ export function UserAnalytics({ showUsageChart = true }: UserAnalyticsProps) {
       {/* 진단별 개선 지표 */}
       <Card>
         <CardHeader>
-          <CardTitle>진단별 개선 지표 (지난 3개월)</CardTitle>
-          <p className="text-sm text-muted-foreground">검사별 평균 점수 추이 및 총 사용자 수 (주차별)</p>
+          <CardTitle>진단별 개선 지표 (최근 3개월)</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            검사별 평균 점수 추이 및 총 사용자 수
+          </p>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={diagnosisImprovementData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="week" />
-              <YAxis yAxisId="left" label={{ value: '평균 점수', angle: -90, position: 'insideLeft' }} />
-              <YAxis yAxisId="right" orientation="right" label={{ value: '총 사용자 수', angle: 90, position: 'insideRight' }} />
-              <Tooltip />
-              <Legend />
-              <Line 
-                yAxisId="left"
-                type="monotone" 
-                dataKey="phq9" 
-                stroke="#8884d8" 
-                strokeWidth={2}
-                name="PHQ-9 (우울증)"
-                dot={{ fill: '#8884d8', r: 4 }}
-              />
-              <Line 
-                yAxisId="left"
-                type="monotone" 
-                dataKey="gad7" 
-                stroke="#82ca9d" 
-                strokeWidth={2}
-                name="GAD-7 (불안)"
-                dot={{ fill: '#82ca9d', r: 4 }}
-              />
-              <Line 
-                yAxisId="left"
-                type="monotone" 
-                dataKey="cpgi" 
-                stroke="#ffc658" 
-                strokeWidth={2}
-                name="CPGI (도박)"
-                dot={{ fill: '#ffc658', r: 4 }}
-              />
-              <Line 
-                yAxisId="right"
-                type="monotone" 
-                dataKey="totalUsers" 
-                stroke="#ff7c7c" 
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                name="총 사용자 수"
-                dot={{ fill: '#ff7c7c', r: 4 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          {loadingTrend ? (
+            <div className="text-center py-20">불러오는 중...</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={400}>
+              <LineChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="week" />
+                <YAxis yAxisId="left" />
+                <YAxis yAxisId="right" orientation="right" />
+                <Tooltip />
+                <Legend />
+                <Line yAxisId="left" type="monotone" dataKey="phq9" stroke="#8884d8" name="PHQ-9" />
+                <Line yAxisId="left" type="monotone" dataKey="gad7" stroke="#82ca9d" name="GAD-7" />
+                <Line yAxisId="left" type="monotone" dataKey="cpgi" stroke="#ffc658" name="CPGI" />
+                <Line yAxisId="right" type="monotone" dataKey="totalUsers" stroke="#ff7c7c" strokeDasharray="5 5" name="총 사용자 수" />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </CardContent>
       </Card>
 
-      {/* 기능별 사용시간 (조건부 렌더링) */}
+      {/* 기능별 사용시간 */}
       {showUsageChart && (
         <Card>
           <CardHeader>
             <CardTitle>기능별 사용시간 및 세션 수</CardTitle>
-            <p className="text-sm text-muted-foreground">각 기능의 평균 사용시간과 총 세션 수</p>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={400}>
               <BarChart data={usageTimeData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="feature" />
-                <YAxis yAxisId="left" label={{ value: '사용시간 (초)', angle: -90, position: 'insideLeft' }} />
-                <YAxis yAxisId="right" orientation="right" label={{ value: '세션 수', angle: 90, position: 'insideRight' }} />
+                <YAxis yAxisId="left" />
+                <YAxis yAxisId="right" orientation="right" />
                 <Tooltip />
                 <Legend />
-                <Bar yAxisId="left" dataKey="time" fill="#8884d8" name="평균 사용시간 (초)" />
+                <Bar yAxisId="left" dataKey="time" fill="#8884d8" name="평균 사용시간" />
                 <Bar yAxisId="right" dataKey="sessions" fill="#82ca9d" name="총 세션 수" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       )}
-
-      {/* 요약 통계 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>전체 재방문율</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold">42.8%</div>
-            <p className="text-sm text-muted-foreground mt-2">
-              지난 30일 기준
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>평균 세션 시간</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold">8분 32초</div>
-            <p className="text-sm text-muted-foreground mt-2">
-              사용자당 평균
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>일평균 세션 수</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-semibold">3,247</div>
-            <p className="text-sm text-muted-foreground mt-2">
-              최근 7일 평균
-            </p>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }
