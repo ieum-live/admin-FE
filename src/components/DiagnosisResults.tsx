@@ -7,6 +7,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Calendar, Download, Filter, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { useState } from "react";
+import React from "react";
 
 export function DiagnosisResults() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);

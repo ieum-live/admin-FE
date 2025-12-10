@@ -20,6 +20,7 @@ import {
   Clock,
   AlertTriangle
 } from "lucide-react";
+import React from "react";
 
 export function Settings() {
   return (

@@ -4,6 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Calendar, Activity, TrendingUp, AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getUserAssessments, getUserDetail } from "../API/userManagementAPI";
+import React from "react";
 
 interface Assessment {
   id: string;

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Link, useLocation } from "react-router-dom";
+import React from "react";
 
 interface AdminSidebarProps {
   onLogout: () => void;

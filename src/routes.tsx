@@ -3,6 +3,7 @@ import { UserAnalytics } from "./components/UserAnalytics";
 import { DiagnosisResults } from "./components/DiagnosisResults";
 import { UserManagement } from "./components/UserManagement";
 import { Settings } from "./components/Settings";
+import React from "react";
 
 export const routes = [
   {
