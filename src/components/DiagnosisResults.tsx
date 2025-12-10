@@ -241,7 +241,26 @@ export function DiagnosisResults() {
         </CardContent>
       </Card>
 
-    
+       {/* 필터 및 컨트롤 */}
+       <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>진단 결과 파일 다운로드</CardTitle>
+            <div className="flex gap-2">
+              <Select defaultValue="3months">
+                <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1month">최근 1개월</SelectItem>
+                  <SelectItem value="3months">최근 3개월</SelectItem>
+                  <SelectItem value="6months">최근 6개월</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" className="gap-2"><Filter className="h-4 w-4" /> 필터</Button>
+              <Button variant="outline" className="gap-2"><Download className="h-4 w-4" /> 내보내기</Button>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
     </div>
   );
 }
