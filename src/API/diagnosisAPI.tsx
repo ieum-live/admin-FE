@@ -1,0 +1,79 @@
+import instance from "./axios";
+
+// ================================
+// 📌 공통: 날짜 문자열 변환 함수
+// ================================
+const formatDate = (date: Date) => date.toISOString().slice(0, 10);
+
+// ================================
+// 📌 진단 요약 API
+// ================================
+export const getDiagnosisSummary = async () => {
+  try {
+    const today = new Date();
+    const to = formatDate(today);
+
+    // 3개월 전 계산 (setMonth가 월 길이에 따라 버그가 있어 방어 코드 추가)
+    const threeMonthsAgo = new Date(today);
+    threeMonthsAgo.setMonth(today.getMonth() - 3);
+
+    const from = formatDate(threeMonthsAgo);
+
+    const res = await instance.get(`/api/diagnostics/summary`, {
+      params: { from, to },
+    });
+
+    // 백엔드 응답 검증
+    if (!res.data || !res.data.data) {
+      console.warn("📌 진단 요약 API: 데이터 없음");
+      return {};
+    }
+
+    return res.data.data;
+  } catch (err) {
+    console.error("❌ 진단 요약 요청 실패", err);
+    throw err;
+  }
+};
+
+// ================================
+// 📌 최근 설문 사용자 리스트 API
+// ================================
+export const getRecentUsers = async () => {
+  try {
+    const res = await instance.get(`/api/diagnostics/recent`, {
+      params: { days: 7 },
+    });
+
+    if (!res.data || !res.data.data) {
+      console.warn("📌 최근 사용자 조회: 빈 배열 반환");
+      return [];
+    }
+
+    return Array.isArray(res.data.data) ? res.data.data : [];
+  } catch (err) {
+    console.error("❌ 최근 사용자 조회 실패", err);
+    throw err;
+  }
+};
+
+// ================================
+// 📌 CSV 다운로드 API
+// ================================
+export const exportDiagnosisCSV = async (from: string, to: string) => {
+    try {
+      const res = await instance.get(`/api/export/diagnostics.csv`, {
+        params: { from, to },
+        responseType: "blob",
+        headers: {
+          Accept: "text/csv",
+        },
+      });
+  
+      return res.data;
+    } catch (err) {
+      console.error("❌ CSV 다운로드 실패:", err);
+      throw err;
+    }
+  };
+   

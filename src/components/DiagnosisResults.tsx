@@ -1,14 +1,20 @@
 import { useState, useEffect } from "react";
+import React from "react";
+import { saveAs } from "file-saver";
+
+import {
+  getDiagnosisSummary,
+  getRecentUsers,
+  exportDiagnosisCSV,
+} from "../API/diagnosisAPI";
+
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Button } from "./ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { Badge } from "./ui/badge";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Calendar, Download, Filter, FileText } from "lucide-react";
-import React from "react";
 import LoadingSpinner from "./LoadingSpinner";
-import { saveAs } from "file-saver";
 
 interface UserData {
   id: string;
@@ -29,145 +35,107 @@ interface UserData {
   };
 }
 
+const getStatusBadge = (risk: "LOW" | "MID" | "HIGH") => {
+  if (risk === "LOW")
+    return <Badge className="bg-green-600">안정군</Badge>;
+  if (risk === "MID")
+    return <Badge className="bg-yellow-500">주의군</Badge>;
+  return <Badge className="bg-red-500">위험군</Badge>;
+};
+
+
+const improvementData = [
+  { month: "1월", LOW: 40, MID: 45, HIGH: 15 },
+  { month: "2월", LOW: 45, MID: 40, HIGH: 15 },
+  { month: "3월", LOW: 50, MID: 35, HIGH: 15 },
+  { month: "4월", LOW: 55, MID: 32, HIGH: 13 },
+  { month: "5월", LOW: 58, MID: 30, HIGH: 12 },
+];
+
 export function DiagnosisResults() {
-  const [selectedUser, setSelectedUser] = useState<string | null>(null);
-  const [summary, setSummary] = useState<any>({
-    improvementRate: 0,
-    stableRatio: 0,
-    totalAssessments: 0,
-    avgAssessmentIntervalDays: 0,
-  });
-  const [loadingSummary, setLoadingSummary] = useState(true);
-
+  const [summary, setSummary] = useState<any>({});
   const [users, setUsers] = useState<UserData[]>([]);
+  
+  const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingUsers, setLoadingUsers] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5;
 
-  // CSV 다운로드 기간 상태
   const [exportPeriod, setExportPeriod] = useState<"1month" | "3months" | "6months">("3months");
 
-  // 📌 API 호출 - 진단 요약 지표
-  const fetchSummary = async () => {
-    try {
-      const today = new Date();
-      const to = today.toISOString().slice(0, 10);
-      const threeMonthsAgo = new Date();
-      threeMonthsAgo.setMonth(today.getMonth() - 3);
-      const from = threeMonthsAgo.toISOString().slice(0, 10);
 
-      const res = await fetch(`/api/diagnostics/summary?from=${from}&to=${to}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
-      const data = await res.json();
-      const summaryData = data.data ?? {};
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 7;
+
+  const totalPages = Math.ceil(users.length / usersPerPage) || 1;
+
+  const paginatedUsers = users.slice(
+    (currentPage - 1) * usersPerPage,
+    currentPage * usersPerPage
+  );
+
+  const loadSummary = async () => {
+    try {
+      const data = await getDiagnosisSummary();
       setSummary({
-        improvementRate: summaryData.improvementRate ?? 0,
-        stableRatio: summaryData.stableRatio ?? 0,
-        totalAssessments: summaryData.totalAssessments ?? 0,
-        avgAssessmentIntervalDays: summaryData.avgAssessmentIntervalDays ?? 0,
+        improvementRate: data.improvementRate ?? 0,
+        stableRatio: data.stableRatio ?? 0,
+        totalAssessments: data.totalAssessments ?? 0,
+        avgAssessmentIntervalDays: data.avgAssessmentIntervalDays ?? 0,
       });
-    } catch (err) {
-      console.error("진단 요약 API 호출 실패:", err);
     } finally {
       setLoadingSummary(false);
     }
   };
 
-  // 📌 API 호출 - 최근 7일 설문 사용자
-  const fetchRecentUsers = async () => {
+  const loadUsers = async () => {
     try {
-      const res = await fetch(`/api/diagnostics/recent?days=7`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
-      const data = await res.json();
-      setUsers(data.data || []);
-    } catch (err) {
-      console.error("최근 설문 사용자 API 호출 실패:", err);
+      const list = await getRecentUsers();
+      setUsers(list);
     } finally {
       setLoadingUsers(false);
     }
   };
 
+  // 최초 로드
   useEffect(() => {
-    fetchSummary();
-    fetchRecentUsers();
+    loadSummary();
+    loadUsers();
   }, []);
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "LOW":
-        return <Badge variant="default" className="bg-green-100 text-green-800">안정</Badge>;
-      case "MID":
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">주의</Badge>;
-      case "HIGH":
-        return <Badge variant="destructive">위험</Badge>;
-      default:
-        return <Badge variant="outline">알 수 없음</Badge>;
-    }
-  };
-
-  // 페이지네이션
-  const paginatedUsers = users.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  const totalPages = Math.ceil(users.length / pageSize);
-
-  // 임시 AreaChart 데이터
-  const improvementData = [
-    { month: "1월", LOW: 65, MID: 25, HIGH: 10 },
-    { month: "2월", LOW: 68, MID: 23, HIGH: 9 },
-    { month: "3월", LOW: 72, MID: 20, HIGH: 8 },
-    { month: "4월", LOW: 75, MID: 18, HIGH: 7 },
-    { month: "5월", LOW: 78, MID: 16, HIGH: 6 },
-    { month: "6월", LOW: 82, MID: 13, HIGH: 5 },
-  ];
-
-  // 📌 CSV 다운로드 핸들러
   const handleExport = async () => {
     try {
       const today = new Date();
       const to = today.toISOString().slice(0, 10);
 
       const fromDate = new Date();
-      switch (exportPeriod) {
-        case "1month":
-          fromDate.setMonth(today.getMonth() - 1);
-          break;
-        case "3months":
-          fromDate.setMonth(today.getMonth() - 3);
-          break;
-        case "6months":
-          fromDate.setMonth(today.getMonth() - 6);
-          break;
-      }
+      if (exportPeriod === "1month") fromDate.setMonth(today.getMonth() - 1);
+      if (exportPeriod === "3months") fromDate.setMonth(today.getMonth() - 3);
+      if (exportPeriod === "6months") fromDate.setMonth(today.getMonth() - 6);
+
       const from = fromDate.toISOString().slice(0, 10);
 
-      const res = await fetch(`/api/export/diagnostics.csv?from=${from}&to=${to}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
-
-      if (!res.ok) throw new Error("파일 다운로드 실패");
-
-      const blob = await res.blob();
+      const blob = await exportDiagnosisCSV(from, to);
       saveAs(blob, `diagnostics_${from}_to_${to}.csv`);
     } catch (err) {
-      console.error(err);
-      alert("파일 다운로드 중 오류가 발생했습니다.");
+      alert("파일 다운로드 실패");
     }
   };
 
+
   return (
     <div className="space-y-6">
-      {/* 통계 요약 */}
+      
+      {/* 📌 통계 요약 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader><CardTitle className="text-sm">전체 개선율</CardTitle></CardHeader>
           <CardContent>
             {loadingSummary ? (
-              <div className="flex justify-center py-12"><LoadingSpinner /></div>
+              <LoadingSpinner />
             ) : (
-              <div className="text-2xl font-semibold text-green-600">{summary.improvementRate?.toFixed(1) ?? "0"}%</div>
+              <div className="text-2xl font-semibold text-green-600">
+                {summary.improvementRate?.toFixed(1)}%
+              </div>
             )}
-            {!loadingSummary && <p className="text-sm text-muted-foreground">최근 3개월</p>}
           </CardContent>
         </Card>
 
@@ -175,11 +143,12 @@ export function DiagnosisResults() {
           <CardHeader><CardTitle className="text-sm">안정군 비율</CardTitle></CardHeader>
           <CardContent>
             {loadingSummary ? (
-              <div className="flex justify-center py-12"><LoadingSpinner /></div>
+              <LoadingSpinner />
             ) : (
-              <div className="text-2xl font-semibold">{summary.stableRatio?.toFixed(1) ?? "0"}%</div>
+              <div className="text-2xl font-semibold">
+                {summary.stableRatio?.toFixed(1)}%
+              </div>
             )}
-            {!loadingSummary && <p className="text-sm text-muted-foreground">현재 기준</p>}
           </CardContent>
         </Card>
 
@@ -187,11 +156,12 @@ export function DiagnosisResults() {
           <CardHeader><CardTitle className="text-sm">총 진단 횟수</CardTitle></CardHeader>
           <CardContent>
             {loadingSummary ? (
-              <div className="flex justify-center py-12"><LoadingSpinner /></div>
+              <LoadingSpinner />
             ) : (
-              <div className="text-2xl font-semibold">{summary.totalAssessments?.toLocaleString() ?? "0"}</div>
+              <div className="text-2xl font-semibold">
+                {summary.totalAssessments?.toLocaleString()}
+              </div>
             )}
-            {!loadingSummary && <p className="text-sm text-muted-foreground">최근 3개월</p>}
           </CardContent>
         </Card>
 
@@ -199,16 +169,17 @@ export function DiagnosisResults() {
           <CardHeader><CardTitle className="text-sm">평균 진단 간격</CardTitle></CardHeader>
           <CardContent>
             {loadingSummary ? (
-              <div className="flex justify-center py-12"><LoadingSpinner /></div>
+              <LoadingSpinner />
             ) : (
-              <div className="text-2xl font-semibold">{summary.avgAssessmentIntervalDays?.toFixed(1) ?? "0"}일</div>
+              <div className="text-2xl font-semibold">
+                {summary.avgAssessmentIntervalDays?.toFixed(1)}일
+              </div>
             )}
-            {!loadingSummary && <p className="text-sm text-muted-foreground">사용자당</p>}
           </CardContent>
         </Card>
       </div>
 
-      {/* 위험도별 분포 추이 */}
+      {/* 📌 차트 */}
       <Card>
         <CardHeader><CardTitle>위험도별 사용자 분포 추이</CardTitle></CardHeader>
         <CardContent>
@@ -218,20 +189,20 @@ export function DiagnosisResults() {
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip formatter={(value) => `${value}%`} />
-              <Area type="monotone" dataKey="LOW" stackId="1" stroke="#10b981" fill="#10b981" name="안정군" />
-              <Area type="monotone" dataKey="MID" stackId="1" stroke="#f59e0b" fill="#f59e0b" name="주의군" />
-              <Area type="monotone" dataKey="HIGH" stackId="1" stroke="#ef4444" fill="#ef4444" name="위험군" />
+              <Area type="monotone" dataKey="LOW" stackId="1" stroke="#10b981" fill="#10b981" />
+              <Area type="monotone" dataKey="MID" stackId="1" stroke="#f59e0b" fill="#f59e0b" />
+              <Area type="monotone" dataKey="HIGH" stackId="1" stroke="#ef4444" fill="#ef4444" />
             </AreaChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      {/* 사용자 테이블 */}
+      {/* 📌 사용자 테이블 */}
       <Card>
         <CardHeader><CardTitle>최근 7일 설문 사용자</CardTitle></CardHeader>
         <CardContent>
           {loadingUsers ? (
-            <div className="flex justify-center py-12"><LoadingSpinner /></div>
+            <LoadingSpinner />
           ) : (
             <>
               <Table>
@@ -250,7 +221,9 @@ export function DiagnosisResults() {
                     <TableRow key={u.user.id}>
                       <TableCell>{u.user.email}</TableCell>
                       <TableCell>{u.user.name}</TableCell>
-                      <TableCell>{new Date(u.latestAssessment.completedAt).toLocaleDateString("ko-KR")}</TableCell>
+                      <TableCell>
+                        {new Date(u.latestAssessment.completedAt).toLocaleDateString("ko-KR")}
+                      </TableCell>
                       <TableCell>{u.latestAssessment.type}</TableCell>
                       <TableCell>{u.latestAssessment.totalScore}</TableCell>
                       <TableCell>{getStatusBadge(u.latestAssessment.riskLevel)}</TableCell>
@@ -259,23 +232,29 @@ export function DiagnosisResults() {
                 </TableBody>
               </Table>
 
-              <div className="flex justify-end mt-2 gap-2">
-                <Button size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}>이전</Button>
-                <span className="flex items-center">{currentPage} / {totalPages}</span>
-                <Button size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}>다음</Button>
+              {/* 페이지네이션 */}
+              <div className="flex justify-end mt-3 gap-2">
+                <Button size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
+                  이전
+                </Button>
+                <span>{currentPage} / {totalPages}</span>
+                <Button size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>
+                  다음
+                </Button>
               </div>
             </>
           )}
         </CardContent>
       </Card>
 
-      {/* 필터 및 CSV 다운로드 */}
+      {/* 📌 CSV 다운로드 */}
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>진단 결과 파일 다운로드</CardTitle>
+            <CardTitle>진단 결과 다운로드</CardTitle>
+
             <div className="flex gap-2">
-              <Select value={exportPeriod} onValueChange={(val) => setExportPeriod(val as any)}>
+              <Select value={exportPeriod} onValueChange={(v) => setExportPeriod(v as any)}>
                 <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1month">최근 1개월</SelectItem>
@@ -283,7 +262,10 @@ export function DiagnosisResults() {
                   <SelectItem value="6months">최근 6개월</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" className="gap-2" onClick={handleExport}><Download className="h-4 w-4" /> 내보내기</Button>
+
+              <Button variant="outline" onClick={handleExport}>
+                CSV 다운로드
+              </Button>
             </div>
           </div>
         </CardHeader>
