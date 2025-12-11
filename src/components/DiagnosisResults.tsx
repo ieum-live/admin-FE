@@ -3,7 +3,6 @@ import React from "react";
 import { saveAs } from "file-saver";
 
 import {
-  getDiagnosisSummary,
   getRecentUsers,
   exportDiagnosisCSV,
 } from "../API/diagnosisAPI";
@@ -82,9 +81,7 @@ export function DiagnosisResults() {
   const [period, setPeriod] = useState<"2weeks" | "1month" | "3months" | "6months">("1month");
 
   // 데이터 상태
-  const [summary, setSummary] = useState<any>({});
   const [users, setUsers] = useState<UserData[]>([]);
-  const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingUsers, setLoadingUsers] = useState(true);
 
   // 페이지네이션
@@ -96,21 +93,6 @@ export function DiagnosisResults() {
     (currentPage - 1) * usersPerPage,
     currentPage * usersPerPage
   );
-
-  // ✔ 요약 로드
-  const loadSummary = async () => {
-    try {
-      const data = await getDiagnosisSummary();
-      setSummary({
-        improvementRate: data.improvementRate ?? 0,
-        stableRatio: data.stableRatio ?? 0,
-        totalAssessments: data.totalAssessments ?? 0,
-        avgAssessmentIntervalDays: data.avgAssessmentIntervalDays ?? 0,
-      });
-    } finally {
-      setLoadingSummary(false);
-    }
-  };
 
   // ✔ 사용자 로드
   const loadUsers = async (testType: string, from: string, to: string) => {
@@ -126,10 +108,8 @@ export function DiagnosisResults() {
   useEffect(() => {
     const { from, to } = getDateRange(period);
 
-    setLoadingSummary(true);
     setLoadingUsers(true);
 
-    loadSummary();
     loadUsers(testType, from, to);
     setCurrentPage(1); // 필터 바뀌면 페이지 초기화
   }, [testType, period]);
@@ -205,54 +185,6 @@ const getTestLabel = (test: string) => {
 
   </CardContent>
 </Card>
-
-
-      {/* ---------------------- 통계 요약 ---------------------- */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader><CardTitle className="text-sm">전체 개선율</CardTitle></CardHeader>
-          <CardContent>
-            {loadingSummary ? <LoadingSpinner /> : (
-              <div className="text-2xl font-semibold text-green-600">
-                {summary.improvementRate?.toFixed(1)}%
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle className="text-sm">안정군 비율</CardTitle></CardHeader>
-          <CardContent>
-            {loadingSummary ? <LoadingSpinner /> : (
-              <div className="text-2xl font-semibold">
-                {summary.stableRatio?.toFixed(1)}%
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle className="text-sm">총 진단 횟수</CardTitle></CardHeader>
-          <CardContent>
-            {loadingSummary ? <LoadingSpinner /> : (
-              <div className="text-2xl font-semibold">
-                {summary.totalAssessments?.toLocaleString()}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle className="text-sm">평균 진단 간격</CardTitle></CardHeader>
-          <CardContent>
-            {loadingSummary ? <LoadingSpinner /> : (
-              <div className="text-2xl font-semibold">
-                {summary.avgAssessmentIntervalDays?.toFixed(1)}일
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
 
       {/* ---------------------- 위험도 차트 ---------------------- */}
       <Card>
