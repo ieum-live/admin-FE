@@ -23,6 +23,7 @@ import {
 import { useEffect, useState } from "react";
 import { getSettings, SettingsData, updateSettings } from "../API/settingAPI";
 import NotiBar from "./ui/notiBar";
+import React from "react";
 
 export function Settings() {
   const [email, setEmail] = useState("");

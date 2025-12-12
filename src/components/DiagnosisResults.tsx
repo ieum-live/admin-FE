@@ -1,14 +1,29 @@
 import { useState, useEffect } from "react";
+import React from "react";
+import { saveAs } from "file-saver";
+
+import {
+  getRecentUsers,
+  exportDiagnosisCSV,
+} from "../API/diagnosisAPI";
+
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Button } from "./ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { Badge } from "./ui/badge";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Calendar, Download, Filter, FileText } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
-import React from "react";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import LoadingSpinner from "./LoadingSpinner";
 
+// 사용자 타입 정의
 interface UserData {
   id: string;
   name: string;
@@ -25,147 +40,153 @@ interface UserData {
     email: string;
     id: string;
     name: string;
-  }
+  };
 }
 
-export function DiagnosisResults() {
-  const [selectedUser, setSelectedUser] = useState<string | null>(null);
-  const [summary, setSummary] = useState<any>({
-    improvementRate: 0,
-    stableRatio: 0,
-    totalAssessments: 0,
-    avgAssessmentIntervalDays: 0,
-  });
-  const [loadingSummary, setLoadingSummary] = useState(true);
+// 위험도 뱃지
+const getStatusBadge = (risk: "LOW" | "MID" | "HIGH") => {
+  if (risk === "LOW") return <Badge className="bg-green-600">안정군</Badge>;
+  if (risk === "MID") return <Badge className="bg-yellow-500">주의군</Badge>;
+  return <Badge className="bg-red-500">위험군</Badge>;
+};
 
+// 기간 → 날짜 범위 계산
+const getDateRange = (period: string) => {
+  const to = new Date();
+  const from = new Date();
+
+  if (period === "2weeks") from.setDate(to.getDate() - 14);
+  if (period === "1month") from.setMonth(to.getMonth() - 1);
+  if (period === "3months") from.setMonth(to.getMonth() - 3);
+  if (period === "6months") from.setMonth(to.getMonth() - 6);
+
+  return {
+    from: from.toISOString().slice(0, 10),
+    to: to.toISOString().slice(0, 10),
+  };
+};
+
+// 차트 임시데이터 (백엔드 연동 시 실제 데이터로 교체 가능)
+const improvementData = [
+  { month: "1월", LOW: 40, MID: 45, HIGH: 15 },
+  { month: "2월", LOW: 45, MID: 40, HIGH: 15 },
+  { month: "3월", LOW: 50, MID: 35, HIGH: 15 },
+  { month: "4월", LOW: 55, MID: 32, HIGH: 13 },
+  { month: "5월", LOW: 58, MID: 30, HIGH: 12 },
+];
+
+export function DiagnosisResults() {
+  // 필터 상태
+  const [testType, setTestType] = useState<"PHQ9" | "GAD7" | "CPGI">("PHQ9");
+  const [period, setPeriod] = useState<"2weeks" | "1month" | "3months" | "6months">("1month");
+
+  // 데이터 상태
   const [users, setUsers] = useState<UserData[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+
+  // 페이지네이션
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5;
+  const usersPerPage = 7;
+  const totalPages = Math.ceil(users.length / usersPerPage) || 1;
 
-  // 📌 API 호출 - 진단 요약 지표
-  const fetchSummary = async () => {
+  const paginatedUsers = users.slice(
+    (currentPage - 1) * usersPerPage,
+    currentPage * usersPerPage
+  );
+
+  // ✔ 사용자 로드
+  const loadUsers = async (testType: string, from: string, to: string) => {
     try {
-      const today = new Date();
-      const to = today.toISOString().slice(0, 10);
-
-      const threeMonthsAgo = new Date();
-      threeMonthsAgo.setMonth(today.getMonth() - 3);
-      const from = threeMonthsAgo.toISOString().slice(0, 10);
-
-      const res = await fetch(`/api/diagnostics/summary?from=${from}&to=${to}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
-      const data = await res.json();
-      console.log("API Response:", data);
-      
-      const summaryData = data.data ?? {};
-      setSummary({
-        improvementRate: summaryData.improvementRate ?? 0,
-        stableRatio: summaryData.stableRatio ?? 0,
-        totalAssessments: summaryData.totalAssessments ?? 0,
-        avgAssessmentIntervalDays: summaryData.avgAssessmentIntervalDays ?? 0,
-      });
-    } catch (err) {
-      console.error("진단 요약 API 호출 실패:", err);
-    } finally {
-      setLoadingSummary(false);
-    }
-  };
-
-  // 📌 API 호출 - 최근 7일 설문 사용자
-  const fetchRecentUsers = async () => {
-    try {
-      const res = await fetch(`/api/diagnostics/recent?days=7`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
-      const data = await res.json();
-      console.log("최근 7일 설문 사용자 데이터:", data);
-      setUsers(data.data || []);
-    } catch (err) {
-      console.error("최근 설문 사용자 API 호출 실패:", err);
+      const list = await getRecentUsers();
+      setUsers(list);
     } finally {
       setLoadingUsers(false);
     }
   };
 
+  // ✔ 필터 변경 시 전체 새로 로드
   useEffect(() => {
-    fetchSummary();
-    fetchRecentUsers();
-  }, []);
+    const { from, to } = getDateRange(period);
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'LOW': return <Badge variant="default" className="bg-green-100 text-green-800">안정</Badge>;
-      case 'MID': return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">주의</Badge>;
-      case 'HIGH': return <Badge variant="destructive">위험</Badge>;
-      default: return <Badge variant="outline">알 수 없음</Badge>;
+    setLoadingUsers(true);
+
+    loadUsers(testType, from, to);
+    setCurrentPage(1); // 필터 바뀌면 페이지 초기화
+  }, [testType, period]);
+
+  // ✔ CSV 다운로드
+  const handleExport = async () => {
+    try {
+      const { from, to } = getDateRange(period);
+
+      const blob = await exportDiagnosisCSV(from, to);
+      saveAs(blob, `diagnostics_${testType}_${from}_to_${to}.csv`);
+    } catch (err) {
+      alert("CSV 다운로드 실패");
     }
   };
 
-  const getImprovementColor = (rate: string) => rate.startsWith('+') ? 'text-green-600' : 'text-red-600';
+  // 필터 텍스트 생성 함수
+const getPeriodLabel = (period: string) => {
+  switch (period) {
+    case "2weeks": return "최근 2주";
+    case "1month": return "최근 1개월";
+    case "3months": return "최근 3개월";
+    case "6months": return "최근 6개월";
+    default: return "";
+  }
+};
 
-  // 페이지네이션
-  const paginatedUsers = users.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  const totalPages = Math.ceil(users.length / pageSize);
+const getTestLabel = (test: string) => {
+  switch (test) {
+    case "PHQ9": return "PHQ-9";
+    case "GAD7": return "GAD-7";
+    case "CPGI": return "CPGI";
+    default: return "";
+  }
+};
 
-  // 임시 AreaChart 데이터
-  const improvementData = [
-    { month: '1월', low: 65, medium: 25, high: 10 },
-    { month: '2월', low: 68, medium: 23, high: 9 },
-    { month: '3월', low: 72, medium: 20, high: 8 },
-    { month: '4월', low: 75, medium: 18, high: 7 },
-    { month: '5월', low: 78, medium: 16, high: 6 },
-    { month: '6월', low: 82, medium: 13, high: 5 },
-  ];
 
   return (
     <div className="space-y-6">
 
-      {/* 통계 요약 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader><CardTitle className="text-sm">전체 개선율</CardTitle></CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold text-green-600">
-              {loadingSummary ? '불러오는 중...' : (summary.improvementRate?.toFixed(1) ?? '0')}%
-            </div>
-            <p className="text-sm text-muted-foreground">최근 3개월</p>
-          </CardContent>
-        </Card>
+      {/* ---------------------- 필터 영역 ---------------------- */}
+<Card className="p-4">
+  <CardHeader className="pb-2">
+      필터 선택
+  </CardHeader>
 
-        <Card>
-          <CardHeader><CardTitle className="text-sm">안정군 비율</CardTitle></CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">
-              {loadingSummary ? '불러오는 중...' : (summary.stableRatio?.toFixed(1) ?? '0')}%
-            </div>
-            <p className="text-sm text-muted-foreground">현재 기준</p>
-          </CardContent>
-        </Card>
+  <CardContent className="flex gap-4 items-center">
 
-        <Card>
-          <CardHeader><CardTitle className="text-sm">총 진단 횟수</CardTitle></CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">
-              {loadingSummary ? '불러오는 중...' : (summary.totalAssessments?.toLocaleString() ?? '0')}
-            </div>
-            <p className="text-sm text-muted-foreground">최근 3개월</p>
-          </CardContent>
-        </Card>
+    {/* 검사 선택 */}
+    <Select value={testType} onValueChange={(v) => setTestType(v as any)}>
+      <SelectTrigger className="w-40">
+        <SelectValue placeholder="검사 선택" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="PHQ9">PHQ-9</SelectItem>
+        <SelectItem value="GAD7">GAD-7</SelectItem>
+        <SelectItem value="CPGI">CPGI</SelectItem>
+      </SelectContent>
+    </Select>
 
-        <Card>
-          <CardHeader><CardTitle className="text-sm">평균 진단 간격</CardTitle></CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">
-              {loadingSummary ? '불러오는 중...' : (summary.avgAssessmentIntervalDays?.toFixed(1) ?? '0')}일
-            </div>
-            <p className="text-sm text-muted-foreground">사용자당</p>
-          </CardContent>
-        </Card>
-      </div>
+    {/* 기간 선택 */}
+    <Select value={period} onValueChange={(v) => setPeriod(v as any)}>
+      <SelectTrigger className="w-40">
+        <SelectValue placeholder="기간 선택" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="2weeks">최근 2주</SelectItem>
+        <SelectItem value="1month">최근 1개월</SelectItem>
+        <SelectItem value="3months">최근 3개월</SelectItem>
+        <SelectItem value="6months">최근 6개월</SelectItem>
+      </SelectContent>
+    </Select>
 
-      {/* 위험도별 분포 추이 */}
+  </CardContent>
+</Card>
+
+      {/* ---------------------- 위험도 차트 ---------------------- */}
       <Card>
         <CardHeader><CardTitle>위험도별 사용자 분포 추이</CardTitle></CardHeader>
         <CardContent>
@@ -175,92 +196,76 @@ export function DiagnosisResults() {
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip formatter={(value) => `${value}%`} />
-              <Area type="monotone" dataKey="LOW" stackId="1" stroke="#10b981" fill="#10b981" name="안정군"/>
-              <Area type="monotone" dataKey="MID" stackId="1" stroke="#f59e0b" fill="#f59e0b" name="주의군"/>
-              <Area type="monotone" dataKey="HIGH" stackId="1" stroke="#ef4444" fill="#ef4444" name="위험군"/>
+              <Area type="monotone" dataKey="LOW" stackId="1" stroke="#10b981" fill="#10b981" />
+              <Area type="monotone" dataKey="MID" stackId="1" stroke="#f59e0b" fill="#f59e0b" />
+              <Area type="monotone" dataKey="HIGH" stackId="1" stroke="#ef4444" fill="#ef4444" />
             </AreaChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      {/* 사용자 테이블 */}
-      <Card>
-        <CardHeader><CardTitle>최근 7일 설문 사용자</CardTitle></CardHeader>
-        <CardContent>
-          {loadingUsers ? (
-            <p>불러오는 중...</p>
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>EMAIL</TableHead>
-                    <TableHead>이름</TableHead>
-                    <TableHead>최근 진단일</TableHead>
-                    <TableHead>검사명</TableHead>
-                    <TableHead>점수</TableHead>
-                    <TableHead>위험도</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                {paginatedUsers.map((u) => (
-                  <TableRow key={u.user.id}>
-                    <TableCell>{u.user.email}</TableCell>
-                    <TableCell>{u.user.name}</TableCell>
-                    <TableCell>
-                      {new Date(u.latestAssessment.completedAt).toLocaleDateString('ko-KR')}
-                    </TableCell>
-                    <TableCell>{u.latestAssessment.type}</TableCell>
-                    <TableCell>{u.latestAssessment.totalScore}</TableCell>
-                    <TableCell>{getStatusBadge(u.latestAssessment.riskLevel)}</TableCell>
-                  </TableRow>
-                ))}
-                </TableBody>
-              </Table>
+{/* ---------------------- 사용자 테이블 ---------------------- */}
+<Card>
+  <CardHeader>
+    <div className="flex justify-between items-center w-full">
+      <CardTitle>
+        {`${getPeriodLabel(period)} 동안 · ${getTestLabel(testType)} 검사를 한 사용자`}
+      </CardTitle>
 
-              {/* 페이지네이션 */}
-              <div className="flex justify-end mt-2 gap-2">
-                <Button
-                  size="sm"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                >
-                  이전
-                </Button>
-                <span className="flex items-center">{currentPage} / {totalPages}</span>
-                <Button
-                  size="sm"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                >
-                  다음
-                </Button>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+      <Button variant="outline" onClick={handleExport}>
+        CSV 다운로드
+      </Button>
+    </div>
+  </CardHeader>
+  
+  <CardContent>
+    {loadingUsers ? (
+      <LoadingSpinner />
+    ) : (
+      <>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>EMAIL</TableHead>
+              <TableHead>이름</TableHead>
+              <TableHead>최근 진단일</TableHead>
+              <TableHead>검사명</TableHead>
+              <TableHead>점수</TableHead>
+              <TableHead>위험도</TableHead>
+            </TableRow>
+          </TableHeader>
 
-       {/* 필터 및 컨트롤 */}
-       <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>진단 결과 파일 다운로드</CardTitle>
-            <div className="flex gap-2">
-              <Select defaultValue="3months">
-                <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1month">최근 1개월</SelectItem>
-                  <SelectItem value="3months">최근 3개월</SelectItem>
-                  <SelectItem value="6months">최근 6개월</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" className="gap-2"><Filter className="h-4 w-4" /> 필터</Button>
-              <Button variant="outline" className="gap-2"><Download className="h-4 w-4" /> 내보내기</Button>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
+          <TableBody>
+            {paginatedUsers.map((u) => (
+              <TableRow key={u.user.id}>
+                <TableCell>{u.user.email}</TableCell>
+                <TableCell>{u.user.name}</TableCell>
+                <TableCell>
+                  {new Date(u.latestAssessment.completedAt).toLocaleDateString("ko-KR")}
+                </TableCell>
+                <TableCell>{u.latestAssessment.type}</TableCell>
+                <TableCell>{u.latestAssessment.totalScore}</TableCell>
+                <TableCell>{getStatusBadge(u.latestAssessment.riskLevel)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+
+        {/* 페이지네이션 */}
+        <div className="flex justify-end mt-3 gap-2">
+          <Button size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
+            이전
+          </Button>
+          <span>{currentPage} / {totalPages}</span>
+          <Button size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>
+            다음
+          </Button>
+        </div>
+      </>
+    )}
+  </CardContent>
+</Card>
+
     </div>
   );
 }

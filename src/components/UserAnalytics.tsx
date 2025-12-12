@@ -5,6 +5,7 @@ import {
   BarChart, Bar
 } from "recharts";
 import React from "react";
+import LoadingSpinner from "./LoadingSpinner";
 
 interface UserAnalyticsProps {
   showUsageChart?: boolean;
@@ -124,25 +125,27 @@ export function UserAnalytics({ showUsageChart = true }: UserAnalyticsProps) {
           </p>
         </CardHeader>
         <CardContent>
-          {loadingTrend ? (
-            <div className="text-center py-20">불러오는 중...</div>
-          ) : (
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="week" />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <Tooltip />
-                <Legend />
-                <Line yAxisId="left" type="monotone" dataKey="phq9" stroke="#8884d8" name="PHQ-9" />
-                <Line yAxisId="left" type="monotone" dataKey="gad7" stroke="#82ca9d" name="GAD-7" />
-                <Line yAxisId="left" type="monotone" dataKey="cpgi" stroke="#ffc658" name="CPGI" />
-                <Line yAxisId="right" type="monotone" dataKey="totalUsers" stroke="#ff7c7c" strokeDasharray="5 5" name="총 사용자 수" />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
+         {loadingTrend ? (
+          <div className="flex justify-center py-20">
+            <LoadingSpinner />
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={400}>
+            <LineChart data={trendData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="week" />
+              <YAxis yAxisId="left" />
+              <YAxis yAxisId="right" orientation="right" />
+              <Tooltip />
+              <Legend />
+              <Line yAxisId="left" type="monotone" dataKey="phq9" stroke="#8884d8" name="PHQ-9" />
+              <Line yAxisId="left" type="monotone" dataKey="gad7" stroke="#82ca9d" name="GAD-7" />
+              <Line yAxisId="left" type="monotone" dataKey="cpgi" stroke="#ffc658" name="CPGI" />
+              <Line yAxisId="right" type="monotone" dataKey="totalUsers" stroke="#ff7c7c" strokeDasharray="5 5" name="총 사용자 수" />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
+      </CardContent>
       </Card>
 
       {/* 기능별 사용시간 */}
