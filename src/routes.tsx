@@ -2,6 +2,7 @@ import { StatsOverview } from "./components/StatsOverview";
 import { UserAnalytics } from "./components/UserAnalytics";
 import { DiagnosisResults } from "./components/DiagnosisResults";
 import { UserManagement } from "./components/UserManagement";
+import { UsageAnalytics } from "./components/UsageAnalytics";
 import { Settings } from "./components/Settings";
 import React from "react";
 
@@ -16,7 +17,7 @@ export const routes = [
           <p className="text-muted-foreground">우웅 어드민 페이지</p>
         </div>
         <StatsOverview />
-        <UserAnalytics showUsageChart={false} />
+        <UserAnalytics />
       </div>
     ),
   },
@@ -29,7 +30,7 @@ export const routes = [
           <p className="text-muted-foreground">우웅 어드민 페이지</p>
         </div>
         <StatsOverview />
-        <UserAnalytics showUsageChart={false} />
+        <UserAnalytics />
       </div>
     ),
   },
@@ -43,7 +44,7 @@ export const routes = [
             재방문율, 사용시간, 기능별 분석
           </p>
         </div>
-        <UserAnalytics showUsageChart={true} />
+        <UsageAnalytics  />
       </div>
     ),
   },

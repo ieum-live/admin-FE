@@ -11,7 +11,7 @@ interface UserAnalyticsProps {
   showUsageChart?: boolean;
 }
 
-export function UserAnalytics({ showUsageChart = true }: UserAnalyticsProps) {
+export function UserAnalytics() {
 
   const [trendData, setTrendData] = useState<any[]>([]);
   const [loadingTrend, setLoadingTrend] = useState(true);
@@ -105,15 +105,6 @@ export function UserAnalytics({ showUsageChart = true }: UserAnalyticsProps) {
     fetchTrendData();
   }, []);
 
-  // 기능별 사용시간 (나중에 API 연결 가능)
-  const usageTimeData = [
-    { feature: "자가진단", time: 245, sessions: 1420 },
-    { feature: "교육 콘텐츠", time: 320, sessions: 890 },
-    { feature: "상담 예약", time: 120, sessions: 345 },
-    { feature: "진단 결과", time: 180, sessions: 1230 },
-    { feature: "커뮤니티", time: 95, sessions: 567 },
-  ];
-
   return (
     <div className="space-y-6">
       {/* 진단별 개선 지표 */}
@@ -147,29 +138,6 @@ export function UserAnalytics({ showUsageChart = true }: UserAnalyticsProps) {
         )}
       </CardContent>
       </Card>
-
-      {/* 기능별 사용시간 */}
-      {showUsageChart && (
-        <Card>
-          <CardHeader>
-            <CardTitle>기능별 사용시간 및 세션 수</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={usageTimeData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="feature" />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <Tooltip />
-                <Legend />
-                <Bar yAxisId="left" dataKey="time" fill="#8884d8" name="평균 사용시간" />
-                <Bar yAxisId="right" dataKey="sessions" fill="#82ca9d" name="총 세션 수" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
