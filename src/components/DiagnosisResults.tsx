@@ -127,64 +127,64 @@ export function DiagnosisResults() {
   };
 
   // 필터 텍스트 생성 함수
-const getPeriodLabel = (period: string) => {
-  switch (period) {
-    case "2weeks": return "최근 2주";
-    case "1month": return "최근 1개월";
-    case "3months": return "최근 3개월";
-    case "6months": return "최근 6개월";
-    default: return "";
-  }
-};
+  const getPeriodLabel = (period: string) => {
+    switch (period) {
+      case "2weeks": return "최근 2주";
+      case "1month": return "최근 1개월";
+      case "3months": return "최근 3개월";
+      case "6months": return "최근 6개월";
+      default: return "";
+    }
+  };
 
-const getTestLabel = (test: string) => {
-  switch (test) {
-    case "PHQ9": return "PHQ-9";
-    case "GAD7": return "GAD-7";
-    case "CPGI": return "CPGI";
-    default: return "";
-  }
-};
+  const getTestLabel = (test: string) => {
+    switch (test) {
+      case "PHQ9": return "PHQ-9";
+      case "GAD7": return "GAD-7";
+      case "CPGI": return "CPGI";
+      default: return "";
+    }
+  };
 
 
   return (
     <div className="space-y-6">
 
       {/* ---------------------- 필터 영역 ---------------------- */}
-<Card className="p-4">
-  <CardHeader className="pb-2">
-      필터 선택
-  </CardHeader>
+      <Card className="p-4">
+        <CardHeader className="pb-2">
+          필터 선택
+        </CardHeader>
 
-  <CardContent className="flex gap-4 items-center">
+        <CardContent className="flex gap-4 items-center">
 
-    {/* 검사 선택 */}
-    <Select value={testType} onValueChange={(v) => setTestType(v as any)}>
-      <SelectTrigger className="w-40">
-        <SelectValue placeholder="검사 선택" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="PHQ9">PHQ-9</SelectItem>
-        <SelectItem value="GAD7">GAD-7</SelectItem>
-        <SelectItem value="CPGI">CPGI</SelectItem>
-      </SelectContent>
-    </Select>
+          {/* 검사 선택 */}
+          <Select value={testType} onValueChange={(v) => setTestType(v as any)}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="검사 선택" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="PHQ9">PHQ-9</SelectItem>
+              <SelectItem value="GAD7">GAD-7</SelectItem>
+              <SelectItem value="CPGI">CPGI</SelectItem>
+            </SelectContent>
+          </Select>
 
-    {/* 기간 선택 */}
-    <Select value={period} onValueChange={(v) => setPeriod(v as any)}>
-      <SelectTrigger className="w-40">
-        <SelectValue placeholder="기간 선택" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="2weeks">최근 2주</SelectItem>
-        <SelectItem value="1month">최근 1개월</SelectItem>
-        <SelectItem value="3months">최근 3개월</SelectItem>
-        <SelectItem value="6months">최근 6개월</SelectItem>
-      </SelectContent>
-    </Select>
+          {/* 기간 선택 */}
+          <Select value={period} onValueChange={(v) => setPeriod(v as any)}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="기간 선택" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2weeks">최근 2주</SelectItem>
+              <SelectItem value="1month">최근 1개월</SelectItem>
+              <SelectItem value="3months">최근 3개월</SelectItem>
+              <SelectItem value="6months">최근 6개월</SelectItem>
+            </SelectContent>
+          </Select>
 
-  </CardContent>
-</Card>
+        </CardContent>
+      </Card>
 
       {/* ---------------------- 위험도 차트 ---------------------- */}
       <Card>
@@ -204,67 +204,67 @@ const getTestLabel = (test: string) => {
         </CardContent>
       </Card>
 
-{/* ---------------------- 사용자 테이블 ---------------------- */}
-<Card>
-  <CardHeader>
-    <div className="flex justify-between items-center w-full">
-      <CardTitle>
-        {`${getPeriodLabel(period)} 동안 · ${getTestLabel(testType)} 검사를 한 사용자`}
-      </CardTitle>
+      {/* ---------------------- 사용자 테이블 ---------------------- */}
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center w-full">
+            <CardTitle>
+              {`${getPeriodLabel(period)} 동안 · ${getTestLabel(testType)} 검사를 한 사용자`}
+            </CardTitle>
 
-      <Button variant="outline" onClick={handleExport}>
-        CSV 다운로드
-      </Button>
-    </div>
-  </CardHeader>
-  
-  <CardContent>
-    {loadingUsers ? (
-      <LoadingSpinner />
-    ) : (
-      <>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>EMAIL</TableHead>
-              <TableHead>이름</TableHead>
-              <TableHead>최근 진단일</TableHead>
-              <TableHead>검사명</TableHead>
-              <TableHead>점수</TableHead>
-              <TableHead>위험도</TableHead>
-            </TableRow>
-          </TableHeader>
+            <Button variant="outline" onClick={handleExport}>
+              CSV 다운로드
+            </Button>
+          </div>
+        </CardHeader>
 
-          <TableBody>
-            {paginatedUsers.map((u) => (
-              <TableRow key={u.user.id}>
-                <TableCell>{u.user.email}</TableCell>
-                <TableCell>{u.user.name}</TableCell>
-                <TableCell>
-                  {new Date(u.latestAssessment.completedAt).toLocaleDateString("ko-KR")}
-                </TableCell>
-                <TableCell>{u.latestAssessment.type}</TableCell>
-                <TableCell>{u.latestAssessment.totalScore}</TableCell>
-                <TableCell>{getStatusBadge(u.latestAssessment.riskLevel)}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <CardContent>
+          {loadingUsers ? (
+            <LoadingSpinner />
+          ) : (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>EMAIL</TableHead>
+                    <TableHead>이름</TableHead>
+                    <TableHead>최근 진단일</TableHead>
+                    <TableHead>검사명</TableHead>
+                    <TableHead>점수</TableHead>
+                    <TableHead>위험도</TableHead>
+                  </TableRow>
+                </TableHeader>
 
-        {/* 페이지네이션 */}
-        <div className="flex justify-end mt-3 gap-2">
-          <Button size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
-            이전
-          </Button>
-          <span>{currentPage} / {totalPages}</span>
-          <Button size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>
-            다음
-          </Button>
-        </div>
-      </>
-    )}
-  </CardContent>
-</Card>
+                <TableBody>
+                  {paginatedUsers.map((u) => (
+                    <TableRow key={u.user.id}>
+                      <TableCell>{u.user.email}</TableCell>
+                      <TableCell>{u.user.name}</TableCell>
+                      <TableCell>
+                        {new Date(u.latestAssessment.completedAt).toLocaleDateString("ko-KR")}
+                      </TableCell>
+                      <TableCell>{u.latestAssessment.type}</TableCell>
+                      <TableCell>{u.latestAssessment.totalScore}</TableCell>
+                      <TableCell>{getStatusBadge(u.latestAssessment.riskLevel)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/* 페이지네이션 */}
+              <div className="flex justify-end mt-3 gap-2">
+                <Button size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
+                  이전
+                </Button>
+                <span>{currentPage} / {totalPages}</span>
+                <Button size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>
+                  다음
+                </Button>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
     </div>
   );
