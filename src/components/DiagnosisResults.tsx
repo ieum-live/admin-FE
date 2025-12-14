@@ -228,19 +228,30 @@ const loadUsers = async (
 
 // 위험도 뱃지
 const getStatusBadge = (risk: "LOW" | "MID" | "HIGH") => {
-  const baseClasses = "px-2 py-1 rounded text-sm font-medium";
-
-  switch (risk) {
-    case "LOW":
-      return <Badge className={`${baseClasses} bg-green-100 text-green-800`}>안정</Badge>;
-    case "MID":
-      return <Badge className={`${baseClasses} bg-yellow-100 text-yellow-800`}>주의</Badge>;
-    case "HIGH":
-      return <Badge className={`${baseClasses} bg-red-300 text-red-800`}>위험</Badge>;
-    default:
-      return null;
-  }
-};
+    const baseClasses = "text-xs";
+    switch (risk) {
+      case 'LOW':
+        return (
+          <Badge variant="default" className={`${baseClasses} bg-green-100 text-green-800`}>
+            안정
+          </Badge>
+        );
+      case 'MID':
+        return (
+          <Badge variant="secondary" className={`${baseClasses} bg-yellow-100 text-yellow-800`}>
+          주의
+          </Badge>
+        );
+      case 'HIGH':
+        return (
+          <Badge variant="destructive" className={baseClasses}>
+            위험
+          </Badge>
+        );
+      default:
+        return <Badge variant="outline" className={baseClasses}>알 수 없음</Badge>;
+    }
+  };
 
 
 useEffect(() => {
