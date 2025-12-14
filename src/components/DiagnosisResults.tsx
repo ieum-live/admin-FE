@@ -226,6 +226,22 @@ const loadUsers = async (
   }
 };
 
+// 위험도 뱃지
+const getStatusBadge = (risk: "LOW" | "MID" | "HIGH") => {
+  const baseClasses = "px-2 py-1 rounded text-sm font-medium";
+
+  switch (risk) {
+    case "LOW":
+      return <Badge className={`${baseClasses} bg-green-100 text-green-800`}>안정</Badge>;
+    case "MID":
+      return <Badge className={`${baseClasses} bg-yellow-100 text-yellow-800`}>주의</Badge>;
+    case "HIGH":
+      return <Badge className={`${baseClasses} bg-red-300 text-red-800`}>위험</Badge>;
+    default:
+  }
+};
+
+
 useEffect(() => {
   loadUsers(testType, period, currentPage - 1, usersPerPage);
 }, [testType, period, currentPage]);
@@ -370,7 +386,7 @@ useEffect(() => {
                       </TableCell>
                       <TableCell>{u.latestAssessment.type}</TableCell>
                       <TableCell>{u.latestAssessment.totalScore}</TableCell>
-                      <TableCell>{(u.latestAssessment.riskLevel)}</TableCell>
+                      <TableCell>{getStatusBadge(u.latestAssessment.riskLevel)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
