@@ -238,6 +238,7 @@ const getStatusBadge = (risk: "LOW" | "MID" | "HIGH") => {
     case "HIGH":
       return <Badge className={`${baseClasses} bg-red-300 text-red-800`}>위험</Badge>;
     default:
+      return null;
   }
 };
 
