@@ -5,6 +5,7 @@ import { saveAs } from "file-saver";
 import {
   getRecentUsers,
   exportDiagnosisCSV,
+  getRiskDistributionTrend,
 } from "../API/diagnosisAPI";
 
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -66,23 +67,20 @@ const getDateRange = (period: string) => {
   };
 };
 
-// 차트 임시데이터 (백엔드 연동 시 실제 데이터로 교체 가능)
-const improvementData = [
-  { month: "1월", LOW: 40, MID: 45, HIGH: 15 },
-  { month: "2월", LOW: 45, MID: 40, HIGH: 15 },
-  { month: "3월", LOW: 50, MID: 35, HIGH: 15 },
-  { month: "4월", LOW: 55, MID: 32, HIGH: 13 },
-  { month: "5월", LOW: 58, MID: 30, HIGH: 12 },
-];
-
 export function DiagnosisResults() {
   // 필터 상태
-  const [testType, setTestType] = useState<"PHQ9" | "GAD7" | "CPGI">("PHQ9");
+  type TestTypeUI = "PHQ9" | "GAD7" | "CPGI";
+  const [testType, setTestType] = useState<TestTypeUI>("PHQ9");
+
   const [period, setPeriod] = useState<"2weeks" | "1month" | "3months" | "6months">("1month");
 
   // 데이터 상태
   const [users, setUsers] = useState<UserData[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+
+  const [riskTrend, setRiskTrend] = useState<any[]>([]);
+  const [loadingTrend, setLoadingTrend] = useState(true);
+
 
   // 페이지네이션
   const [currentPage, setCurrentPage] = useState(1);
@@ -93,6 +91,95 @@ export function DiagnosisResults() {
     (currentPage - 1) * usersPerPage,
     currentPage * usersPerPage
   );
+  
+  const TEST_TYPE_TO_API: Record<
+      TestTypeUI,
+      "PHQ-9" | "GAD-7" | "CPGI"
+    > = {
+      PHQ9: "PHQ-9",
+      GAD7: "GAD-7",
+      CPGI: "CPGI",
+    };
+
+    const loadRiskTrend = async () => {
+      try {
+        setLoadingTrend(true);
+    
+        const apiType = TEST_TYPE_TO_API[testType];
+        const raw = await getRiskDistributionTrend(apiType, period);
+        console.log("raw", raw);
+    
+        const chartData = transformRiskTrend(raw, testType); // testType 전달
+        console.log("📊 chartData", chartData);
+    
+        setRiskTrend(chartData);
+      } catch (err) {
+        console.error(err);
+        setRiskTrend([]);
+      } finally {
+        setLoadingTrend(false);
+      }
+    };
+    
+    
+    
+    const transformRiskTrend = (rawData: any[], testType: TestTypeUI) => {
+      const map = new Map<string, any>();
+      const SCALE_TO_RISK = SCALE_TO_RISK_MAP[testType]; // 검사별 매핑 사용
+    
+      rawData.forEach((item) => {
+        const { label, scaleName, userCount } = item;
+        const risk = SCALE_TO_RISK[scaleName];
+    
+        if (!risk) return;
+    
+        if (!map.has(label)) {
+          map.set(label, {
+            label,
+            LOW: 0,
+            MID: 0,
+            HIGH: 0,
+          });
+        }
+    
+        map.get(label)[risk] += userCount;
+      });
+    
+      return Array.from(map.values());
+    };
+    
+  
+
+  // 검사별 SCALE → RISK 매핑
+const SCALE_TO_RISK_MAP: Record<TestTypeUI, Record<string, "LOW" | "MID" | "HIGH">> = {
+  PHQ9: {
+    "정상": "LOW",
+    "가벼운 우울증": "LOW",
+    "중간정도 우울증": "MID",
+    "심한 우울증": "HIGH",
+  },
+  GAD7: {
+    "정상": "LOW",
+    "불안 시사됨": "HIGH",
+  },
+  CPGI: {
+    "일반군": "LOW",
+    "문제군": "MID",
+    "위험군": "HIGH",
+  },
+};
+  
+
+  useEffect(() => {
+    const { from, to } = getDateRange(period);
+  
+    setLoadingUsers(true);
+    loadUsers(testType, from, to);
+    loadRiskTrend();
+    setCurrentPage(1);
+  }, [testType, period]);
+  
+  
 
   // ✔ 사용자 로드
   const loadUsers = async (testType: string, from: string, to: string) => {
@@ -145,7 +232,7 @@ export function DiagnosisResults() {
       default: return "";
     }
   };
-
+  
 
   return (
     <div className="space-y-6">
@@ -188,21 +275,29 @@ export function DiagnosisResults() {
 
       {/* ---------------------- 위험도 차트 ---------------------- */}
       <Card>
-        <CardHeader><CardTitle>위험도별 사용자 분포 추이</CardTitle></CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={400}>
-            <AreaChart data={improvementData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip formatter={(value) => `${value}%`} />
-              <Area type="monotone" dataKey="LOW" stackId="1" stroke="#10b981" fill="#10b981" />
-              <Area type="monotone" dataKey="MID" stackId="1" stroke="#f59e0b" fill="#f59e0b" />
-              <Area type="monotone" dataKey="HIGH" stackId="1" stroke="#ef4444" fill="#ef4444" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+  <CardHeader>
+    <CardTitle>위험도별 사용자 분포 추이</CardTitle>
+  </CardHeader>
+
+  <CardContent>
+  <div style={{ width: '100%', height: 400 }}>
+  <ResponsiveContainer width="100%" height="100%">
+  <AreaChart data={riskTrend}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="label" />
+      <YAxis />
+      <Tooltip />
+      <Area type="monotone" dataKey="LOW" stackId="1" stroke="#10b981" fill="#10b981" />
+      <Area type="monotone" dataKey="MID" stackId="1" stroke="#f59e0b" fill="#f59e0b" />
+      <Area type="monotone" dataKey="HIGH" stackId="1" stroke="#ef4444" fill="#ef4444" />
+    </AreaChart>
+  </ResponsiveContainer>
+</div>
+
+</CardContent>
+
+</Card>
+
 
       {/* ---------------------- 사용자 테이블 ---------------------- */}
       <Card>
