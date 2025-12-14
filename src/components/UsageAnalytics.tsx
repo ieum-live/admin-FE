@@ -37,13 +37,16 @@ import {
 import LoadingSpinner from "./LoadingSpinner";
 import {
   getTop5Features,
+  getFeatureUsageTrend,
   TopFeatureItem,
+  FeatureTrendItem,
 } from "../API/usageAnalyticsAPI";
 
 /* =======================
    타입
 ======================= */
 
+type TopPeriod = "today" | "2weeks" | "1month";
 type UiPeriod = "2weeks" | "1month" | "3months" | "6months";
 type ApiPeriod = "WEEK_2" | "MONTH_1" | "MONTH_3" | "MONTH_6";
 
@@ -60,14 +63,35 @@ type FeatureType =
   | "PHQ9"
   | "DAILY_TOPIC"
   | "DIARY"
-  | "MEDITATION"
-  | "WALKING";
+  | "MEDITATION_QUEST"
+  | "ACTIVITY_QUEST";
 
 /* =======================
    날짜 유틸
 ======================= */
 
 const formatDate = (d: Date) => d.toISOString().slice(0, 10);
+
+const getTopDateRange = (period: TopPeriod) => {
+  const today = new Date();
+  const to = formatDate(today);
+  const from = new Date(today);
+
+  switch (period) {
+    case "today":
+      // 오늘 하루
+      return { from: to, to };
+
+    case "2weeks":
+      from.setDate(today.getDate() - 13);
+      return { from: formatDate(from), to };
+
+    case "1month":
+      from.setMonth(today.getMonth() - 1);
+      return { from: formatDate(from), to };
+  }
+};
+
 
 const getDateRange = (period: PeriodType) => {
   const today = new Date();
@@ -116,7 +140,11 @@ export function UsageAnalytics() {
   const [period, setPeriod] = useState<PeriodType>("2weeks");
   const [feature, setFeature] = useState<FeatureType>("PHQ9");
 
+  const [topPeriod, setTopPeriod] = useState<TopPeriod>("today");
+  const [chartPeriod, setChartPeriod] = useState<PeriodType>("2weeks");
+
   const [topFeatures, setTopFeatures] = useState<TopFeatureItem[]>([]);
+  const [chartData, setChartData] = useState<FeatureTrendItem[]>([]);
 
   const [loadingTop, setLoadingTop] = useState(false);
   const [loadingChart, setLoadingChart] = useState(false);
@@ -126,10 +154,10 @@ export function UsageAnalytics() {
     const loadTop5 = async () => {
       try {
         setLoadingTop(true);
-        const { from, to } = getDateRange(period);
-
+  
+        const { from, to } = getTopDateRange(topPeriod);
         console.log("TOP5 조회 범위:", { from, to });
-
+  
         const data = await getTop5Features(from, to);
         setTopFeatures(data);
       } catch (e) {
@@ -138,11 +166,40 @@ export function UsageAnalytics() {
         setLoadingTop(false);
       }
     };
-
+  
     loadTop5();
-  }, [period]);
+  }, [topPeriod]);
+  
 
+  /* ---------- 그래프 ---------- */
+  /* ---------- 그래프 ---------- */
+useEffect(() => {
+  const loadTrend = async () => {
+    try {
+      setLoadingChart(true);
 
+      const apiPeriod = periodToApi[period];
+      console.log("📈 트렌드 조회:", feature, apiPeriod);
+
+      const res = await getFeatureUsageTrend(feature, apiPeriod);
+
+        console.log("🔥 그래프 raw 응답", res);
+        console.log("🔥 그래프에 들어갈 배열", res.data);
+
+        setChartData(res.data); // ✅ 배열
+
+    } catch (e) {
+      console.error("❌ 트렌드 조회 실패 (catch 진입)", e);
+      setChartData([]);
+    } finally {
+      setLoadingChart(false);
+    }
+  };
+
+  loadTrend();
+}, [feature, period]);
+
+  
 
   return (
     <div className="space-y-6">
@@ -154,8 +211,8 @@ export function UsageAnalytics() {
 
           {/* 기간 필터 */}
           <Select
-            value={period}
-            onValueChange={(v) => setPeriod(v as any)}
+            value={topPeriod}
+            onValueChange={(v) => setTopPeriod(v as TopPeriod)}
           >
             <SelectTrigger className="w-36">
               <SelectValue />
@@ -166,6 +223,7 @@ export function UsageAnalytics() {
               <SelectItem value="1month">최근 1개월</SelectItem>
             </SelectContent>
           </Select>
+
         </CardHeader>
 
         <CardContent>
@@ -201,7 +259,76 @@ export function UsageAnalytics() {
         </CardContent>
       </Card>
 
-    
+      {/* ================= 필터 ================= */}
+      <Card>
+        <CardHeader>
+          <CardTitle>필터 선택</CardTitle>
+        </CardHeader>
+
+        <CardContent className="flex gap-4">
+          <Select value={feature} onValueChange={(v) => setFeature(v as FeatureType)}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="PHQ9">PHQ-9</SelectItem>
+              <SelectItem value="GAD-7">GAD-7</SelectItem>
+              <SelectItem value="CPGI">CPGI</SelectItem>
+              <SelectItem value="DAILY_TOPIC">매일 1주제</SelectItem>
+              <SelectItem value="DIARY">일기</SelectItem>
+              <SelectItem value="MEDITATION_QUEST">명상 퀘스트</SelectItem>
+              <SelectItem value="ACTIVITY_QUEST">산책 퀘스트</SelectItem>
+
+            </SelectContent>
+          </Select>
+
+          <Select value={period} onValueChange={(v) => setPeriod(v as PeriodType)}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2weeks">최근 2주</SelectItem>
+              <SelectItem value="1month">최근 1개월</SelectItem>
+              <SelectItem value="3months">최근 3개월</SelectItem>
+              <SelectItem value="6months">최근 6개월</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
+      {/* ================= 그래프 ================= */}
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {`${getFeatureLabel(feature)} · ${getPeriodLabel(period)} 사용 추세`}
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent>
+  <div style={{ width: "100%", height: 350 }}>
+    <ResponsiveContainer>
+      <AreaChart data={chartData}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis
+          dataKey="date"
+          tickFormatter={(v) => v.slice(5)}
+        />
+        <YAxis domain={[0, "dataMax + 10"]} />
+        <Tooltip />
+        <Area
+          type="monotone"
+          dataKey="count"
+          stroke="#3b82f6"
+          fill="#93c5fd"
+          isAnimationActive={false}
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  </div>
+</CardContent>
+
+
+      </Card>
     </div>
   );
 }
