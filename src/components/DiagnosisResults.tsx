@@ -75,8 +75,11 @@ export function DiagnosisResults() {
   const [period, setPeriod] = useState<"2weeks" | "1month" | "3months" | "6months">("1month");
 
   // 데이터 상태
-  const [users, setUsers] = useState<UserData[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  
 
   const [riskTrend, setRiskTrend] = useState<any[]>([]);
   const [loadingTrend, setLoadingTrend] = useState(true);
@@ -85,12 +88,6 @@ export function DiagnosisResults() {
   // 페이지네이션
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 7;
-  const totalPages = Math.ceil(users.length / usersPerPage) || 1;
-
-  const paginatedUsers = users.slice(
-    (currentPage - 1) * usersPerPage,
-    currentPage * usersPerPage
-  );
   
   const TEST_TYPE_TO_API: Record<
       TestTypeUI,
@@ -174,33 +171,66 @@ const SCALE_TO_RISK_MAP: Record<TestTypeUI, Record<string, "LOW" | "MID" | "HIGH
     const { from, to } = getDateRange(period);
   
     setLoadingUsers(true);
-    loadUsers(testType, from, to);
+    loadUsers(testType, period);
     loadRiskTrend();
     setCurrentPage(1);
   }, [testType, period]);
-  
-  
 
-  // ✔ 사용자 로드
-  const loadUsers = async (testType: string, from: string, to: string) => {
-    try {
-      const list = await getRecentUsers();
-      setUsers(list);
-    } finally {
-      setLoadingUsers(false);
-    }
+  const mapScaleToRisk = (testType: TestTypeUI, scaleName: string): "LOW" | "MID" | "HIGH" => {
+    const SCALE_TO_RISK = SCALE_TO_RISK_MAP[testType];
+    return SCALE_TO_RISK[scaleName] || "LOW";
   };
-
-  // ✔ 필터 변경 시 전체 새로 로드
-  useEffect(() => {
-    const { from, to } = getDateRange(period);
-
+  
+  
+const loadUsers = async (
+  testType: TestTypeUI,
+  period: "2weeks" | "1month" | "3months" | "6months",
+  page: number = 0,
+  size: number = 7
+) => {
+  try {
     setLoadingUsers(true);
 
-    loadUsers(testType, from, to);
-    setCurrentPage(1); // 필터 바뀌면 페이지 초기화
-  }, [testType, period]);
+    const apiType = TEST_TYPE_TO_API[testType];
+    const res = await getRecentUsers({ type: apiType, period, page, size });
 
+    // 서버 데이터 → 화면용 UserData로 변환
+    const mappedUsers: UserData[] = res.content.map(u => ({
+      id: u.email,
+      name: u.name,
+      email: u.email,
+      latestAssessment: {
+        id: u.email,
+        type: u.testName,
+        completedAt: u.lastDiagnosisDate,
+        totalScore: u.score,
+        riskLevel: mapScaleToRisk(testType, u.scaleName),
+      },
+      user: {
+        email: u.email,
+        id: u.email,
+        name: u.name,
+      }
+    }));
+    console.log("ttt", mappedUsers)
+    setUsers(mappedUsers);
+    setTotalUsers(res.page.totalElements);
+    setTotalPages(res.page.totalPages);
+  } catch (err) {
+    console.error(err);
+    setUsers([]);
+    setTotalUsers(0);
+    setTotalPages(1);
+  } finally {
+    setLoadingUsers(false);
+  }
+};
+
+useEffect(() => {
+  loadUsers(testType, period, currentPage - 1, usersPerPage);
+}, [testType, period, currentPage]);
+
+  
   // ✔ CSV 다운로드
   const handleExport = async () => {
     try {
@@ -331,7 +361,7 @@ const SCALE_TO_RISK_MAP: Record<TestTypeUI, Record<string, "LOW" | "MID" | "HIGH
                 </TableHeader>
 
                 <TableBody>
-                  {paginatedUsers.map((u) => (
+                  {users.map((u) => (
                     <TableRow key={u.user.id}>
                       <TableCell>{u.user.email}</TableCell>
                       <TableCell>{u.user.name}</TableCell>
@@ -340,21 +370,19 @@ const SCALE_TO_RISK_MAP: Record<TestTypeUI, Record<string, "LOW" | "MID" | "HIGH
                       </TableCell>
                       <TableCell>{u.latestAssessment.type}</TableCell>
                       <TableCell>{u.latestAssessment.totalScore}</TableCell>
-                      <TableCell>{getStatusBadge(u.latestAssessment.riskLevel)}</TableCell>
+                      <TableCell>{(u.latestAssessment.riskLevel)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
+
               </Table>
 
               {/* 페이지네이션 */}
               <div className="flex justify-end mt-3 gap-2">
-                <Button size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
-                  이전
-                </Button>
-                <span>{currentPage} / {totalPages}</span>
-                <Button size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>
-                  다음
-                </Button>
+              <Button size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>이전</Button>
+<span>{currentPage} / {totalPages}</span>
+<Button size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>다음</Button>
+
               </div>
             </>
           )}
