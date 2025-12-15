@@ -72,7 +72,7 @@ export function UserManagement() {
   const [averageDiagnoses, setAverageDiagnoses] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const itemsPerPage = 30;
+  const itemsPerPage = 15;
   const [componentLoading, setComponentLoading] = useState(false);
 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -189,15 +189,15 @@ export function UserManagement() {
     }
   };
 
-  const filteredUsers = users;
-  // .filter(user => {
-  //   const matchesSearch = (user.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-  //     (user.email?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-  //     (user.id?.toLowerCase() || "").includes(searchTerm.toLowerCase());
-  //   const matchesDepression = depressionFilter === 'all' || user.depressionStatus === depressionFilter;
-  //   const matchesGambling = gamblingFilter === 'all' || user.gamblingStatus === gamblingFilter;
-  //   return matchesSearch && matchesDepression && matchesGambling;
-  // });
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = (user.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+                          (user.email?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+                          (user.id?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+    const matchesDepression = depressionFilter === 'all' || user.depressionStatus === depressionFilter;
+    const matchesGambling = gamblingFilter === 'all' || user.gamblingStatus === gamblingFilter;
+    return matchesSearch && matchesDepression && matchesGambling;
+  });
+  
 
   const toggleUserSelection = (userId: string) => {
     setSelectedUsers(prev => prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]);
@@ -498,9 +498,10 @@ export function UserManagement() {
               {totalPages > 1 && (
                 <Pagination>
                   <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} size="default" />
-                    </PaginationItem>
+                  <PaginationItem>
+                    <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} size="default">
+                    </PaginationPrevious>
+                  </PaginationItem>
                     {[...Array(totalPages)].map((_, i) => (
                       <PaginationItem key={i}>
                         <PaginationLink
@@ -512,9 +513,10 @@ export function UserManagement() {
                         </PaginationLink>
                       </PaginationItem>
                     ))}
-                    <PaginationItem>
-                      <PaginationNext onClick={() => handlePageChange(currentPage + 1)} size="default" />
-                    </PaginationItem>
+                  <PaginationItem>
+                    <PaginationNext onClick={() => handlePageChange(currentPage + 1)} size="default">
+                    </PaginationNext>
+                  </PaginationItem>
                   </PaginationContent>
                 </Pagination>
               )}
