@@ -39,6 +39,8 @@ interface UserDetailProps {
 export function UserDetail({ userId }: UserDetailProps) {
   const [user, setUser] = useState<User | null>(null);
   const [assessmentsByDate, setAssessmentsByDate] = useState<Record<string, Record<string, number>>>({});
+  const [availableTypes, setAvailableTypes] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const loadUser = async () => {
@@ -62,20 +64,23 @@ export function UserDetail({ userId }: UserDetailProps) {
         });
 
         const assessments: Assessment[] = await getUserAssessments(userId);
-        // 날짜 기준으로 타입별 점수 구조 만들기
+
+        const types = Array.from(new Set(assessments.map(a => a.type)));
+        setAvailableTypes(types);
+        setSelectedTypes(new Set(types));
+
         const byDate: Record<string, Record<string, number>> = {};
         assessments.forEach(a => {
           if (!byDate[a.takenDate]) byDate[a.takenDate] = {};
           byDate[a.takenDate][a.type] = a.totalScore;
         });
 
-        // 날짜순 정렬
-        const sortedByDate = Object.keys(byDate).sort().reduce((acc, date) => {
-          acc[date] = byDate[date];
-          return acc;
-        }, {} as Record<string, Record<string, number>>);
-
-        setAssessmentsByDate(sortedByDate);
+        setAssessmentsByDate(
+          Object.keys(byDate).sort().reduce((acc, d) => {
+            acc[d] = byDate[d];
+            return acc;
+          }, {} as Record<string, Record<string, number>>)
+        );
 
       } catch (err) {
         console.error("유저 정보 불러오기 실패:", err);
@@ -93,11 +98,14 @@ export function UserDetail({ userId }: UserDetailProps) {
   }));
 
   const lineColors: Record<string, string> = {
-    'Simple': '#8884d8',
-    'PHQ-9': '#82ca9d',
-    'GAD-7': '#ffc658',
-    'BDI': '#ff6b6b'
+    Simple: "#8884d8",
+    "PHQ-9": "#82ca9d",
+    "GAD-7": "#ffc658",
+    BDI: "#ff6b6b",
+    CPGI: "#38bdf8",
+    Gamble_Simple: "#a855f7",
   };
+
 
   const lastActiveTime = user.lastActive ? new Date(user.lastActive).getTime() : 0;
   const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
@@ -275,6 +283,23 @@ export function UserDetail({ userId }: UserDetailProps) {
                 <TrendingUp className="h-4 w-4" />
                 진단 점수 추이
               </CardTitle>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {availableTypes.map(type => (
+                  <label key={type} className="flex items-center gap-1 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={selectedTypes.has(type)}
+                      onChange={() => {
+                        const next = new Set(selectedTypes);
+                        next.has(type) ? next.delete(type) : next.add(type);
+                        setSelectedTypes(next);
+                      }}
+                    />
+                    {type}
+                  </label>
+                ))}
+              </div>
+
             </CardHeader>
             <CardContent className="dashboard-card-content">
               <ResponsiveContainer width="100%" height="100%">
@@ -283,17 +308,20 @@ export function UserDetail({ userId }: UserDetailProps) {
                   <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
                   <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} />
                   <Tooltip contentStyle={{ fontSize: 12 }} />
-                  {(['Simple', 'PHQ-9', 'GAD-7', 'BDI'] as const).map(type => (
-                    <Line
-                      key={type}
-                      type="monotone"
-                      dataKey={type}
-                      stroke={lineColors[type]}
-                      strokeWidth={2}
-                      dot={{ r: 3 }}
-                      name={type}
-                    />
-                  ))}
+                  {availableTypes
+                    .filter(type => selectedTypes.has(type))
+                    .map(type => (
+                      <Line
+                        key={type}
+                        type="monotone"
+                        dataKey={type}
+                        stroke={lineColors[type] ?? "#64748b"}
+                        strokeWidth={2}
+                        dot={{ r: 3 }}
+                        name={type}
+                      />
+                    ))}
+
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
