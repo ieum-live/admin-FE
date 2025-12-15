@@ -142,6 +142,20 @@ export function UserDetail({ userId }: UserDetailProps) {
     }
   };
 
+  const formatDateTime = (isoString?: string) => {
+    if (!isoString) return "-";
+    const date = new Date(isoString);
+  
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0'); // 월
+    const dd = String(date.getDate()).padStart(2, '0');      // 일
+    const hh = String(date.getHours()).padStart(2, '0');     // 시
+    const min = String(date.getMinutes()).padStart(2, '0');  // 분
+  
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+  };
+  
+
   return (
     <>
       <style>
@@ -203,11 +217,11 @@ export function UserDetail({ userId }: UserDetailProps) {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">가입일</span>
-                <span className="font-medium">{user.registrationDate}</span>
+                <span className="font-medium">{formatDateTime(user.registrationDate)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">최근 활동</span>
-                <span className="font-medium">{user.lastActive}</span>
+                <span className="font-medium">{formatDateTime(user.lastActive)}</span>
               </div>
             </CardContent>
           </Card>
