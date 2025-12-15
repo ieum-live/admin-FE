@@ -106,7 +106,6 @@ export function UserDetail({ userId }: UserDetailProps) {
     Gamble_Simple: "#a855f7",
   };
 
-
   const lastActiveTime = user.lastActive ? new Date(user.lastActive).getTime() : 0;
   const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
 
@@ -142,6 +141,7 @@ export function UserDetail({ userId }: UserDetailProps) {
         return <Badge variant="outline" className={baseClasses}>알 수 없음</Badge>;
     }
   };
+
   return (
     <>
       <style>
@@ -150,12 +150,13 @@ export function UserDetail({ userId }: UserDetailProps) {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
-            height: 100vh; /* 화면 전체 기준 */
+            height: 100vh; 
           }
           .dashboard-column {
             display: grid;
-            grid-template-rows: 1fr 1fr; /* 두 카드 균등 분할 */
+            grid-template-rows: 1fr 1fr;
             gap: 1rem;
+            height: 100%;
           }
           .dashboard-card {
             display: flex;
@@ -165,6 +166,7 @@ export function UserDetail({ userId }: UserDetailProps) {
           .dashboard-card-content {
             flex: 1;
             overflow: auto;
+            min-height: 300px; /* 차트가 잘리는 문제 방지 */
           }
         `}
       </style>
@@ -299,33 +301,34 @@ export function UserDetail({ userId }: UserDetailProps) {
                   </label>
                 ))}
               </div>
-
             </CardHeader>
             <CardContent className="dashboard-card-content">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
-                  <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} />
-                  <Tooltip contentStyle={{ fontSize: 12 }} />
-                  {availableTypes
-                    .filter(type => selectedTypes.has(type))
-                    .map(type => (
-                      <Line
-                        key={type}
-                        type="monotone"
-                        dataKey={type}
-                        stroke={lineColors[type] ?? "#64748b"}
-                        strokeWidth={2}
-                        dot={{ r: 3 }}
-                        name={type}
-                      />
-                    ))}
+              <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
+                <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11 }} /> {/* 자동 범위 */}
+                <Tooltip contentStyle={{ fontSize: 12 }} />
+                {availableTypes
+                  .filter(type => selectedTypes.has(type))
+                  .map(type => (
+                    <Line
+                      key={type}
+                      type="monotone"
+                      dataKey={type}
+                      stroke={lineColors[type] ?? "#64748b"}
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                      connectNulls={true} // null 값이 있어도 선 이어주기
+                      name={type}
+                    />
+                  ))}
+              </LineChart>
 
-                </LineChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
+
           <Card className="dashboard-card">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -334,7 +337,7 @@ export function UserDetail({ userId }: UserDetailProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="dashboard-card-content">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={activityData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="feature" tick={{ fontSize: 11 }} />
