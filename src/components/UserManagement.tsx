@@ -117,74 +117,58 @@ export function UserManagement() {
   useEffect(() => {
     const processUsers = async () => {
       if (allRawUsers.length === 0) return;
-
+  
       setComponentLoading(true);
       try {
         const filtered = allRawUsers.filter((u: any) =>
           (u.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
           (u.email?.toLowerCase() || "").includes(searchTerm.toLowerCase())
         );
-
+  
         setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-
+  
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
         const slicedUsers = filtered.slice(startIndex, endIndex);
-
-        const mapped = await Promise.all(
-          slicedUsers.map(async (u: any) => {
-            try {
-              const detail: FullUser = await getUserDetail(u.id);
-              return {
-                id: u.id,
-                name: u.name,
-                age: new Date().getFullYear() - new Date(u.birthDate).getFullYear(),
-                gender: u.gender,
-                email: u.email,
-                depressionStatus: (detail.status.depression?.toLowerCase() ?? 'low') as 'low' | 'medium' | 'high',
-                gamblingStatus: (detail.status.gambling?.toLowerCase() ?? 'low') as 'low' | 'medium' | 'high',
-                lastDiagnosis: detail.status.latestAssessmentDate,
-                diagnosisCount: detail.status.totalAssessments,
-                improvementRate: ((detail.status.improvementRate ?? 0).toFixed(2)) + '%',
-                registrationDate: u.createdAt,
-                lastActive: detail.status.latestAssessmentDate,
-              };
-            } catch (err) {
-              // 상세 조회 실패 시 기본 정보만라도 반환
-              return {
-                id: u.id,
-                name: u.name,
-                age: 0,
-                gender: u.gender,
-                email: u.email,
-                depressionStatus: 'low',
-                gamblingStatus: 'low',
-                lastDiagnosis: '-',
-                diagnosisCount: 0,
-                improvementRate: '0%',
-                registrationDate: u.createdAt,
-                lastActive: '-',
-              } as MappedUser;
-            }
-          })
-        );
-
+  
+        // MID / LOW / HIGH → medium / low / high 매핑
+        const riskMap: Record<string, 'low' | 'medium' | 'high'> = {
+          LOW: 'low',
+          MID: 'medium',
+          HIGH: 'high'
+        };
+  
+        const mapped: MappedUser[] = slicedUsers.map((u: any) => ({
+          id: u.id,
+          name: u.name,
+          age: new Date().getFullYear() - new Date(u.birthDate).getFullYear(),
+          gender: u.gender,
+          email: u.email,
+          depressionStatus: riskMap[u.depressionRisk] ?? 'low',
+          gamblingStatus: riskMap[u.gamblingRisk] ?? 'low',
+          lastDiagnosis: u.updatedAt || '-',
+          diagnosisCount: u.totalAssessments ?? 0,
+          improvementRate: ((u.improvementRate ?? 0).toFixed(2)) + '%',
+          registrationDate: u.createdAt,
+          lastActive: u.updatedAt || '-',
+        }));
+  
         setUsers(mapped);
+  
       } catch (error) {
         console.error("데이터 처리 중 오류:", error);
       } finally {
         setComponentLoading(false);
       }
     };
-
-    // 검색어가 바뀌거나 페이지가 바뀔 때 실행
+  
     const timer = setTimeout(() => {
       processUsers();
     }, 300);
-
+  
     return () => clearTimeout(timer);
-
-  }, [allRawUsers, searchTerm, currentPage])
+  }, [allRawUsers, searchTerm, currentPage]);
+  
 
   useEffect(() => {
     setCurrentPage(1);
