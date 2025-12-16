@@ -227,36 +227,32 @@ useEffect(() => {
         </CardHeader>
 
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>순위</TableHead>
-                <TableHead>기능명</TableHead>
-                <TableHead>사용 횟수</TableHead>
-              </TableRow>
-            </TableHeader>
-
-            <TableBody>
-              {loadingTop ? (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center py-6">
-                    불러오는 중...
-                  </TableCell>
-                </TableRow>
-              ) : (
-                topFeatures.map((f, index) => (
-                  <TableRow key={f.feature}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{getFeatureLabel(f.feature)}</TableCell>
-                    <TableCell>
-                      {f.totalSessions.toLocaleString()}
-                    </TableCell>
+            {loadingTop ? (
+              <LoadingSpinner />
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>순위</TableHead>
+                    <TableHead>기능명</TableHead>
+                    <TableHead>사용 횟수</TableHead>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
+                </TableHeader>
+
+                <TableBody>
+                  {topFeatures.map((f, index) => (
+                    <TableRow key={f.feature}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{getFeatureLabel(f.feature)}</TableCell>
+                      <TableCell>
+                        {f.totalSessions.toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
       </Card>
 
       {/* ================= 필터 ================= */}
