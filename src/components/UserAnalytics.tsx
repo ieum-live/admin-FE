@@ -31,7 +31,7 @@ type TrendItem = {
   label: string;
   phq9: number;
   gad7: number;
-  cpgi: number;
+  cagi: number;
   totalUsers: number;
 };
 
@@ -71,7 +71,7 @@ export function UserAnalytics() {
         label: item.weekLabel,
         phq9: item.phq9Avg,
         gad7: item.gad7Avg,
-        cpgi: item.cagiAvg,
+        cagi: item.cagiAvg,
         totalUsers: item.totalUsers,
       }));
 
@@ -146,7 +146,7 @@ export function UserAnalytics() {
                 <Line
                   yAxisId="left"
                   type="monotone"
-                  dataKey="cpgi"
+                  dataKey="cagi"
                   name="CAGI"
                   stroke="#ffc658"
                 />
