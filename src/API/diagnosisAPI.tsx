@@ -16,7 +16,7 @@ export interface RiskDistributionItem {
 // 📌 위험도별 사용자 분포 추이 API
 // ================================
 export const getRiskDistributionTrend = async (
-    type?: "PHQ-9" | "GAD-7" | "CPGI",
+    type?: "PHQ-9" | "GAD-7" | "CAGI",
     period: "2weeks" | "1month" | "3months" | "6months" = "1month"
   ): Promise<RiskDistributionItem[]> => {
     try {
@@ -57,7 +57,7 @@ export const getRiskDistributionTrend = async (
   }
   
   export const getRecentUsers = async (params?: {
-    type?: "PHQ-9" | "GAD-7" | "CPGI";
+    type?: "PHQ-9" | "GAD-7" | "CAGI";
     period?: "2weeks" | "1month" | "3months" | "6months";
     page?: number;
     size?: number;

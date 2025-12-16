@@ -71,7 +71,7 @@ export function UserAnalytics() {
         label: item.weekLabel,
         phq9: item.phq9Avg,
         gad7: item.gad7Avg,
-        cpgi: item.cpgiAvg,
+        cpgi: item.cagiAvg,
         totalUsers: item.totalUsers,
       }));
 
@@ -95,7 +95,7 @@ export function UserAnalytics() {
           <div>
             <CardTitle>진단별 개선 지표</CardTitle>
             <p className="text-sm text-muted-foreground">
-              기간별 평균 점수 추이 (PHQ-9 / GAD-7 / CPGI)
+              기간별 평균 점수 추이 (PHQ-9 / GAD-7 / CAGI)
             </p>
           </div>
 
@@ -147,7 +147,7 @@ export function UserAnalytics() {
                   yAxisId="left"
                   type="monotone"
                   dataKey="cpgi"
-                  name="CPGI"
+                  name="CAGI"
                   stroke="#ffc658"
                 />
                 <Line

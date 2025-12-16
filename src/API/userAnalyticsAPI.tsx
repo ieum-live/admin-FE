@@ -5,7 +5,7 @@ export type DiagnosticsTrendItem = {
   weekLabel: string;     // ex) "9/2주"
   phq9Avg: number;
   gad7Avg: number;
-  cpgiAvg: number;
+  cagiAvg: number;
   totalUsers: number;
 };
 
