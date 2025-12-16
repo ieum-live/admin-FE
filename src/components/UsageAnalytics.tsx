@@ -127,6 +127,7 @@ const getFeatureLabel = (f: string) => {
     case "DAILY_TOPIC": return "매일 1주제";
     case "DIARY": return "일기";
     case "MEDITATION_QUEST": return "명상 퀘스트";
+    case "IMPULSE_QUEST": return "감정 퀘스트";
     case "ACTIVITY_QUEST": return "산책 퀘스트";
     default: return f;
   }
@@ -274,6 +275,7 @@ useEffect(() => {
               <SelectItem value="DIARY">일기</SelectItem>
               <SelectItem value="MEDITATION_QUEST">명상 퀘스트</SelectItem>
               <SelectItem value="ACTIVITY_QUEST">산책 퀘스트</SelectItem>
+              <SelectItem value="IMPULSE_QUEST">감정 퀘스트</SelectItem>
 
             </SelectContent>
           </Select>
