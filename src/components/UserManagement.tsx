@@ -8,18 +8,11 @@ import { Badge } from "./ui/badge";
 import { Textarea } from "./ui/textarea";
 import { Search, MessageSquare, Bell, Mail, Eye, Filter, X } from "lucide-react";
 import { UserDetail } from "./UserDetail";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "./ui/pagination";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { getUserStatistics, getUserDetail, getUsers } from "../API/userManagementAPI";
 import LoadingSpinner from "./LoadingSpinner";
 import { AlertType, sendBulkAlert } from "../API/alertAPI";
+import { UserBasicInfo } from "./UserBasicInfo";
 import React from "react";
 
 interface BasicUser {
@@ -72,7 +65,7 @@ export function UserManagement() {
   const [averageDiagnoses, setAverageDiagnoses] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const itemsPerPage = 15;
+  const itemsPerPage = 10;
   const [componentLoading, setComponentLoading] = useState(false);
 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -501,29 +494,12 @@ export function UserManagement() {
               </Table>
               )}
               {totalPages > 1 && filteredUsers.length > 0 &&(
-                <Pagination>
-                  <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} size="default">
-                    </PaginationPrevious>
-                  </PaginationItem>
-                    {[...Array(totalPages)].map((_, i) => (
-                      <PaginationItem key={i}>
-                        <PaginationLink
-                          size="default"
-                          isActive={currentPage === i + 1}
-                          onClick={() => handlePageChange(i + 1)}
-                        >
-                          {i + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                  <PaginationItem>
-                    <PaginationNext onClick={() => handlePageChange(currentPage + 1)} size="default">
-                    </PaginationNext>
-                  </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+                <div className="flex justify-end mt-3 gap-2">
+                              <Button size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>이전</Button>
+                <span>{currentPage} / {totalPages}</span>
+                <Button size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>다음</Button>
+                
+                              </div>
               )}
             </CardContent>)
           }
@@ -534,9 +510,29 @@ export function UserManagement() {
       {/* 오른쪽: 사용자 상세 정보 (항상 표시) */}
       <div className="lg:sticky lg:top-6 lg:h-fit">
         <Card>
-          <CardHeader>
-            <CardTitle>사용자 상세 정보</CardTitle>
-          </CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>사용자 상세 정보</CardTitle>
+
+              {selectedUser && (
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      정보 더보기
+                    </Button>
+                  </DialogTrigger>
+
+                  <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                      <DialogTitle>기본 정보</DialogTitle>
+                    </DialogHeader>
+
+                    {/* ✅ 기본 정보만 표시 */}
+                    <UserBasicInfo userId={selectedUser.id} />
+                  </DialogContent>
+                </Dialog>
+              )}
+            </CardHeader>
+
           <CardContent>
             {selectedUser ? (
               <UserDetail userId={selectedUser.id} />

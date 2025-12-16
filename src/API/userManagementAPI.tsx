@@ -1,3 +1,4 @@
+import { TIMEOUT } from "dns";
 import instance from "./axios";
 
 export interface GetUsersParams {
@@ -24,6 +25,7 @@ export const getUsers = async ({
             page,
             size,
         },
+        timeout: 15000
     });
     return response.data.data;
 };
