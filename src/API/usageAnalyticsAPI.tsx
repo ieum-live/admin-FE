@@ -62,11 +62,15 @@ export async function getFeatureUsageTrend(
   ): Promise<FeatureTrendPayload> {
     const res = await instance.get(
       "/api/usage/features",
-      { params: { feature, period } }
+      {
+        params: { feature, period },
+        timeout: 150000, // 🔥 트렌드 전용
+      }
     );
   
-    return res.data.data; // { feature, data }
+    return res.data.data;
   }
+  
   
   
   
