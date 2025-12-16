@@ -69,7 +69,7 @@ const getDateRange = (period: string) => {
 
 export function DiagnosisResults() {
   // 필터 상태
-  type TestTypeUI = "PHQ9" | "GAD7" | "CPGI";
+  type TestTypeUI = "PHQ9" | "GAD7" | "CAGI";
   const [testType, setTestType] = useState<TestTypeUI>("PHQ9");
 
   const [period, setPeriod] = useState<"2weeks" | "1month" | "3months" | "6months">("1month");
@@ -91,11 +91,11 @@ export function DiagnosisResults() {
   
   const TEST_TYPE_TO_API: Record<
       TestTypeUI,
-      "PHQ-9" | "GAD-7" | "CPGI"
+      "PHQ-9" | "GAD-7" | "CAGI"
     > = {
       PHQ9: "PHQ-9",
       GAD7: "GAD-7",
-      CPGI: "CPGI",
+      CAGI: "CAGI",
     };
 
     const loadRiskTrend = async () => {
@@ -168,7 +168,7 @@ const SCALE_TO_RISK_MAP: Record<TestTypeUI, Record<string, "LOW" | "MID" | "HIGH
     "정상": "LOW",
     "불안 시사됨": "HIGH",
   },
-  CPGI: {
+  CAGI: {
     "일반군": "LOW",
     "문제군": "MID",
     "위험군": "HIGH",
@@ -295,7 +295,7 @@ useEffect(() => {
     switch (test) {
       case "PHQ9": return "PHQ-9";
       case "GAD7": return "GAD-7";
-      case "CPGI": return "CPGI";
+      case "CAGI": return "CAGI";
       default: return "";
     }
   };
@@ -320,7 +320,7 @@ useEffect(() => {
             <SelectContent>
               <SelectItem value="PHQ9">PHQ-9</SelectItem>
               <SelectItem value="GAD7">GAD-7</SelectItem>
-              <SelectItem value="CPGI">CPGI</SelectItem>
+              <SelectItem value="CAGI">CAGI</SelectItem>
             </SelectContent>
           </Select>
 

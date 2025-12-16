@@ -103,7 +103,7 @@ export function UserDetail({ userId }: UserDetailProps) {
     "PHQ-9": "#82ca9d",
     "GAD-7": "#ffc658",
     BDI: "#ff6b6b",
-    CPGI: "#38bdf8",
+    CAGI: "#38bdf8",
     Gamble_Simple: "#a855f7",
   };
 
