@@ -122,7 +122,7 @@ const getPeriodLabel = (p: PeriodType) => {
 const getFeatureLabel = (f: string) => {
   switch (f) {
     case "PHQ9": return "PHQ-9 검사";
-    case "GAD-7": return "GAD-7 검사";
+    case "GAD7": return "GAD-7 검사";
     case "CPGI": return "CPGI 검사";
     case "DAILY_TOPIC": return "매일 1주제";
     case "DIARY": return "일기";
@@ -268,7 +268,7 @@ useEffect(() => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="PHQ9">PHQ-9</SelectItem>
-              <SelectItem value="GAD-7">GAD-7</SelectItem>
+              <SelectItem value="GAD7">GAD-7</SelectItem>
               <SelectItem value="CPGI">CPGI</SelectItem>
               <SelectItem value="DAILY_TOPIC">매일 1주제</SelectItem>
               <SelectItem value="DIARY">일기</SelectItem>
