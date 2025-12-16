@@ -122,12 +122,12 @@ export function DiagnosisResults() {
     
     const transformRiskTrend = (rawData: any[], testType: TestTypeUI) => {
       const map = new Map<string, any>();
-      const SCALE_TO_RISK = SCALE_TO_RISK_MAP[testType]; // 검사별 매핑 사용
+      const SCALE_TO_RISK = SCALE_TO_RISK_MAP[testType];
     
+      // 1. userCount 누적
       rawData.forEach((item) => {
         const { label, scaleName, userCount } = item;
         const risk = SCALE_TO_RISK[scaleName];
-    
         if (!risk) return;
     
         if (!map.has(label)) {
@@ -136,13 +136,22 @@ export function DiagnosisResults() {
             LOW: 0,
             MID: 0,
             HIGH: 0,
+            TOTAL: 0,
           });
         }
     
-        map.get(label)[risk] += userCount;
+        const target = map.get(label);
+        target[risk] += userCount;
+        target.TOTAL += userCount;
       });
     
-      return Array.from(map.values());
+      // 2. 퍼센트로 변환
+      return Array.from(map.values()).map((item) => ({
+        label: item.label,
+        LOW: item.TOTAL ? +(item.LOW / item.TOTAL * 100).toFixed(1) : 0,
+        MID: item.TOTAL ? +(item.MID / item.TOTAL * 100).toFixed(1) : 0,
+        HIGH: item.TOTAL ? +(item.HIGH / item.TOTAL * 100).toFixed(1) : 0,
+      }));
     };
     
   
