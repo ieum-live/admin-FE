@@ -1,10 +1,24 @@
 // 📌 StatsOverview.tsx
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Users, Calendar, TrendingUp, Activity, ShieldCheck, ClipboardList, CalendarRange } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
+import {
+  Users,
+  Calendar,
+  TrendingUp,
+  Activity,
+  ShieldCheck,
+  ClipboardList,
+  CalendarRange,
+} from "lucide-react";
 import { getDiagnosisSummary } from "../API/overviewAPI";
-import React from "react";
 import LoadingSpinner from "./LoadingSpinner";
+import { Badge } from "./ui/badge";
+import React from "react";
 
 // ---------------- 타입 선언 ----------------
 type DAUStat = {
@@ -12,7 +26,7 @@ type DAUStat = {
   value: string;
   icon: any;
   change: string;
-  changeType: string;
+  changeType: "increase" | "decrease";
   period: string;
 };
 
@@ -24,8 +38,83 @@ type SummaryStat = {
 
 type CombinedStat = DAUStat | SummaryStat;
 
-export function StatsOverview() {
+// ---------------- Badge 스타일 ----------------
+const getStatusBadge = (
+  status: "low" | "medium" | "high",
+  label: string
+) => {
+  const baseClasses = "text-xs";
 
+  if (status === "low") {
+    return (
+      <Badge
+        variant="default"
+        className={`${baseClasses} bg-green-100 text-green-800`}
+      >
+        {label}
+      </Badge>
+    );
+  }
+
+  if (status === "medium") {
+    return (
+      <Badge
+        variant="secondary"
+        className={`${baseClasses} bg-yellow-100 text-yellow-800`}
+      >
+        {label}
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge variant="destructive" className={baseClasses}>
+      {label}
+    </Badge>
+  );
+};
+
+// ---------------- 개선율 기준 (더 엄격) ----------------
+const getImprovementStyle = (value: number) => {
+  if (value >= 50) {
+    return {
+      status: "low" as const,
+      textClass: "text-green-700",
+    };
+  }
+  if (value >= 30) {
+    return {
+      status: "medium" as const,
+      textClass: "text-yellow-700",
+    };
+  }
+  return {
+    status: "high" as const,
+    textClass: "text-red-700",
+  };
+};
+
+// ---------------- 안정군 기준 ----------------
+const getStableStyle = (value: number) => {
+  if (value >= 70) {
+    return {
+      status: "low" as const,
+      textClass: "text-green-700",
+    };
+  }
+  if (value >= 40) {
+    return {
+      status: "medium" as const,
+      textClass: "text-yellow-700",
+    };
+  }
+  return {
+    status: "high" as const,
+    textClass: "text-red-700",
+  };
+};
+
+export function StatsOverview() {
   const [summary, setSummary] = useState({
     improvementRate: 0,
     stableRatio: 0,
@@ -35,25 +124,26 @@ export function StatsOverview() {
 
   const [loadingSummary, setLoadingSummary] = useState(true);
 
-  const loadSummary = async () => {
-    try {
-      const data = await getDiagnosisSummary();
-      setSummary({
-        improvementRate: data.improvementRate ?? 0,
-        stableRatio: data.stableRatio ?? 0,
-        totalAssessments: data.totalAssessments ?? 0,
-        avgAssessmentIntervalDays: data.avgAssessmentIntervalDays ?? 0,
-      });
-    } finally {
-      setLoadingSummary(false);
-    }
-  };
-
   useEffect(() => {
+    const loadSummary = async () => {
+      try {
+        const data = await getDiagnosisSummary();
+        setSummary({
+          improvementRate: data.improvementRate ?? 0,
+          stableRatio: data.stableRatio ?? 0,
+          totalAssessments: data.totalAssessments ?? 0,
+          avgAssessmentIntervalDays:
+            data.avgAssessmentIntervalDays ?? 0,
+        });
+      } finally {
+        setLoadingSummary(false);
+      }
+    };
+
     loadSummary();
   }, []);
 
-  // ------------------------- DAU/WAU/MAU/YAU -------------------------
+  // ---------------- DAU / WAU / MAU / YAU ----------------
   const dauStats: DAUStat[] = [
     {
       title: "일일 활성 사용자 (DAU)",
@@ -89,7 +179,7 @@ export function StatsOverview() {
     },
   ];
 
-  // ------------------------- 요약 통계 -------------------------
+  // ---------------- 요약 통계 ----------------
   const summaryStats: SummaryStat[] = [
     {
       title: "전체 개선율",
@@ -113,40 +203,85 @@ export function StatsOverview() {
     },
   ];
 
-  const combinedStats: CombinedStat[] = [...dauStats, ...summaryStats];
+  const combinedStats: CombinedStat[] = [
+    ...dauStats,
+    ...summaryStats,
+  ];
 
-  // ------------------------- UI -------------------------
+  // ---------------- UI ----------------
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {combinedStats.map((stat, index) => {
         const Icon = stat.icon;
 
+        const isImprovement = stat.title === "전체 개선율";
+        const isStable = stat.title === "안정군 비율";
+
+        const improvementStyle = isImprovement
+          ? getImprovementStyle(summary.improvementRate)
+          : null;
+
+        const stableStyle = isStable
+          ? getStableStyle(summary.stableRatio)
+          : null;
+
+        const valueTextClass =
+          improvementStyle?.textClass ??
+          stableStyle?.textClass ??
+          "";
+
         return (
           <Card key={index}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm">{stat.title}</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm">
+                {stat.title}
+              </CardTitle>
               <Icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
 
-            <CardContent>
-              {/* 📌 값 */}
-              <div className="text-2xl font-bold">
-                {loadingSummary && index >= dauStats.length ? (
-                  <LoadingSpinner />
-                ) : (
-                  stat.value
+            <CardContent className="space-y-2">
+              {/* 값 + Badge */}
+              <div className="flex items-center gap-2">
+                <div
+                  className={`text-2xl font-bold ${valueTextClass}`}
+                >
+                  {loadingSummary &&
+                  index >= dauStats.length ? (
+                    <LoadingSpinner />
+                  ) : (
+                    stat.value
+                  )}
+                </div>
+
+                {!loadingSummary && improvementStyle && (
+                  <>
+                    {getStatusBadge(
+                      improvementStyle.status,
+                      "개선"
+                    )}
+                  </>
+                )}
+
+                {!loadingSummary && stableStyle && (
+                  <>
+                    {getStatusBadge(
+                      stableStyle.status,
+                      "안정"
+                    )}
+                  </>
                 )}
               </div>
 
-              {/* 📌 변화율 (DAU/WAU/MAU/YAU 항목만) */}
+              {/* 변화율 */}
               {"change" in stat && (
-                <p
-                  className={`text-xs ${
-                    stat.changeType === "increase" ? "text-green-500" : "text-red-500"
-                  }`}
-                >
-                  {stat.change} ({stat.period})
-                </p>
+                <div>
+                  {getStatusBadge(
+                    stat.changeType === "increase"
+                      ? "low"
+                      : "high",
+                    `${stat.change} · ${stat.period}`
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
