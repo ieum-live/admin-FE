@@ -165,69 +165,87 @@ export function UserDetail({ userId }: UserDetailProps) {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
-            height: 100vh; 
+            align-items: stretch;
           }
+
           .dashboard-column {
-            display: grid;
-            grid-template-rows: 1fr 1fr;
-            gap: 1rem;
-            height: 100%;
-          }
-          .dashboard-card {
             display: flex;
             flex-direction: column;
             height: 100%;
           }
+
+          .dashboard-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+          }
+
           .dashboard-card-content {
             flex: 1;
             overflow: auto;
-            min-height: 300px; /* 차트가 잘리는 문제 방지 */
+            min-height: 300px;
           }
         `}
-      </style>
+        </style>
+
 
       <div className="dashboard-grid">
         <div className="dashboard-column">
           <Card className="dashboard-card">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Activity className="h-4 w-4" />
-                기본 정보
+                <TrendingUp className="h-4 w-4" />
+                진단 점수 추이
               </CardTitle>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {availableTypes.map(type => (
+                  <label key={type} className="flex items-center gap-1 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={selectedTypes.has(type)}
+                      onChange={() => {
+                        const next = new Set(selectedTypes);
+                        next.has(type) ? next.delete(type) : next.add(type);
+                        setSelectedTypes(next);
+                      }}
+                    />
+                    {type}
+                  </label>
+                ))}
+              </div>
             </CardHeader>
-            <CardContent className="dashboard-card-content space-y-2 text-sm">
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">사용자 ID</span>
-                <span className="font-medium">{user.id}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">이름</span>
-                <span className="font-medium">{user.name}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">나이</span>
-                <span className="font-medium">{user.age}세</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">성별</span>
-                <span className="font-medium">{user.gender}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">이메일</span>
-                <span className="font-medium truncate ml-2">{user.email}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">가입일</span>
-                <span className="font-medium">{formatDateTime(user.registrationDate)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">최근 활동</span>
-                <span className="font-medium">{formatDateTime(user.lastActive)}</span>
-              </div>
-            </CardContent>
-          </Card>
+            <CardContent className="dashboard-card-content">
+              <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
+                <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11 }} /> {/* 자동 범위 */}
+                <Tooltip contentStyle={{ fontSize: 12 }} />
+                {availableTypes
+                  .filter(type => selectedTypes.has(type))
+                  .map(type => (
+                    <Line
+                      key={type}
+                      type="monotone"
+                      dataKey={type}
+                      stroke={lineColors[type] ?? "#64748b"}
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                      connectNulls={true} // null 값이 있어도 선 이어주기
+                      name={type}
+                    />
+                  ))}
+              </LineChart>
 
-          <Card className="dashboard-card">
+              </ResponsiveContainer>
+            </CardContent>
+            
+          </Card>
+        </div>
+
+        <div className="dashboard-column">
+          
+        <Card className="dashboard-card">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4" />
@@ -289,80 +307,6 @@ export function UserDetail({ userId }: UserDetailProps) {
                     </div>
                   )}
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="dashboard-column">
-          <Card className="dashboard-card">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" />
-                진단 점수 추이
-              </CardTitle>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {availableTypes.map(type => (
-                  <label key={type} className="flex items-center gap-1 text-xs">
-                    <input
-                      type="checkbox"
-                      checked={selectedTypes.has(type)}
-                      onChange={() => {
-                        const next = new Set(selectedTypes);
-                        next.has(type) ? next.delete(type) : next.add(type);
-                        setSelectedTypes(next);
-                      }}
-                    />
-                    {type}
-                  </label>
-                ))}
-              </div>
-            </CardHeader>
-            <CardContent className="dashboard-card-content">
-              <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
-                <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11 }} /> {/* 자동 범위 */}
-                <Tooltip contentStyle={{ fontSize: 12 }} />
-                {availableTypes
-                  .filter(type => selectedTypes.has(type))
-                  .map(type => (
-                    <Line
-                      key={type}
-                      type="monotone"
-                      dataKey={type}
-                      stroke={lineColors[type] ?? "#64748b"}
-                      strokeWidth={2}
-                      dot={{ r: 3 }}
-                      connectNulls={true} // null 값이 있어도 선 이어주기
-                      name={type}
-                    />
-                  ))}
-              </LineChart>
-
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <Card className="dashboard-card">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                기능별 활동 패턴
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="dashboard-card-content">
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={activityData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="feature" tick={{ fontSize: 11 }} />
-                  <YAxis yAxisId="left" tick={{ fontSize: 11 }} />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
-                  <Tooltip contentStyle={{ fontSize: 12 }} />
-                  <Bar yAxisId="left" dataKey="sessions" fill="#8884d8" name="세션 수" radius={[4, 4, 0, 0]} />
-                  <Bar yAxisId="right" dataKey="avgTime" fill="#82ca9d" name="평균 시간 (분)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
             </CardContent>
           </Card>
         </div>

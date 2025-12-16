@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { getUserStatistics, getUserDetail, getUsers } from "../API/userManagementAPI";
 import LoadingSpinner from "./LoadingSpinner";
 import { AlertType, sendBulkAlert } from "../API/alertAPI";
+import { UserBasicInfo } from "./UserBasicInfo";
 import React from "react";
 
 interface BasicUser {
@@ -509,9 +510,29 @@ export function UserManagement() {
       {/* 오른쪽: 사용자 상세 정보 (항상 표시) */}
       <div className="lg:sticky lg:top-6 lg:h-fit">
         <Card>
-          <CardHeader>
-            <CardTitle>사용자 상세 정보</CardTitle>
-          </CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>사용자 상세 정보</CardTitle>
+
+              {selectedUser && (
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      정보 더보기
+                    </Button>
+                  </DialogTrigger>
+
+                  <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                      <DialogTitle>기본 정보</DialogTitle>
+                    </DialogHeader>
+
+                    {/* ✅ 기본 정보만 표시 */}
+                    <UserBasicInfo userId={selectedUser.id} />
+                  </DialogContent>
+                </Dialog>
+              )}
+            </CardHeader>
+
           <CardContent>
             {selectedUser ? (
               <UserDetail userId={selectedUser.id} />
