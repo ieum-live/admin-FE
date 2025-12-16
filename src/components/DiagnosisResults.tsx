@@ -5,6 +5,7 @@ import { saveAs } from "file-saver";
 import {
   getRecentUsers,
   exportDiagnosisCSV,
+  getRiskDistributionTrend,
 } from "../API/diagnosisAPI";
 
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -66,54 +67,198 @@ const getDateRange = (period: string) => {
   };
 };
 
-// 차트 임시데이터 (백엔드 연동 시 실제 데이터로 교체 가능)
-const improvementData = [
-  { month: "1월", LOW: 40, MID: 45, HIGH: 15 },
-  { month: "2월", LOW: 45, MID: 40, HIGH: 15 },
-  { month: "3월", LOW: 50, MID: 35, HIGH: 15 },
-  { month: "4월", LOW: 55, MID: 32, HIGH: 13 },
-  { month: "5월", LOW: 58, MID: 30, HIGH: 12 },
-];
-
 export function DiagnosisResults() {
   // 필터 상태
-  const [testType, setTestType] = useState<"PHQ9" | "GAD7" | "CPGI">("PHQ9");
+  type TestTypeUI = "PHQ9" | "GAD7" | "CPGI";
+  const [testType, setTestType] = useState<TestTypeUI>("PHQ9");
+
   const [period, setPeriod] = useState<"2weeks" | "1month" | "3months" | "6months">("1month");
 
   // 데이터 상태
-  const [users, setUsers] = useState<UserData[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  
+
+  const [riskTrend, setRiskTrend] = useState<any[]>([]);
+  const [loadingTrend, setLoadingTrend] = useState(true);
+
 
   // 페이지네이션
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 7;
-  const totalPages = Math.ceil(users.length / usersPerPage) || 1;
+  
+  const TEST_TYPE_TO_API: Record<
+      TestTypeUI,
+      "PHQ-9" | "GAD-7" | "CPGI"
+    > = {
+      PHQ9: "PHQ-9",
+      GAD7: "GAD-7",
+      CPGI: "CPGI",
+    };
 
-  const paginatedUsers = users.slice(
-    (currentPage - 1) * usersPerPage,
-    currentPage * usersPerPage
-  );
+    const loadRiskTrend = async () => {
+      try {
+        setLoadingTrend(true);
+    
+        const apiType = TEST_TYPE_TO_API[testType];
+        const raw = await getRiskDistributionTrend(apiType, period);
+        console.log("raw", raw);
+    
+        const chartData = transformRiskTrend(raw, testType); // testType 전달
+        console.log("📊 chartData", chartData);
+    
+        setRiskTrend(chartData);
+      } catch (err) {
+        console.error(err);
+        setRiskTrend([]);
+      } finally {
+        setLoadingTrend(false);
+      }
+    };
+    
+    
+    
+    const transformRiskTrend = (rawData: any[], testType: TestTypeUI) => {
+      const map = new Map<string, any>();
+      const SCALE_TO_RISK = SCALE_TO_RISK_MAP[testType]; // 검사별 매핑 사용
+    
+      rawData.forEach((item) => {
+        const { label, scaleName, userCount } = item;
+        const risk = SCALE_TO_RISK[scaleName];
+    
+        if (!risk) return;
+    
+        if (!map.has(label)) {
+          map.set(label, {
+            label,
+            LOW: 0,
+            MID: 0,
+            HIGH: 0,
+          });
+        }
+    
+        map.get(label)[risk] += userCount;
+      });
+    
+      return Array.from(map.values());
+    };
+    
+  
 
-  // ✔ 사용자 로드
-  const loadUsers = async (testType: string, from: string, to: string) => {
-    try {
-      const list = await getRecentUsers();
-      setUsers(list);
-    } finally {
-      setLoadingUsers(false);
+  // 검사별 SCALE → RISK 매핑
+const SCALE_TO_RISK_MAP: Record<TestTypeUI, Record<string, "LOW" | "MID" | "HIGH">> = {
+  PHQ9: {
+    "정상": "LOW",
+    "가벼운 우울증": "LOW",
+    "중간정도 우울증": "MID",
+    "심한 우울증": "HIGH",
+  },
+  GAD7: {
+    "정상": "LOW",
+    "불안 시사됨": "HIGH",
+  },
+  CPGI: {
+    "일반군": "LOW",
+    "문제군": "MID",
+    "위험군": "HIGH",
+  },
+};
+  
+
+  useEffect(() => {
+    const { from, to } = getDateRange(period);
+  
+    setLoadingUsers(true);
+    loadUsers(testType, period);
+    loadRiskTrend();
+    setCurrentPage(1);
+  }, [testType, period]);
+
+  const mapScaleToRisk = (testType: TestTypeUI, scaleName: string): "LOW" | "MID" | "HIGH" => {
+    const SCALE_TO_RISK = SCALE_TO_RISK_MAP[testType];
+    return SCALE_TO_RISK[scaleName] || "LOW";
+  };
+  
+  
+const loadUsers = async (
+  testType: TestTypeUI,
+  period: "2weeks" | "1month" | "3months" | "6months",
+  page: number = 0,
+  size: number = 7
+) => {
+  try {
+    setLoadingUsers(true);
+
+    const apiType = TEST_TYPE_TO_API[testType];
+    const res = await getRecentUsers({ type: apiType, period, page, size });
+
+    // 서버 데이터 → 화면용 UserData로 변환
+    const mappedUsers: UserData[] = res.content.map(u => ({
+      id: u.email,
+      name: u.name,
+      email: u.email,
+      latestAssessment: {
+        id: u.email,
+        type: u.testName,
+        completedAt: u.lastDiagnosisDate,
+        totalScore: u.score,
+        riskLevel: mapScaleToRisk(testType, u.scaleName),
+      },
+      user: {
+        email: u.email,
+        id: u.email,
+        name: u.name,
+      }
+    }));
+    console.log("ttt", mappedUsers)
+    setUsers(mappedUsers);
+    setTotalUsers(res.page.totalElements);
+    setTotalPages(res.page.totalPages);
+  } catch (err) {
+    console.error(err);
+    setUsers([]);
+    setTotalUsers(0);
+    setTotalPages(1);
+  } finally {
+    setLoadingUsers(false);
+  }
+};
+
+// 위험도 뱃지
+const getStatusBadge = (risk: "LOW" | "MID" | "HIGH") => {
+    const baseClasses = "text-xs";
+    switch (risk) {
+      case 'LOW':
+        return (
+          <Badge variant="default" className={`${baseClasses} bg-green-100 text-green-800`}>
+            안정
+          </Badge>
+        );
+      case 'MID':
+        return (
+          <Badge variant="secondary" className={`${baseClasses} bg-yellow-100 text-yellow-800`}>
+          주의
+          </Badge>
+        );
+      case 'HIGH':
+        return (
+          <Badge variant="destructive" className={baseClasses}>
+            위험
+          </Badge>
+        );
+      default:
+        return <Badge variant="outline" className={baseClasses}>알 수 없음</Badge>;
     }
   };
 
-  // ✔ 필터 변경 시 전체 새로 로드
-  useEffect(() => {
-    const { from, to } = getDateRange(period);
 
-    setLoadingUsers(true);
+useEffect(() => {
+  loadUsers(testType, period, currentPage - 1, usersPerPage);
+}, [testType, period, currentPage]);
 
-    loadUsers(testType, from, to);
-    setCurrentPage(1); // 필터 바뀌면 페이지 초기화
-  }, [testType, period]);
-
+  
   // ✔ CSV 다운로드
   const handleExport = async () => {
     try {
@@ -145,7 +290,7 @@ export function DiagnosisResults() {
       default: return "";
     }
   };
-
+  
 
   return (
     <div className="space-y-6">
@@ -188,21 +333,29 @@ export function DiagnosisResults() {
 
       {/* ---------------------- 위험도 차트 ---------------------- */}
       <Card>
-        <CardHeader><CardTitle>위험도별 사용자 분포 추이</CardTitle></CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={400}>
-            <AreaChart data={improvementData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip formatter={(value) => `${value}%`} />
-              <Area type="monotone" dataKey="LOW" stackId="1" stroke="#10b981" fill="#10b981" />
-              <Area type="monotone" dataKey="MID" stackId="1" stroke="#f59e0b" fill="#f59e0b" />
-              <Area type="monotone" dataKey="HIGH" stackId="1" stroke="#ef4444" fill="#ef4444" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+  <CardHeader>
+    <CardTitle>위험도별 사용자 분포 추이</CardTitle>
+  </CardHeader>
+
+  <CardContent>
+  <div style={{ width: '100%', height: 400 }}>
+  <ResponsiveContainer width="100%" height="100%">
+  <AreaChart data={riskTrend}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="label" />
+      <YAxis />
+      <Tooltip />
+      <Area type="monotone" dataKey="LOW" stackId="1" stroke="#10b981" fill="#10b981" />
+      <Area type="monotone" dataKey="MID" stackId="1" stroke="#f59e0b" fill="#f59e0b" />
+      <Area type="monotone" dataKey="HIGH" stackId="1" stroke="#ef4444" fill="#ef4444" />
+    </AreaChart>
+  </ResponsiveContainer>
+</div>
+
+</CardContent>
+
+</Card>
+
 
       {/* ---------------------- 사용자 테이블 ---------------------- */}
       <Card>
@@ -236,7 +389,7 @@ export function DiagnosisResults() {
                 </TableHeader>
 
                 <TableBody>
-                  {paginatedUsers.map((u) => (
+                  {users.map((u) => (
                     <TableRow key={u.user.id}>
                       <TableCell>{u.user.email}</TableCell>
                       <TableCell>{u.user.name}</TableCell>
@@ -249,17 +402,15 @@ export function DiagnosisResults() {
                     </TableRow>
                   ))}
                 </TableBody>
+
               </Table>
 
               {/* 페이지네이션 */}
               <div className="flex justify-end mt-3 gap-2">
-                <Button size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
-                  이전
-                </Button>
-                <span>{currentPage} / {totalPages}</span>
-                <Button size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>
-                  다음
-                </Button>
+              <Button size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>이전</Button>
+<span>{currentPage} / {totalPages}</span>
+<Button size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>다음</Button>
+
               </div>
             </>
           )}
