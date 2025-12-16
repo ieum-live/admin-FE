@@ -5,6 +5,7 @@ import { Calendar, Activity, TrendingUp, AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getUserAssessments, getUserDetail } from "../API/userManagementAPI";
 import React from "react";
+import LoadingSpinner from "./LoadingSpinner";
 
 interface Assessment {
   id: string;
@@ -90,7 +91,7 @@ export function UserDetail({ userId }: UserDetailProps) {
     loadUser();
   }, [userId]);
 
-  if (!user) return <div>로딩 중...</div>;
+  if (!user) return <LoadingSpinner />;
 
   const chartData = Object.entries(assessmentsByDate).map(([date, scores]) => ({
     date,

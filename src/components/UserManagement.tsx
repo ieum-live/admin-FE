@@ -8,14 +8,6 @@ import { Badge } from "./ui/badge";
 import { Textarea } from "./ui/textarea";
 import { Search, MessageSquare, Bell, Mail, Eye, Filter, X } from "lucide-react";
 import { UserDetail } from "./UserDetail";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "./ui/pagination";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { getUserStatistics, getUserDetail, getUsers } from "../API/userManagementAPI";
 import LoadingSpinner from "./LoadingSpinner";
@@ -72,7 +64,7 @@ export function UserManagement() {
   const [averageDiagnoses, setAverageDiagnoses] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const itemsPerPage = 15;
+  const itemsPerPage = 10;
   const [componentLoading, setComponentLoading] = useState(false);
 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -501,29 +493,12 @@ export function UserManagement() {
               </Table>
               )}
               {totalPages > 1 && filteredUsers.length > 0 &&(
-                <Pagination>
-                  <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} size="default">
-                    </PaginationPrevious>
-                  </PaginationItem>
-                    {[...Array(totalPages)].map((_, i) => (
-                      <PaginationItem key={i}>
-                        <PaginationLink
-                          size="default"
-                          isActive={currentPage === i + 1}
-                          onClick={() => handlePageChange(i + 1)}
-                        >
-                          {i + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                  <PaginationItem>
-                    <PaginationNext onClick={() => handlePageChange(currentPage + 1)} size="default">
-                    </PaginationNext>
-                  </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+                <div className="flex justify-end mt-3 gap-2">
+                              <Button size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>이전</Button>
+                <span>{currentPage} / {totalPages}</span>
+                <Button size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>다음</Button>
+                
+                              </div>
               )}
             </CardContent>)
           }
