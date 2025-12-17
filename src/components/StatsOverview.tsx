@@ -23,12 +23,13 @@ import React from "react";
 // ---------------- 타입 선언 ----------------
 type DAUStat = {
   title: string;
-  value?: string;
+  value: number | null;
   icon: any;
-  change?: string;
+  change?: number | null;
   changeType?: "increase" | "decrease";
   period?: string;
 };
+
 
 type SummaryStat = {
   title: string;
@@ -133,18 +134,11 @@ export function StatsOverview() {
     loadMetrics();
   }, []);
 
-  // ---------------- DAU 카드 (항상 렌더링) ----------------
   const dauStats: DAUStat[] = [
     {
       title: "일일 활성 사용자 (DAU)",
-      value:
-        metrics?.dau != null
-          ? Number(metrics.dau).toLocaleString()
-          : "-",
-      change:
-        metrics?.dauChangeRate != null
-          ? `${metrics.dauChangeRate >= 0 ? "+" : ""}${metrics.dauChangeRate.toFixed(1)}%`
-          : undefined,
+      value: metrics?.dau ?? null,
+      change: metrics?.dauChangeRate ?? null,
       changeType:
         metrics?.dauChangeRate != null && metrics.dauChangeRate >= 0
           ? "increase"
@@ -154,14 +148,8 @@ export function StatsOverview() {
     },
     {
       title: "주간 활성 사용자 (WAU)",
-      value:
-        metrics?.wau != null
-          ? Number(metrics.wau).toLocaleString()
-          : "-",
-      change:
-        metrics?.wauChangeRate != null
-          ? `${metrics.wauChangeRate >= 0 ? "+" : ""}${metrics.wauChangeRate.toFixed(1)}%`
-          : undefined,
+      value: metrics?.wau ?? null,
+      change: metrics?.wauChangeRate ?? null,
       changeType:
         metrics?.wauChangeRate != null && metrics.wauChangeRate >= 0
           ? "increase"
@@ -171,14 +159,8 @@ export function StatsOverview() {
     },
     {
       title: "월간 활성 사용자 (MAU)",
-      value:
-        metrics?.mau != null
-          ? Number(metrics.mau).toLocaleString()
-          : "-",
-      change:
-        metrics?.mauChangeRate != null
-          ? `${metrics.mauChangeRate >= 0 ? "+" : ""}${metrics.mauChangeRate.toFixed(1)}%`
-          : undefined,
+      value: metrics?.mau ?? null,
+      change: metrics?.mauChangeRate ?? null,
       changeType:
         metrics?.mauChangeRate != null && metrics.mauChangeRate >= 0
           ? "increase"
@@ -188,14 +170,8 @@ export function StatsOverview() {
     },
     {
       title: "연간 활성 사용자 (YAU)",
-      value:
-        metrics?.yau != null
-          ? Number(metrics.yau).toLocaleString()
-          : "-",
-      change:
-        metrics?.yauChangeRate != null
-          ? `${metrics.yauChangeRate >= 0 ? "+" : ""}${metrics.yauChangeRate.toFixed(1)}%`
-          : undefined,
+      value: metrics?.yau ?? null,
+      change: metrics?.yauChangeRate ?? null,
       changeType:
         metrics?.yauChangeRate != null && metrics.yauChangeRate >= 0
           ? "increase"
@@ -203,8 +179,7 @@ export function StatsOverview() {
       icon: Activity,
       period: "전년 대비",
     },
-  ];
-  
+  ];  
 
   // ---------------- 요약 통계 ----------------
   const summaryStats: SummaryStat[] = [
@@ -267,36 +242,41 @@ export function StatsOverview() {
             </CardHeader>
 
             <CardContent className="space-y-2">
-              {/* 값 */}
-              <div className="flex items-center gap-2">
-                <div className={`text-2xl font-bold ${valueTextClass}`}>
-                  {(isDAUCard && loadingMetrics) ||
-                  (!isDAUCard && loadingSummary) ? (
-                    <LoadingSpinner />
-                  ) : (
-                    stat.value
-                  )}
-                </div>
-
-                {!loadingSummary && improvementStyle && (
-                  getStatusBadge(improvementStyle.status, "개선")
-                )}
-
-                {!loadingSummary && stableStyle && (
-                  getStatusBadge(stableStyle.status, "안정")
+            {/* 값 */}
+            <div className="flex items-center gap-2">
+              <div className={`text-2xl font-bold ${valueTextClass}`}>
+                {isDAUCard && loadingMetrics ? (
+                  <LoadingSpinner />
+                ) : !isDAUCard && loadingSummary ? (
+                  <LoadingSpinner />
+                ) : stat.value != null ? (
+                  typeof stat.value === "number"
+                    ? stat.value.toLocaleString()
+                    : stat.value
+                ) : (
+                  "-"
                 )}
               </div>
 
-              {/* 변화율 */}
-              {"change" in stat && stat.change && (
-                <div>
-                  {getStatusBadge(
-                    stat.changeType === "increase" ? "low" : "high",
-                    `${stat.change} · ${stat.period}`
-                  )}
-                </div>
-              )}
-            </CardContent>
+              {!loadingSummary && improvementStyle &&
+                getStatusBadge(improvementStyle.status, "개선")}
+
+              {!loadingSummary && stableStyle &&
+                getStatusBadge(stableStyle.status, "안정")}
+            </div>
+
+            {/* 변화율 */}
+            {"change" in stat && stat.change != null && (
+              <div>
+                {getStatusBadge(
+                  stat.changeType === "increase" ? "low" : "high",
+                  `${stat.change >= 0 ? "+" : ""}${stat.change.toFixed(1)}% · ${stat.period}`
+                )}
+              </div>
+            )}
+
+          </CardContent>
+
           </Card>
         );
       })}
