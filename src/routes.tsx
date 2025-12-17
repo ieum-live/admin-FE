@@ -41,7 +41,7 @@ export const routes = [
         <div>
           <h1 className="text-3xl font-semibold">사용량 분석</h1>
           <p className="text-muted-foreground">
-            재방문율, 사용시간, 기능별 분석
+            활성 기능 순위, 기능별 사용 추세
           </p>
         </div>
         <UsageAnalytics />
@@ -55,7 +55,7 @@ export const routes = [
         <div>
           <h1 className="text-3xl font-semibold">진단 결과 및 추이</h1>
           <p className="text-muted-foreground">
-            자가진단 결과 분석 및 개선율 추적
+            자가진단 결과 분석 및 분포 추이
           </p>
         </div>
         <DiagnosisResults />

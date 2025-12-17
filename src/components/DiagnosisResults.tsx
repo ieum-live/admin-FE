@@ -268,17 +268,21 @@ useEffect(() => {
 }, [testType, period, currentPage]);
 
   
-  // ✔ CSV 다운로드
-  const handleExport = async () => {
-    try {
-      const { from, to } = getDateRange(period);
+const handleExport = async () => {
+  try {
+    const apiType = TEST_TYPE_TO_API[testType];
 
-      const blob = await exportDiagnosisCSV(from, to);
-      saveAs(blob, `diagnostics_${testType}_${from}_to_${to}.csv`);
-    } catch (err) {
-      alert("CSV 다운로드 실패");
-    }
-  };
+    const blob = await exportDiagnosisCSV(apiType, period);
+
+    saveAs(
+      blob,
+      `diagnostics_${apiType}_${period}.csv`
+    );
+  } catch (err) {
+    alert("CSV 다운로드 실패");
+  }
+};
+
 
   // 필터 텍스트 생성 함수
   const getPeriodLabel = (period: string) => {

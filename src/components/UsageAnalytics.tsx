@@ -123,9 +123,11 @@ const getFeatureLabel = (f: string) => {
   switch (f) {
     case "PHQ9": return "PHQ-9 검사";
     case "GAD7": return "GAD-7 검사";
-    case "CPGI": return "CPGI 검사";
+    case "CAGI": return "CAGI 검사";
+    case "POT_WATERING": return "마음 정원";
     case "DAILY_TOPIC": return "매일 1주제";
     case "DIARY": return "일기";
+    case "IMPULSE_QUEST": return "충동 퀘스트";
     case "MEDITATION_QUEST": return "명상 퀘스트";
     case "ACTIVITY_QUEST": return "산책 퀘스트";
     default: return f;
@@ -171,7 +173,6 @@ export function UsageAnalytics() {
   }, [topPeriod]);
   
 
-  /* ---------- 그래프 ---------- */
   /* ---------- 그래프 ---------- */
 useEffect(() => {
   const loadTrend = async () => {
@@ -269,12 +270,13 @@ useEffect(() => {
             <SelectContent>
               <SelectItem value="PHQ9">PHQ-9</SelectItem>
               <SelectItem value="GAD7">GAD-7</SelectItem>
-              <SelectItem value="CPGI">CPGI</SelectItem>
+              <SelectItem value="CAGI">CAGI</SelectItem>
               <SelectItem value="DAILY_TOPIC">매일 1주제</SelectItem>
+              <SelectItem value="POT_WATERING">마음정원</SelectItem>
               <SelectItem value="DIARY">일기</SelectItem>
+              <SelectItem value="EMOTION_QUEST">충동 퀘스트</SelectItem>
               <SelectItem value="MEDITATION_QUEST">명상 퀘스트</SelectItem>
               <SelectItem value="ACTIVITY_QUEST">산책 퀘스트</SelectItem>
-
             </SelectContent>
           </Select>
 
