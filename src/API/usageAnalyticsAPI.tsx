@@ -50,9 +50,6 @@ export interface FeatureTrendPayload {
     feature: string;
     data: FeatureTrendItem[];
   }
-  
-  
-  // usageAnalyticsAPI.ts
 
 // usageAnalyticsAPI.ts
 

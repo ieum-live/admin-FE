@@ -35,3 +35,22 @@ export const getDiagnosisSummary = async () => {
       throw err;
     }
   };
+
+  // ================================
+// 📌 활성 사용자 지표 API (DAU / WAU / MAU / YAU)
+// ================================
+export const getMetricsOverview = async () => {
+  try {
+    const res = await instance.get(`/api/metrics/overview`);
+
+    if (!res.data || !res.data.data) {
+      console.warn("📌 Metrics Overview API: 데이터 없음");
+      return null;
+    }
+
+    return res.data.data;
+  } catch (err) {
+    console.error("❌ Metrics Overview 요청 실패", err);
+    throw err;
+  }
+};
