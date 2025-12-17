@@ -1,5 +1,6 @@
 // 📌 StatsOverview.tsx
 import { useEffect, useState } from "react";
+import React from "react";
 import {
   Card,
   CardContent,
@@ -18,7 +19,6 @@ import {
 import { getDiagnosisSummary, getMetricsOverview } from "../API/overviewAPI";
 import LoadingSpinner from "./LoadingSpinner";
 import { Badge } from "./ui/badge";
-import React from "react";
 
 /* ================= 타입 ================= */
 
@@ -104,7 +104,7 @@ export function StatsOverview() {
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingMetrics, setLoadingMetrics] = useState(true);
 
-  /** 요약 */
+  /** 데이터 */
   const [summary, setSummary] = useState({
     improvementRate: 0,
     stableRatio: 0,
@@ -112,7 +112,6 @@ export function StatsOverview() {
     avgAssessmentIntervalDays: 0,
   });
 
-  /** DAU */
   const [metrics, setMetrics] = useState<Metrics>({
     dau: 0,
     wau: 0,
@@ -155,6 +154,18 @@ export function StatsOverview() {
       })
       .finally(() => setLoadingMetrics(false));
   }, []);
+
+  /* ================= 🔥 핵심: 전체 로딩 컷 ================= */
+
+  if (loadingSummary || loadingMetrics) {
+    return (
+      <div className="flex justify-center items-center min-h-[240px]">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  /* ================= 카드 데이터 ================= */
 
   const dauStats: DAUStat[] = [
     {
@@ -233,8 +244,6 @@ export function StatsOverview() {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {combinedStats.map((stat, index) => {
         const Icon = stat.icon;
-        const isLoading =
-          stat.kind === "dau" ? loadingMetrics : loadingSummary;
 
         const improvement =
           stat.kind === "summary" && stat.title === "전체 개선율"
@@ -254,27 +263,20 @@ export function StatsOverview() {
             </CardHeader>
 
             <CardContent className="space-y-2">
-              {/* 값 */}
               <div className="flex items-center gap-2">
                 <div className="text-2xl font-bold">
-                  {isLoading ? (
-                    <LoadingSpinner />
-                  ) : stat.kind === "dau" ? (
-                    stat.value.toLocaleString()
-                  ) : (
-                    stat.value
-                  )}
+                  {stat.kind === "dau"
+                    ? stat.value.toLocaleString()
+                    : stat.value}
                 </div>
 
                 {improvement &&
                   getStatusBadge(improvement.status, "개선")}
-
                 {stable &&
                   getStatusBadge(stable.status, "안정")}
               </div>
 
-              {/* 변화율 */}
-              {stat.kind === "dau" && !isLoading && (
+              {stat.kind === "dau" && (
                 <div>
                   {getStatusBadge(
                     stat.changeType === "increase" ? "low" : "high",
