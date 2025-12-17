@@ -41,7 +41,9 @@ export const getDiagnosisSummary = async () => {
 // ================================
 export const getMetricsOverview = async () => {
   try {
-    const res = await instance.get(`/api/metrics/overview`);
+    const res = await instance.get(`/api/metrics/overview`, {
+      timeout: 10000, // ✅ 이 요청만 20초
+    });
 
     if (!res.data || !res.data.data) {
       console.warn("📌 Metrics Overview API: 데이터 없음");

@@ -128,6 +128,7 @@ const getFeatureLabel = (f: string) => {
     case "DAILY_TOPIC": return "매일 1주제";
     case "DIARY": return "일기";
     case "IMPULSE_QUEST": return "충동 퀘스트";
+    case "EMOTION_QUEST": return "충동 퀘스트";
     case "MEDITATION_QUEST": return "명상 퀘스트";
     case "ACTIVITY_QUEST": return "산책 퀘스트";
     default: return f;
