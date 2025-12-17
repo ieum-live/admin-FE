@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Card, CardContent, CardHeader } from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
@@ -34,11 +34,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             onLogin();
             navigate("/");
         } catch (err: any) {
-            const backendMessage =
-                err?.response?.data?.message ||
-                err?.message ||
-                "로그인 중 오류가 발생했습니다.";
-
             setError("입력 정보를 다시 확인해주세요.");
         } finally {
             setLoading(false);
