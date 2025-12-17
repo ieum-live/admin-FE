@@ -120,41 +120,34 @@ export function DiagnosisResults() {
     
     
     
-    const transformRiskTrend = (rawData: any[], testType: TestTypeUI) => {
-      const map = new Map<string, any>();
+    const transformRiskTrend = (
+      rawData: any[],
+      testType: TestTypeUI
+    ) => {
+      const map = new Map<string, { label: string; LOW: number; MID: number; HIGH: number }>();
       const SCALE_TO_RISK = SCALE_TO_RISK_MAP[testType];
     
-      // 1. userCount 누적
-      rawData.forEach((item) => {
-        const { label, scaleName, userCount } = item;
+      rawData.forEach(({ label, scaleName, userPercentage }) => {
         const risk = SCALE_TO_RISK[scaleName];
         if (!risk) return;
     
         if (!map.has(label)) {
-          map.set(label, {
-            label,
-            LOW: 0,
-            MID: 0,
-            HIGH: 0,
-            TOTAL: 0,
-          });
+          map.set(label, { label, LOW: 0, MID: 0, HIGH: 0 });
         }
     
-        const target = map.get(label);
-        target[risk] += userCount;
-        target.TOTAL += userCount;
+        // ✅ 백엔드가 계산한 비율 그대로 사용
+        map.get(label)![risk] += userPercentage;
       });
     
-      // 2. 퍼센트로 변환
-      return Array.from(map.values()).map((item) => ({
+      return Array.from(map.values()).map(item => ({
         label: item.label,
-        LOW: item.TOTAL ? +(item.LOW / item.TOTAL * 100).toFixed(1) : 0,
-        MID: item.TOTAL ? +(item.MID / item.TOTAL * 100).toFixed(1) : 0,
-        HIGH: item.TOTAL ? +(item.HIGH / item.TOTAL * 100).toFixed(1) : 0,
+        LOW: +item.LOW.toFixed(1),
+        MID: +item.MID.toFixed(1),
+        HIGH: +item.HIGH.toFixed(1),
       }));
     };
     
-  
+    
 
   // 검사별 SCALE → RISK 매핑
 const SCALE_TO_RISK_MAP: Record<TestTypeUI, Record<string, "LOW" | "MID" | "HIGH">> = {
