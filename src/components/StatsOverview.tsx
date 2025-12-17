@@ -20,18 +20,31 @@ import LoadingSpinner from "./LoadingSpinner";
 import { Badge } from "./ui/badge";
 import React from "react";
 
-// ---------------- 타입 선언 ----------------
-type DAUStat = {
-  title: string;
-  value: number | null;
-  icon: any;
-  change?: number | null;
-  changeType?: "increase" | "decrease";
-  period?: string;
+/* ================= 타입 ================= */
+
+type Metrics = {
+  dau: number;
+  wau: number;
+  mau: number;
+  yau: number;
+  dauChangeRate: number;
+  wauChangeRate: number;
+  mauChangeRate: number;
+  yauChangeRate: number;
 };
 
+type DAUStat = {
+  kind: "dau";
+  title: string;
+  value: number;
+  icon: any;
+  change: number;
+  changeType: "increase" | "decrease";
+  period: string;
+};
 
 type SummaryStat = {
+  kind: "summary";
   title: string;
   value: string;
   icon: any;
@@ -39,7 +52,8 @@ type SummaryStat = {
 
 type CombinedStat = DAUStat | SummaryStat;
 
-// ---------------- Badge 스타일 ----------------
+/* ================= Badge ================= */
+
 const getStatusBadge = (
   status: "low" | "medium" | "high",
   label: string
@@ -69,29 +83,28 @@ const getStatusBadge = (
   );
 };
 
-// ---------------- 개선율 기준 ----------------
+/* ================= 기준 ================= */
+
 const getImprovementStyle = (value: number) => {
-  if (value >= 50) {
-    return { status: "low" as const, textClass: "text-green-700" };
-  }
-  if (value >= 30) {
-    return { status: "medium" as const, textClass: "text-yellow-700" };
-  }
-  return { status: "high" as const, textClass: "text-red-700" };
+  if (value >= 50) return { status: "low" as const };
+  if (value >= 30) return { status: "medium" as const };
+  return { status: "high" as const };
 };
 
-// ---------------- 안정군 기준 ----------------
 const getStableStyle = (value: number) => {
-  if (value >= 70) {
-    return { status: "low" as const, textClass: "text-green-700" };
-  }
-  if (value >= 40) {
-    return { status: "medium" as const, textClass: "text-yellow-700" };
-  }
-  return { status: "high" as const, textClass: "text-red-700" };
+  if (value >= 70) return { status: "low" as const };
+  if (value >= 40) return { status: "medium" as const };
+  return { status: "high" as const };
 };
+
+/* ================= 컴포넌트 ================= */
 
 export function StatsOverview() {
+  /** 로딩 */
+  const [loadingSummary, setLoadingSummary] = useState(true);
+  const [loadingMetrics, setLoadingMetrics] = useState(true);
+
+  /** 요약 */
   const [summary, setSummary] = useState({
     improvementRate: 0,
     stableRatio: 0,
@@ -99,106 +112,110 @@ export function StatsOverview() {
     avgAssessmentIntervalDays: 0,
   });
 
-  const [metrics, setMetrics] = useState<any>(null);
-  const [loadingSummary, setLoadingSummary] = useState(true);
-  const [loadingMetrics, setLoadingMetrics] = useState(true);
+  /** DAU */
+  const [metrics, setMetrics] = useState<Metrics>({
+    dau: 0,
+    wau: 0,
+    mau: 0,
+    yau: 0,
+    dauChangeRate: 0,
+    wauChangeRate: 0,
+    mauChangeRate: 0,
+    yauChangeRate: 0,
+  });
 
-  // ---------------- 요약 지표 ----------------
+  /* -------- 요약 -------- */
   useEffect(() => {
-    const loadSummary = async () => {
-      try {
-        const data = await getDiagnosisSummary();
+    getDiagnosisSummary()
+      .then((data) => {
         setSummary({
-          improvementRate: data.improvementRate ?? 0,
-          stableRatio: data.stableRatio ?? 0,
-          totalAssessments: data.totalAssessments ?? 0,
-          avgAssessmentIntervalDays: data.avgAssessmentIntervalDays ?? 0,
+          improvementRate: data?.improvementRate ?? 0,
+          stableRatio: data?.stableRatio ?? 0,
+          totalAssessments: data?.totalAssessments ?? 0,
+          avgAssessmentIntervalDays: data?.avgAssessmentIntervalDays ?? 0,
         });
-      } finally {
-        setLoadingSummary(false);
-      }
-    };
-    loadSummary();
+      })
+      .finally(() => setLoadingSummary(false));
   }, []);
 
-  // ---------------- DAU/WAU/MAU/YAU ----------------
+  /* -------- DAU -------- */
   useEffect(() => {
-    const loadMetrics = async () => {
-      try {
-        const data = await getMetricsOverview();
-        setMetrics(data);
-      } finally {
-        setLoadingMetrics(false);
-      }
-    };
-    loadMetrics();
+    getMetricsOverview()
+      .then((data) => {
+        setMetrics({
+          dau: data?.dau ?? 0,
+          wau: data?.wau ?? 0,
+          mau: data?.mau ?? 0,
+          yau: data?.yau ?? 0,
+          dauChangeRate: data?.dauChangeRate ?? 0,
+          wauChangeRate: data?.wauChangeRate ?? 0,
+          mauChangeRate: data?.mauChangeRate ?? 0,
+          yauChangeRate: data?.yauChangeRate ?? 0,
+        });
+      })
+      .finally(() => setLoadingMetrics(false));
   }, []);
 
   const dauStats: DAUStat[] = [
     {
+      kind: "dau",
       title: "일일 활성 사용자 (DAU)",
-      value: metrics?.dau ?? null,
-      change: metrics?.dauChangeRate ?? null,
-      changeType:
-        metrics?.dauChangeRate != null && metrics.dauChangeRate >= 0
-          ? "increase"
-          : "decrease",
+      value: metrics.dau,
+      change: metrics.dauChangeRate,
+      changeType: metrics.dauChangeRate >= 0 ? "increase" : "decrease",
       icon: Users,
       period: "전일 대비",
     },
     {
+      kind: "dau",
       title: "주간 활성 사용자 (WAU)",
-      value: metrics?.wau ?? null,
-      change: metrics?.wauChangeRate ?? null,
-      changeType:
-        metrics?.wauChangeRate != null && metrics.wauChangeRate >= 0
-          ? "increase"
-          : "decrease",
+      value: metrics.wau,
+      change: metrics.wauChangeRate,
+      changeType: metrics.wauChangeRate >= 0 ? "increase" : "decrease",
       icon: Calendar,
       period: "전주 대비",
     },
     {
+      kind: "dau",
       title: "월간 활성 사용자 (MAU)",
-      value: metrics?.mau ?? null,
-      change: metrics?.mauChangeRate ?? null,
-      changeType:
-        metrics?.mauChangeRate != null && metrics.mauChangeRate >= 0
-          ? "increase"
-          : "decrease",
+      value: metrics.mau,
+      change: metrics.mauChangeRate,
+      changeType: metrics.mauChangeRate >= 0 ? "increase" : "decrease",
       icon: TrendingUp,
       period: "전월 대비",
     },
     {
+      kind: "dau",
       title: "연간 활성 사용자 (YAU)",
-      value: metrics?.yau ?? null,
-      change: metrics?.yauChangeRate ?? null,
-      changeType:
-        metrics?.yauChangeRate != null && metrics.yauChangeRate >= 0
-          ? "increase"
-          : "decrease",
+      value: metrics.yau,
+      change: metrics.yauChangeRate,
+      changeType: metrics.yauChangeRate >= 0 ? "increase" : "decrease",
       icon: Activity,
       period: "전년 대비",
     },
-  ];  
+  ];
 
-  // ---------------- 요약 통계 ----------------
   const summaryStats: SummaryStat[] = [
     {
+      kind: "summary",
       title: "전체 개선율",
       value: `${summary.improvementRate.toFixed(1)}%`,
       icon: TrendingUp,
     },
     {
+      kind: "summary",
       title: "안정군 비율",
       value: `${summary.stableRatio.toFixed(1)}%`,
       icon: ShieldCheck,
     },
     {
+      kind: "summary",
       title: "총 진단 횟수",
-      value: `${summary.totalAssessments.toLocaleString()}`,
+      value: summary.totalAssessments.toLocaleString(),
       icon: ClipboardList,
     },
     {
+      kind: "summary",
       title: "평균 진단 간격",
       value: `${summary.avgAssessmentIntervalDays.toFixed(1)}일`,
       icon: CalendarRange,
@@ -210,29 +227,24 @@ export function StatsOverview() {
     ...summaryStats,
   ];
 
-  // ---------------- UI ----------------
+  /* ================= UI ================= */
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {combinedStats.map((stat, index) => {
         const Icon = stat.icon;
+        const isLoading =
+          stat.kind === "dau" ? loadingMetrics : loadingSummary;
 
-        const isImprovement = stat.title === "전체 개선율";
-        const isStable = stat.title === "안정군 비율";
+        const improvement =
+          stat.kind === "summary" && stat.title === "전체 개선율"
+            ? getImprovementStyle(summary.improvementRate)
+            : null;
 
-        const improvementStyle = isImprovement
-          ? getImprovementStyle(summary.improvementRate)
-          : null;
-
-        const stableStyle = isStable
-          ? getStableStyle(summary.stableRatio)
-          : null;
-
-        const valueTextClass =
-          improvementStyle?.textClass ??
-          stableStyle?.textClass ??
-          "";
-
-        const isDAUCard = index < dauStats.length;
+        const stable =
+          stat.kind === "summary" && stat.title === "안정군 비율"
+            ? getStableStyle(summary.stableRatio)
+            : null;
 
         return (
           <Card key={index}>
@@ -242,41 +254,37 @@ export function StatsOverview() {
             </CardHeader>
 
             <CardContent className="space-y-2">
-            {/* 값 */}
-            <div className="flex items-center gap-2">
-              <div className={`text-2xl font-bold ${valueTextClass}`}>
-                {isDAUCard && loadingMetrics ? (
-                  <LoadingSpinner />
-                ) : !isDAUCard && loadingSummary ? (
-                  <LoadingSpinner />
-                ) : stat.value != null ? (
-                  typeof stat.value === "number"
-                    ? stat.value.toLocaleString()
-                    : stat.value
-                ) : (
-                  "-"
-                )}
+              {/* 값 */}
+              <div className="flex items-center gap-2">
+                <div className="text-2xl font-bold">
+                  {isLoading ? (
+                    <LoadingSpinner />
+                  ) : stat.kind === "dau" ? (
+                    stat.value.toLocaleString()
+                  ) : (
+                    stat.value
+                  )}
+                </div>
+
+                {improvement &&
+                  getStatusBadge(improvement.status, "개선")}
+
+                {stable &&
+                  getStatusBadge(stable.status, "안정")}
               </div>
 
-              {!loadingSummary && improvementStyle &&
-                getStatusBadge(improvementStyle.status, "개선")}
-
-              {!loadingSummary && stableStyle &&
-                getStatusBadge(stableStyle.status, "안정")}
-            </div>
-
-            {/* 변화율 */}
-            {"change" in stat && stat.change != null && (
-              <div>
-                {getStatusBadge(
-                  stat.changeType === "increase" ? "low" : "high",
-                  `${stat.change >= 0 ? "+" : ""}${stat.change.toFixed(1)}% · ${stat.period}`
-                )}
-              </div>
-            )}
-
-          </CardContent>
-
+              {/* 변화율 */}
+              {stat.kind === "dau" && !isLoading && (
+                <div>
+                  {getStatusBadge(
+                    stat.changeType === "increase" ? "low" : "high",
+                    `${stat.change >= 0 ? "+" : ""}${stat.change.toFixed(
+                      1
+                    )}% · ${stat.period}`
+                  )}
+                </div>
+              )}
+            </CardContent>
           </Card>
         );
       })}
