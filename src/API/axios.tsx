@@ -1,9 +1,10 @@
 // src/API/axios.ts
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-const apiUrl = import.meta.env.VITE_API_BASE_URL || "https://api.ieum.live";
+const apiUrl = "https://api.ieum.live";
 
 console.log("🌐 API Base URL:", apiUrl);
+console.log("🌐 ENV Variable:", (import.meta as any).env?.VITE_API_BASE_URL);
 
 // 1. Axios 인스턴스 생성
 const instance = axios.create({
