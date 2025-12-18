@@ -56,12 +56,5 @@
     server: {
       port: 3000,
       open: true,
-      proxy: {
-        "/api": {
-          target: "https://ieum.o-r.kr/",
-          changeOrigin: true,
-          secure: false,
-        },
-      },
     },
   });

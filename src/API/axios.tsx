@@ -1,7 +1,10 @@
 // src/API/axios.ts
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-const apiUrl = import.meta.env.VITE_BASE_URL;
+const apiUrl = "https://api.ieum.live";
+
+console.log("🌐 API Base URL:", apiUrl);
+console.log("🌐 ENV Variable:", (import.meta as any).env?.VITE_API_BASE_URL);
 
 // 1. Axios 인스턴스 생성
 const instance = axios.create({
@@ -31,10 +34,16 @@ instance.interceptors.request.use(
 instance.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
-        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+        const originalRequest = error.config as InternalAxiosRequestConfig & {
+            _retry?: boolean;
+        };
 
         // 401 에러(인증 실패)이고, 아직 재시도하지 않았다면
-        if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+        if (
+            error.response?.status === 401 &&
+            originalRequest &&
+            !originalRequest._retry
+        ) {
             originalRequest._retry = true;
 
             try {
@@ -61,7 +70,6 @@ instance.interceptors.response.use(
                 }
 
                 return instance(originalRequest);
-
             } catch (refreshError) {
                 console.error("토큰 갱신 실패:", refreshError);
 

@@ -16,7 +16,7 @@ export interface RiskDistributionItem {
 // 📌 위험도별 사용자 분포 추이 API
 // ================================
 export const getRiskDistributionTrend = async (
-    type?: "PHQ-9" | "GAD-7" | "CPGI",
+    type?: "PHQ-9" | "GAD-7" | "CAGI",
     period: "2weeks" | "1month" | "3months" | "6months" = "1month"
   ): Promise<RiskDistributionItem[]> => {
     try {
@@ -57,7 +57,7 @@ export const getRiskDistributionTrend = async (
   }
   
   export const getRecentUsers = async (params?: {
-    type?: "PHQ-9" | "GAD-7" | "CPGI";
+    type?: "PHQ-9" | "GAD-7" | "CAGI";
     period?: "2weeks" | "1month" | "3months" | "6months";
     page?: number;
     size?: number;
@@ -75,20 +75,30 @@ export const getRiskDistributionTrend = async (
 // ================================
 // 📌 CSV 다운로드 API
 // ================================
-export const exportDiagnosisCSV = async (from: string, to: string) => {
-    try {
-      const res = await instance.get(`/api/export/diagnostics.csv`, {
-        params: { from, to },
+export const exportDiagnosisCSV = async (
+  type?: "PHQ-9" | "GAD-7" | "CAGI",
+  period?: "2weeks" | "1month" | "3months" | "6months"
+) => {
+  try {
+    const res = await instance.get(
+      "/api/diagnostics/results/list/csv",
+      {
+        params: {
+          type,
+          period,
+        },
         responseType: "blob",
         headers: {
           Accept: "text/csv",
         },
-      });
-  
-      return res.data;
-    } catch (err) {
-      console.error("❌ CSV 다운로드 실패:", err);
-      throw err;
-    }
-  };
+      }
+    );
+
+    return res.data;
+  } catch (err) {
+    console.error("❌ CSV 다운로드 실패:", err);
+    throw err;
+  }
+};
+
    

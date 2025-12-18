@@ -15,7 +15,7 @@ export const routes = [
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-semibold">전체 대시보드</h1>
-          <p className="text-muted-foreground">우웅 어드민 페이지</p>
+          <p className="text-muted-foreground">이음 어드민 페이지</p>
         </div>
         <StatsOverview />
         <UserAnalytics />
@@ -28,7 +28,7 @@ export const routes = [
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-semibold">전체 대시보드</h1>
-          <p className="text-muted-foreground">우웅 어드민 페이지</p>
+          <p className="text-muted-foreground">이음 어드민 페이지</p>
         </div>
         <StatsOverview />
         <UserAnalytics />
@@ -42,10 +42,10 @@ export const routes = [
         <div>
           <h1 className="text-3xl font-semibold">사용량 분석</h1>
           <p className="text-muted-foreground">
-            재방문율, 사용시간, 기능별 분석
+            활성 기능 순위, 기능별 사용 추세
           </p>
         </div>
-        <UsageAnalytics  />
+        <UsageAnalytics />
       </div>
     ),
   },
@@ -56,7 +56,7 @@ export const routes = [
         <div>
           <h1 className="text-3xl font-semibold">진단 결과 및 추이</h1>
           <p className="text-muted-foreground">
-            자가진단 결과 분석 및 개선율 추적
+            자가진단 결과 분석 및 분포 추이
           </p>
         </div>
         <DiagnosisResults />
