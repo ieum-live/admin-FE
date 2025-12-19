@@ -12,6 +12,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import React from "react";
 
+
 interface AdminSidebarProps {
     onLogout: () => void;
 }
@@ -54,6 +55,7 @@ export function AdminSidebar({ onLogout }: AdminSidebarProps) {
     return (
         <div className="w-64 bg-card border-r border-border h-screen p-4 flex flex-col">
             <div>
+            <Link to="/">
                 <div className="mb-8">
                     <img
                         src={
@@ -68,6 +70,7 @@ export function AdminSidebar({ onLogout }: AdminSidebarProps) {
                         이음 관리자 대시보드
                     </p>
                 </div>
+                </Link>
 
                 <nav className="space-y-2">
                     {menuItems.map((item) => {
