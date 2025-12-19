@@ -3,8 +3,14 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
 const apiUrl = "https://api.ieum.live";
 
+console.log("========================================");
+console.log("🔧 AXIOS INITIALIZATION START");
+console.log("========================================");
 console.log("🌐 API Base URL:", apiUrl);
 console.log("🌐 ENV Variable:", (import.meta as any).env?.VITE_API_BASE_URL);
+console.log("🌐 apiUrl type:", typeof apiUrl);
+console.log("🌐 apiUrl value:", JSON.stringify(apiUrl));
+console.log("========================================");
 
 // 1. Axios 인스턴스 생성
 const instance = axios.create({
@@ -15,6 +21,9 @@ const instance = axios.create({
     },
     timeout: 5000, // 타임아웃 설정 (선택사항)
 });
+
+console.log("✅ Instance created with baseURL:", instance.defaults.baseURL);
+console.log("========================================");
 
 // 2. 요청 인터셉터 (토큰 실어 보내기)
 instance.interceptors.request.use(
