@@ -42,7 +42,7 @@ export const getDiagnosisSummary = async () => {
 export const getMetricsOverview = async () => {
   try {
     const res = await instance.get(`/api/metrics/overview`, {
-      timeout: 10000, // ✅ 이 요청만 20초
+      timeout: 30000, // ✅ 30초로 증가
     });
 
     if (!res.data || !res.data.data) {
