@@ -190,7 +190,7 @@ export function UserDetail({ userId }: UserDetailProps) {
 
 
       <div className="dashboard-grid">
-        <div className="dashboard-column">
+        <div className="dashboard-column joyride-user-dianosis-result">
           <Card className="dashboard-card">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -245,7 +245,7 @@ export function UserDetail({ userId }: UserDetailProps) {
 
         <div className="dashboard-column">
           
-        <Card className="dashboard-card">
+        <Card className="dashboard-card joyride-user-status">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4" />

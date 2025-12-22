@@ -14,6 +14,7 @@ import LoadingSpinner from "./LoadingSpinner";
 import { AlertType, sendBulkAlert } from "../API/alertAPI";
 import { UserBasicInfo } from "./UserBasicInfo";
 import React from "react";
+import {UserManagementJoyride} from "./Joyride/UserManagementJoyride"
 
 interface BasicUser {
   id: string;
@@ -37,7 +38,7 @@ interface FullUser {
   status: UserDetailStatus;
 }
 
-interface MappedUser {
+export interface MappedUser {
   id: string;
   name: string;
   age: number;
@@ -270,7 +271,7 @@ export function UserManagement() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr,500px] gap-6">
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 joyride-user-summary">
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">전체 사용자</CardTitle>
@@ -280,18 +281,6 @@ export function UserManagement() {
                 {totalUsers}
               </div>
               <p className="text-sm text-muted-foreground">등록된 사용자</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">고위험군</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold text-red-600">
-                {highRiskUsers}
-              </div>
-              <p className="text-sm text-muted-foreground">우울/도박 고위험</p>
             </CardContent>
           </Card>
 
@@ -309,6 +298,18 @@ export function UserManagement() {
 
           <Card>
             <CardHeader>
+              <CardTitle className="text-sm">고위험군</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-semibold text-red-600">
+                {highRiskUsers}
+              </div>
+              <p className="text-sm text-muted-foreground">우울/도박 고위험</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle className="text-sm">평균 진단 횟수</CardTitle>
             </CardHeader>
             <CardContent>
@@ -319,7 +320,7 @@ export function UserManagement() {
             </CardContent>
           </Card>
         </div>
-        <Card>
+        <Card className="joyride-user-table">
           <CardHeader>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
@@ -329,7 +330,7 @@ export function UserManagement() {
                     <DialogTrigger asChild>
                       <Button
                         variant="default"
-                        className="gap-2"
+                        className="gap-2 joyride-user-notification"
                         disabled={selectedUsers.length === 0}
                       >
                         <Bell className="h-4 w-4" />
@@ -393,7 +394,7 @@ export function UserManagement() {
                   </Dialog>
                 </div>
               </div>
-              <div className="flex gap-4">
+              <div className="flex gap-4 joyride-user-filter">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -408,7 +409,7 @@ export function UserManagement() {
                     <SelectValue placeholder="우울증 상태" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">모든 상태</SelectItem>
+                    <SelectItem value="all">우울증</SelectItem>
                     <SelectItem value="low">안정</SelectItem>
                     <SelectItem value="medium">주의</SelectItem>
                     <SelectItem value="high">위험</SelectItem>
@@ -419,7 +420,7 @@ export function UserManagement() {
                     <SelectValue placeholder="도박 위험도" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">모든 위험도</SelectItem>
+                    <SelectItem value="all">도박 위험도</SelectItem>
                     <SelectItem value="low">낮음</SelectItem>
                     <SelectItem value="medium">중간</SelectItem>
                     <SelectItem value="high">높음</SelectItem>
@@ -482,7 +483,7 @@ export function UserManagement() {
                       <TableCell className="text-center">{user.lastDiagnosis}</TableCell>
                       <TableCell className={`text-center ${getImprovementColor(user.improvementRate)}`}>{user.improvementRate}</TableCell>
                       <TableCell className="text-center">{user.diagnosisCount}회</TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-center joyride-user-detail">
                         <Button variant="ghost" size="sm" onClick={() => handleUserClick(user)} className="gap-2">
                           <Eye className="h-4 w-4" />
                           보기
@@ -507,7 +508,6 @@ export function UserManagement() {
         </Card>
       </div>
 
-      {/* 오른쪽: 사용자 상세 정보 (항상 표시) */}
       <div className="lg:sticky lg:top-6 lg:h-fit">
         <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -516,7 +516,7 @@ export function UserManagement() {
               {selectedUser && (
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="joyride-user-info-detail">
                       정보 더보기
                     </Button>
                   </DialogTrigger>
@@ -549,6 +549,10 @@ export function UserManagement() {
           </CardContent>
         </Card>
       </div>
+      <UserManagementJoyride
+        handleUserClick={handleUserClick}
+        users={users}
+      />
     </div>
   );
 }
