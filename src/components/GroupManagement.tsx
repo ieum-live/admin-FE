@@ -208,29 +208,28 @@ const saveAssignment = () => {
             const isMe = admin.id === currentAdminId;
 
             return (
-              <div
+                <div
                 key={admin.id}
-                className={`p-3 rounded-lg border ${
-                  selectedAdminId === admin.id
-                    ? "bg-muted"
-                    : "hover:bg-muted"
-                }`}
+                onClick={() => {
+                  setSelectedAdminId(admin.id);
+                  setCheckedStudents(assignments[admin.id]);
+                }}
+                className={`p-3 rounded-lg border cursor-pointer transition
+                  ${
+                    selectedAdminId === admin.id
+                      ? "bg-muted border-primary"
+                      : "hover:bg-muted"
+                  }
+                `}
               >
                 <div className="flex justify-between items-start">
-                  <div
-                    className="cursor-pointer"
-                    onClick={() => {
-                      setSelectedAdminId(admin.id);
-                      setCheckedStudents(assignments[admin.id]);
-                    }}
-                  >
+                  {/* 왼쪽 정보 */}
+                  <div>
                     <div className="flex gap-2 items-center">
-                      <span className="font-medium">
-                        {admin.name}
-                      </span>
-
+                      <span className="font-medium">{admin.name}</span>
+              
                       {isMe && <Badge>내 그룹</Badge>}
-
+              
                       <Badge
                         variant={
                           admin.role === "SUPER_ADMIN"
@@ -243,28 +242,30 @@ const saveAssignment = () => {
                           : "관리자"}
                       </Badge>
                     </div>
-
+              
                     <div className="text-xs text-muted-foreground">
                       {admin.email}
                     </div>
                   </div>
-
+              
+                  {/* 오른쪽 액션 */}
                   {isSuperAdmin && !isMe && (
-                    <div className="flex gap-1">
+                    <div
+                      className="flex gap-1"
+                      onClick={e => e.stopPropagation()} // ⭐ 핵심
+                    >
                       <input
                         type="checkbox"
                         checked={selectedAdmins.includes(admin.id)}
                         onChange={() =>
                           setSelectedAdmins(prev =>
                             prev.includes(admin.id)
-                              ? prev.filter(
-                                  v => v !== admin.id
-                                )
+                              ? prev.filter(v => v !== admin.id)
                               : [...prev, admin.id]
                           )
                         }
                       />
-
+              
                       <Button
                         size="icon"
                         variant="ghost"
@@ -280,7 +281,7 @@ const saveAssignment = () => {
                     </div>
                   )}
                 </div>
-              </div>
+              </div>              
             );
           })}
         </CardContent>

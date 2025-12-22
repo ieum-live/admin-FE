@@ -48,7 +48,7 @@ export function AdminSidebar({ onLogout }: AdminSidebarProps) {
     { path: "/usage-analytics", label: "사용량 분석", icon: Activity },
     { path: "/diagnosis-results", label: "진단 결과", icon: TrendingUp },
     { path: "/user-management", label: "사용자 관리", icon: UserCheck },
-    { path: "/group-management", label: "학생 관리", icon: UserCog },
+    { path: "/group-management", label: "관리자 / 그룹 관리", icon: UserCog },
     { path: "/settings", label: "설정", icon: Settings },
   ];
 
