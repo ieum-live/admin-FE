@@ -48,7 +48,7 @@ export function UserManualPage() {
           desc="사용자 검사 결과를 확인하고 관리합니다."
           items={[
             "위험도 사용자 분포 추이",
-            "검사 결과 파일 다운로드",
+            "검사 결과 CSV 다운로드",
           ]}
         />
 
@@ -87,8 +87,6 @@ export function UserManualPage() {
     </div>
   );
 }
-
-/* ---------------- 카드 컴포넌트 ---------------- */
 
 function ManualCard({
   emoji,

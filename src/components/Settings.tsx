@@ -151,7 +151,7 @@ export function Settings() {
       </Card>
 
       {/* 알림 설정 */}
-      <Card>
+      {/*  <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5" />
@@ -160,7 +160,7 @@ export function Settings() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-4">
-            {/* <div className="flex items-center justify-between">
+             <div className="flex items-center justify-between">
               <div>
                 <Label>고위험군 알림</Label>
                 <p className="text-sm text-muted-foreground">
@@ -168,8 +168,8 @@ export function Settings() {
                 </p>
               </div>
               <Switch defaultChecked />
-            </div> */}
-            {/* 
+            </div>
+          
             <div className="flex items-center justify-between">
               <div>
                 <Label>일일 리포트</Label>
@@ -178,7 +178,7 @@ export function Settings() {
                 </p>
               </div>
               <Switch defaultChecked />
-            </div> */}
+            </div> 
 
             <div className="flex items-center justify-between">
               <div>
@@ -209,7 +209,7 @@ export function Settings() {
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>
         </CardContent>
-      </Card>
+      </Card >*/}
 
       {/* 데이터 관리 */}
       {/* <Card>
