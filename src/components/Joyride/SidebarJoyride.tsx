@@ -10,9 +10,8 @@ export function AdminJoyride() {
   const [run, setRun] = useState(false);
 
   useEffect(() => {
-    setRun(true);
-    const done = localStorage.getItem("joyrideDone");
-    if (!done) {
+    const step = localStorage.getItem(JOYRIDE_KEY);
+    if (step !== "done") {
       setRun(true);
     }
   }, []);
@@ -44,7 +43,7 @@ export function AdminJoyride() {
     },
     {
       target: ".joyride-dashboard-card",
-      content: "서비스 전체 현황을 한눈에 확인하는 대시보드입니다.",
+      content: "서비스 전체 현황을 한눈에 확인할 수 있습니다.",
       disableBeacon: true,
     },
     {
@@ -64,7 +63,7 @@ export function AdminJoyride() {
     },
     {
       target: ".joyride-group-management",
-      content: "관리자 권한과 학생 그룹을 관리합니다.",
+      content: "관리자 권한과 학생 그룹을 관리할 수 있습니다.",
       disableBeacon: true,
     },
     {
@@ -76,33 +75,33 @@ export function AdminJoyride() {
 
   return (
     <Joyride
-      steps={steps}
-      run={run}
-      continuous
-      scrollToFirstStep
-      showSkipButton
-      showProgress={false}  
-      hideCloseButton={false}
-      disableOverlayClose={false}
-      locale={{
-        back: "이전",
-        close: "닫기",
-        last: "시작하기",
-        next: "다음",
-        skip: "건너뛰기",
-      }}
-      styles={{
-        options: {
-          primaryColor: "#22c55e",
-          zIndex: 10000,
-        },
-      }}
-      callback={(data) => {
-        if (data.status === STATUS.FINISHED) {
-          localStorage.setItem(JOYRIDE_KEY, "dashboard");
-          navigate("/dashboard");
-        }
-      }}
-    />
+  steps={steps}
+  run={run}
+  continuous
+  showSkipButton
+  hideCloseButton
+  disableOverlayClose
+  locale={{
+    back: "이전",
+    next: "다음",
+    skip: "건너뛰기",
+    last: "다음 페이지",
+  }}
+  styles={{
+    options: {
+      primaryColor: "#22c55e",
+      zIndex: 10000,
+    },
+  }}
+  callback={(data) => {
+    if (
+      data.status === STATUS.FINISHED ||
+      data.status === STATUS.SKIPPED
+    ) {
+      localStorage.setItem(JOYRIDE_KEY, "dashboard");
+      navigate("/dashboard");
+    }
+  }}
+/>
   );
 }
