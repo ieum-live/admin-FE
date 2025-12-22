@@ -24,12 +24,14 @@ export function AdminJoyride() {
       content: (
         <div>
           <h3 className="font-semibold mb-2">
-            👋 관리자 페이지에 오신 것을 환영합니다!
+            👋 이음 관리자 페이지에 오신 것을 환영합니다!
           </h3>
           <p className="text-sm text-muted-foreground">
-            지금부터 이음 관리자 페이지의 주요 기능을 간단히 안내해드릴게요.
+            지금부터 주요 기능을 간단히 안내해드릴게요.
             <br />
-            <b>다음</b> 버튼을 눌러 따라와 주세요 🙂
+            <b>건너뛰기</b>를 누르면 다음 페이지로 넘어갈 수 있습니다.
+            <br/>
+            메뉴얼을 보고 싶다면 <b>다음</b>을 눌러주세요🙂
           </p>
         </div>
       ),
