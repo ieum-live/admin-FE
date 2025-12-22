@@ -7,6 +7,7 @@ import {
   exportDiagnosisCSV,
   getRiskDistributionTrend,
 } from "../API/diagnosisAPI";
+import { DiagnosisResultsJoyride } from "./Joyride/DiagnosisResultsJoyride";
 
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -300,7 +301,7 @@ const handleExport = async () => {
 
   return (
     <div className="space-y-6">
-
+    <div className="joyride-risk-trend">
       {/* ---------------------- 필터 영역 ---------------------- */}
       <Card className="p-4">
         <CardHeader className="pb-2">
@@ -311,7 +312,7 @@ const handleExport = async () => {
 
           {/* 검사 선택 */}
           <Select value={testType} onValueChange={(v) => setTestType(v as any)}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-40 joyride-risk-trend-filter1">
               <SelectValue placeholder="검사 선택" />
             </SelectTrigger>
             <SelectContent>
@@ -323,7 +324,7 @@ const handleExport = async () => {
 
           {/* 기간 선택 */}
           <Select value={period} onValueChange={(v) => setPeriod(v as any)}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-40 joyride-risk-trend-filter2">
               <SelectValue placeholder="기간 선택" />
             </SelectTrigger>
             <SelectContent>
@@ -337,43 +338,43 @@ const handleExport = async () => {
         </CardContent>
       </Card>
 
-      {/* ---------------------- 위험도 차트 ---------------------- */}
       <Card>
-  <CardHeader>
-    <CardTitle>위험도별 사용자 분포 추이</CardTitle>
-  </CardHeader>
+      <CardHeader>
+        <CardTitle>위험도별 사용자 분포 추이</CardTitle>
+      </CardHeader>
 
-  <CardContent>
-  <div style={{ width: '100%', height: 400 }}>
-  <ResponsiveContainer width="100%" height="100%">
-  <AreaChart data={riskTrend}>
-      <CartesianGrid strokeDasharray="3 3" />
-      <XAxis dataKey="label" />
-      <YAxis />
-      <Tooltip />
-      <Area type="monotone" dataKey="LOW" stackId="1" stroke="#10b981" fill="#10b981" />
-      <Area type="monotone" dataKey="MID" stackId="1" stroke="#f59e0b" fill="#f59e0b" />
-      <Area type="monotone" dataKey="HIGH" stackId="1" stroke="#ef4444" fill="#ef4444" />
-    </AreaChart>
-  </ResponsiveContainer>
-</div>
-
+        <CardContent>
+        <div style={{ width: '100%', height: 400 }}>
+        <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={riskTrend}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="label" />
+            <YAxis />
+            <Tooltip />
+            <Area type="monotone" dataKey="LOW" stackId="1" stroke="#10b981" fill="#10b981" />
+            <Area type="monotone" dataKey="MID" stackId="1" stroke="#f59e0b" fill="#f59e0b" />
+            <Area type="monotone" dataKey="HIGH" stackId="1" stroke="#ef4444" fill="#ef4444" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
 </CardContent>
-
 </Card>
+</div>
 
 
       {/* ---------------------- 사용자 테이블 ---------------------- */}
+      <div className="joyride-user-diagnosis-results">
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center w-full">
             <CardTitle>
               {`${getPeriodLabel(period)} 동안 · ${getTestLabel(testType)} 검사를 한 사용자`}
             </CardTitle>
-
+            <div className="joyride-user-diagnosis-results-csv">
             <Button variant="outline" onClick={handleExport}>
               CSV 다운로드
             </Button>
+            </div>
           </div>
         </CardHeader>
 
@@ -422,7 +423,8 @@ const handleExport = async () => {
           )}
         </CardContent>
       </Card>
-
+    </div>
+    <DiagnosisResultsJoyride />
     </div>
   );
 }
