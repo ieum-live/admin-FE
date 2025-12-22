@@ -103,8 +103,8 @@ export function Settings() {
               <Label htmlFor="app-name">애플리케이션 이름</Label>
               <Input
                 id="app-name"
-                defaultValue="이음"
-                placeholder="애플리케이션 이름"
+                defaultValue="이음 (ieum)"
+                readOnly
               />
             </div>
             <div className="space-y-2">
@@ -119,7 +119,7 @@ export function Settings() {
             </div>
           </div>
 
-          <div className="space-y-2">
+          {/*  <div className="space-y-2">
             <Label htmlFor="maintenance-mode">점검 모드</Label>
             <div className="flex items-center space-x-2">
               <Switch id="maintenance-mode" />
@@ -127,7 +127,7 @@ export function Settings() {
                 점검 모드 활성화 시 일반 사용자 접근이 제한됩니다.
               </span>
             </div>
-          </div>
+          </div> */}
 
           {/* <div className="space-y-2">
             <Label htmlFor="session-timeout">세션 타임아웃 (분)</Label>
