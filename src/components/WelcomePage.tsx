@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { PasswordChangeModal } from "./PasswordChangeModal";
-import { AdminJoyride } from "./AdminJoyride";
+import { AdminJoyride } from "./SidebarJoyride";
 import React from "react";
 
 export function WelcomePage() {
