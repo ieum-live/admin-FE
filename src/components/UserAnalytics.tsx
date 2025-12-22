@@ -89,7 +89,7 @@ export function UserAnalytics() {
   }, [range]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 joyride-user-analytics">
       <Card>
         <CardHeader className="flex flex-row justify-between items-center">
           <div>
@@ -104,7 +104,7 @@ export function UserAnalytics() {
             value={range}
             onValueChange={(v) => setRange(v as RangeType)}
           >
-            <SelectTrigger className="w-[130px]">
+            <SelectTrigger className="w-[130px] joyride-user-analytics-range">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

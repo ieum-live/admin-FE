@@ -1,4 +1,3 @@
-// 📌 StatsOverview.tsx
 import { useEffect, useState } from "react";
 import React from "react";
 import {
@@ -19,6 +18,7 @@ import {
 import { getDiagnosisSummary, getMetricsOverview } from "../API/overviewAPI";
 import LoadingSpinner from "./LoadingSpinner";
 import { Badge } from "./ui/badge";
+import { OverviewJoyride } from "./Joyride/OverviewJoyride";
 
 /* ================= 타입 ================= */
 
@@ -34,7 +34,6 @@ type Metrics = {
 };
 
 type DAUStat = {
-  kind: "dau";
   title: string;
   value: number;
   icon: any;
@@ -44,13 +43,10 @@ type DAUStat = {
 };
 
 type SummaryStat = {
-  kind: "summary";
   title: string;
   value: string;
   icon: any;
 };
-
-type CombinedStat = DAUStat | SummaryStat;
 
 /* ================= Badge ================= */
 
@@ -100,15 +96,9 @@ const getStableStyle = (value: number) => {
 /* ================= 컴포넌트 ================= */
 
 export function StatsOverview() {
-  /** 로딩 */
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingMetrics, setLoadingMetrics] = useState(true);
 
-  /** 에러 상태 */
-  const [errorSummary, setErrorSummary] = useState<string | null>(null);
-  const [errorMetrics, setErrorMetrics] = useState<string | null>(null);
-
-  /** 데이터 */
   const [summary, setSummary] = useState({
     improvementRate: 0,
     stableRatio: 0,
@@ -137,11 +127,6 @@ export function StatsOverview() {
           totalAssessments: data?.totalAssessments ?? 0,
           avgAssessmentIntervalDays: data?.avgAssessmentIntervalDays ?? 0,
         });
-        setErrorSummary(null);
-      })
-      .catch((err) => {
-        console.error("진단 요약 데이터 로드 실패:", err);
-        setErrorSummary("진단 요약 데이터를 불러오는데 실패했습니다.");
       })
       .finally(() => setLoadingSummary(false));
   }, []);
@@ -160,16 +145,9 @@ export function StatsOverview() {
           mauChangeRate: data?.mauChangeRate ?? 0,
           yauChangeRate: data?.yauChangeRate ?? 0,
         });
-        setErrorMetrics(null);
-      })
-      .catch((err) => {
-        console.error("활성 사용자 지표 로드 실패:", err);
-        setErrorMetrics("활성 사용자 지표를 불러오는데 실패했습니다.");
       })
       .finally(() => setLoadingMetrics(false));
   }, []);
-
-  /* ================= 🔥 핵심: 전체 로딩 컷 ================= */
 
   if (loadingSummary || loadingMetrics) {
     return (
@@ -183,7 +161,6 @@ export function StatsOverview() {
 
   const dauStats: DAUStat[] = [
     {
-      kind: "dau",
       title: "일일 활성 사용자 (DAU)",
       value: metrics.dau,
       change: metrics.dauChangeRate,
@@ -192,7 +169,6 @@ export function StatsOverview() {
       period: "전일 대비",
     },
     {
-      kind: "dau",
       title: "주간 활성 사용자 (WAU)",
       value: metrics.wau,
       change: metrics.wauChangeRate,
@@ -201,7 +177,6 @@ export function StatsOverview() {
       period: "전주 대비",
     },
     {
-      kind: "dau",
       title: "월간 활성 사용자 (MAU)",
       value: metrics.mau,
       change: metrics.mauChangeRate,
@@ -210,7 +185,6 @@ export function StatsOverview() {
       period: "전월 대비",
     },
     {
-      kind: "dau",
       title: "연간 활성 사용자 (YAU)",
       value: metrics.yau,
       change: metrics.yauChangeRate,
@@ -222,88 +196,96 @@ export function StatsOverview() {
 
   const summaryStats: SummaryStat[] = [
     {
-      kind: "summary",
       title: "전체 개선율",
       value: `${summary.improvementRate.toFixed(1)}%`,
       icon: TrendingUp,
     },
     {
-      kind: "summary",
       title: "안정군 비율",
       value: `${summary.stableRatio.toFixed(1)}%`,
       icon: ShieldCheck,
     },
     {
-      kind: "summary",
       title: "총 진단 횟수",
       value: summary.totalAssessments.toLocaleString(),
       icon: ClipboardList,
     },
     {
-      kind: "summary",
       title: "평균 진단 간격",
       value: `${summary.avgAssessmentIntervalDays.toFixed(1)}일`,
       icon: CalendarRange,
     },
   ];
 
-  const combinedStats: CombinedStat[] = [
-    ...dauStats,
-    ...summaryStats,
-  ];
-
   /* ================= UI ================= */
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {combinedStats.map((stat, index) => {
-        const Icon = stat.icon;
+    <>
+      <OverviewJoyride />
 
-        const improvement =
-          stat.kind === "summary" && stat.title === "전체 개선율"
-            ? getImprovementStyle(summary.improvementRate)
-            : null;
+      {/* 🔹 DAU 영역 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 joyride-dau-row">
+        {dauStats.map((stat, index) => {
+          const Icon = stat.icon;
 
-        const stable =
-          stat.kind === "summary" && stat.title === "안정군 비율"
-            ? getStableStyle(summary.stableRatio)
-            : null;
+          return (
+            <Card key={index}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm">{stat.title}</CardTitle>
+                <Icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
 
-        return (
-          <Card key={index}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm">{stat.title}</CardTitle>
-              <Icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-
-            <CardContent className="space-y-2">
-              <div className="flex items-center gap-2">
+              <CardContent className="space-y-2">
                 <div className="text-2xl font-bold">
-                  {stat.kind === "dau"
-                    ? stat.value.toLocaleString()
-                    : stat.value}
+                  {stat.value.toLocaleString()}
                 </div>
-
-                {improvement &&
-                  getStatusBadge(improvement.status, "개선")}
-                {stable &&
-                  getStatusBadge(stable.status, "안정")}
-              </div>
-
-              {stat.kind === "dau" && (
-                <div>
-                  {getStatusBadge(
-                    stat.changeType === "increase" ? "low" : "high",
-                    `${stat.change >= 0 ? "+" : ""}${stat.change.toFixed(
-                      1
-                    )}% · ${stat.period}`
-                  )}
+                <div className="joyride-dau-badge">
+                {getStatusBadge(
+                  stat.changeType === "increase" ? "low" : "high",
+                  `${stat.change >= 0 ? "+" : ""}${stat.change.toFixed(
+                    1
+                  )}% · ${stat.period}`
+                )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* 🔹 Summary 영역 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 joyride-summary-row">
+        {summaryStats.map((stat, index) => {
+          const Icon = stat.icon;
+
+          const improvement =
+            stat.title === "전체 개선율"
+              ? getImprovementStyle(summary.improvementRate)
+              : null;
+
+          const stable =
+            stat.title === "안정군 비율"
+              ? getStableStyle(summary.stableRatio)
+              : null;
+
+          return (
+            <Card key={index}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm">{stat.title}</CardTitle>
+                <Icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+
+              <CardContent className="flex items-center gap-2">
+                <div className="text-2xl font-bold ">{stat.value}</div>
+                <div className="joyride-summary-badge">
+                {improvement && getStatusBadge(improvement.status, "개선")}
+                {stable && getStatusBadge(stable.status, "안정")}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </>
   );
 }
