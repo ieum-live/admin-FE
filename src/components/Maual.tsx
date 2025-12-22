@@ -76,7 +76,7 @@ export function UserManualPage() {
         <ManualCard
           emoji="⚙️"
           title="설정"
-          desc="관리자 개인 설정을 변경합니다."
+          desc="설정을 변경합니다."
           items={[
             "화면 테마 설정 (라이트 / 다크)",
             "관리자 이름 및 이메일",
