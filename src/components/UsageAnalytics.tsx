@@ -41,6 +41,7 @@ import {
   TopFeatureItem,
   FeatureTrendItem,
 } from "../API/usageAnalyticsAPI";
+import { UsageAnalyticsJoyride } from "./Joyride/UsageAnalyticsJoyride";
 
 /* =======================
    타입
@@ -199,6 +200,7 @@ useEffect(() => {
   };
 
   loadTrend();
+
 }, [feature, period]);
 
   
@@ -207,7 +209,7 @@ useEffect(() => {
     <div className="space-y-6">
 
       {/* ================= TOP 5 ================= */}
-      <Card>
+      <Card className="joyride-top5">
         <CardHeader className="flex flex-row justify-between items-center">
           <CardTitle>활성 기능 순위</CardTitle>
 
@@ -216,7 +218,7 @@ useEffect(() => {
             value={topPeriod}
             onValueChange={(v) => setTopPeriod(v as TopPeriod)}
           >
-            <SelectTrigger className="w-36">
+            <SelectTrigger className="w-36 joyride-top5-filter">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -258,6 +260,7 @@ useEffect(() => {
       </Card>
 
       {/* ================= 필터 ================= */}
+      <div className="joyride-trend">
       <Card>
         <CardHeader>
           <CardTitle>필터 선택</CardTitle>
@@ -265,7 +268,7 @@ useEffect(() => {
 
         <CardContent className="flex gap-4">
           <Select value={feature} onValueChange={(v) => setFeature(v as FeatureType)}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-40 joyride-trend-filter1">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -282,7 +285,7 @@ useEffect(() => {
           </Select>
 
           <Select value={period} onValueChange={(v) => setPeriod(v as PeriodType)}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-40 joyride-trend-filter2">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -328,6 +331,8 @@ useEffect(() => {
 
 
       </Card>
+    </div>
+    <UsageAnalyticsJoyride />
     </div>
   );
 }

@@ -5,14 +5,14 @@ import React from "react";
 
 const JOYRIDE_KEY = "adminJoyrideStep";
 
-export function OverviewJoyride() {
+export function UsageAnalyticsJoyride() {
   const navigate = useNavigate();
   const [run, setRun] = useState(false);
 
   useEffect(() => {
     const step = localStorage.getItem(JOYRIDE_KEY);
 
-    if ( step === "dashboard") {
+    if ( step === "usage-analytics") {
       setRun(true);
     }
   }, );
@@ -25,48 +25,41 @@ export function OverviewJoyride() {
       content: (
         <div>
           <h3 className="font-semibold mb-2">
-            📊 전체 대시보드
+          📈 사용량 분석
           </h3>
           <p className="text-sm text-muted-foreground">
-            현재 서비스의 사용 현황과 사용자 상태를
-            한눈에 확인할 수 있어요.
+           활성 기능과 기능별 사용추이를 한눈에 확인할 수 있어요.
           </p>
         </div>
       ),
     },
     {
-        target: ".joyride-dau-row",
-        content: "일 / 주 / 월 / 연 단위의 사용자 활동량을 확인할 수 있어요.",
+        target: ".joyride-top5",
+        content: "기능 사용 횟수에 따라 활성 기능 TOP5를 확인할 수 있어요.",
         placement: "right",
         disableBeacon: true,
       },
       {
-        target: ".joyride-dau-badge",
-        content: "전일·전주·전월·전년 대비 어떻게 변화했는지 확인할 수 있어요.",
+        target: ".joyride-top5-filter",
+        content: "필터로 오늘·최근 2주·3개월 데이터를 선택해 볼 수 있어요.",
         placement: "right",
         disableBeacon: true,
       },
       {
-        target: ".joyride-summary-row",
-        content: "정식 진단의 요약 지표를 확인 할 수 있어요.",
+        target: ".joyride-trend",
+        content: "주요 기능별로 사용량 추이를 볼 수 있어요.",
         placement: "right",
         disableBeacon: true,
       },
       {
-        target: ".joyride-summary-badge",
-        content: "초록·노랑·빨강 뱃지로 상태 단계를 직관적으로 확인할 수 있어요.",
+        target: ".joyride-trend-filter1",
+        content: "정식진단·퀘스트·일기 등 주요 기능을 선택해서 볼 수 있어요.",
         placement: "right",
         disableBeacon: true,
       },
       {
-        target: ".joyride-user-analytics",
-        content: "진단별 색상 선 그래프로 개선 추이를 직관적으로 확인할 수 있어요.",
-        placement: "right",
-        disableBeacon: true,
-      },
-      {
-        target: ".joyride-user-analytics-range",
-        content: "기간 필터로 최근 2주·3개월 데이터를 선택해 볼 수 있어요.",
+        target: ".joyride-trend-filter2",
+        content: "기간 필터로 최근 2주·1개월·3개월·6개월 데이터를 선택해 볼 수 있어요.",
         placement: "right",
         disableBeacon: true,
       },
@@ -97,8 +90,8 @@ export function OverviewJoyride() {
           data.status === STATUS.FINISHED ||
           data.status === STATUS.SKIPPED
         ) {
-          localStorage.setItem(JOYRIDE_KEY, "usage-analytics");
-          navigate("/usage-analytics");
+          localStorage.setItem(JOYRIDE_KEY, "diagnosis-results");
+          navigate("/diagnosis-results");
         }
       }}
     />

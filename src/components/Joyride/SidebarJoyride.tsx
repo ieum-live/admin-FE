@@ -24,7 +24,7 @@ export function AdminJoyride() {
       content: (
         <div>
           <h3 className="font-semibold mb-2">
-            👋 관리자 페이지에 오신 것을 환영합니다
+            👋 관리자 페이지에 오신 것을 환영합니다!
           </h3>
           <p className="text-sm text-muted-foreground">
             지금부터 이음 관리자 페이지의 주요 기능을 간단히 안내해드릴게요.
@@ -89,7 +89,7 @@ export function AdminJoyride() {
   }}
   styles={{
     options: {
-      primaryColor: "#22c55e",
+      primaryColor: "#1AA85C",
       zIndex: 10000,
     },
   }}
