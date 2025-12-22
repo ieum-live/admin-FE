@@ -3,9 +3,6 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
 const apiUrl = "https://api.ieum.live";
 
-console.log("🌐 API Base URL:", apiUrl);
-console.log("🌐 ENV Variable:", (import.meta as any).env?.VITE_API_BASE_URL);
-
 // 1. Axios 인스턴스 생성
 const instance = axios.create({
     baseURL: apiUrl,
@@ -71,8 +68,6 @@ instance.interceptors.response.use(
 
                 return instance(originalRequest);
             } catch (refreshError) {
-                console.error("토큰 갱신 실패:", refreshError);
-
                 // 로그아웃 처리
                 localStorage.removeItem("accessToken");
                 localStorage.removeItem("refreshToken");

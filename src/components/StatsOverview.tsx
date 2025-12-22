@@ -104,6 +104,10 @@ export function StatsOverview() {
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingMetrics, setLoadingMetrics] = useState(true);
 
+  /** 에러 상태 */
+  const [errorSummary, setErrorSummary] = useState<string | null>(null);
+  const [errorMetrics, setErrorMetrics] = useState<string | null>(null);
+
   /** 데이터 */
   const [summary, setSummary] = useState({
     improvementRate: 0,
@@ -133,6 +137,11 @@ export function StatsOverview() {
           totalAssessments: data?.totalAssessments ?? 0,
           avgAssessmentIntervalDays: data?.avgAssessmentIntervalDays ?? 0,
         });
+        setErrorSummary(null);
+      })
+      .catch((err) => {
+        console.error("진단 요약 데이터 로드 실패:", err);
+        setErrorSummary("진단 요약 데이터를 불러오는데 실패했습니다.");
       })
       .finally(() => setLoadingSummary(false));
   }, []);
@@ -151,6 +160,11 @@ export function StatsOverview() {
           mauChangeRate: data?.mauChangeRate ?? 0,
           yauChangeRate: data?.yauChangeRate ?? 0,
         });
+        setErrorMetrics(null);
+      })
+      .catch((err) => {
+        console.error("활성 사용자 지표 로드 실패:", err);
+        setErrorMetrics("활성 사용자 지표를 불러오는데 실패했습니다.");
       })
       .finally(() => setLoadingMetrics(false));
   }, []);
