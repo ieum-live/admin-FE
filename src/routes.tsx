@@ -6,6 +6,7 @@ import { UsageAnalytics } from "./components/UsageAnalytics";
 import { Settings } from "./components/Settings";
 import { GroupManagement } from "./components/GroupManagement";
 import { WelcomePage } from "./components/WelcomePage";
+import { UserManualPage } from "./components/Maual";
 import React from "react";
 
 export const routes = [
@@ -19,6 +20,19 @@ export const routes = [
           <p className="text-muted-foreground">이음 어드민 페이지</p>
         </div>
         <WelcomePage />
+      </div>
+    ),
+  },
+  {
+    path: "/manual",
+    exact: true,
+    element: (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-semibold">사용자 메뉴얼</h1>
+          <p className="text-muted-foreground">사용 가이드</p>
+        </div>
+        <UserManualPage />
       </div>
     ),
   },
