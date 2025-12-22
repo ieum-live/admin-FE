@@ -4,6 +4,8 @@ import { DiagnosisResults } from "./components/DiagnosisResults";
 import { UserManagement } from "./components/UserManagement";
 import { UsageAnalytics } from "./components/UsageAnalytics";
 import { Settings } from "./components/Settings";
+import { GroupManagement } from "./components/GroupManagement";
+import { WelcomePage } from "./components/WelcomePage";
 import React from "react";
 
 export const routes = [
@@ -13,11 +15,10 @@ export const routes = [
     element: (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-semibold">전체 대시보드</h1>
+          <h1 className="text-3xl font-semibold">WELCOME</h1>
           <p className="text-muted-foreground">이음 어드민 페이지</p>
         </div>
-        <StatsOverview />
-        <UserAnalytics />
+        <WelcomePage />
       </div>
     ),
   },
@@ -73,6 +74,18 @@ export const routes = [
           </p>
         </div>
         <UserManagement />
+      </div>
+    ),
+  },
+  {
+    path: "/group-management",
+    element: (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-semibold">학생 그룹 관리</h1>
+          <p className="text-muted-foreground">담당자 - 학생 배정</p>
+        </div>
+        <GroupManagement />
       </div>
     ),
   },
