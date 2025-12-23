@@ -45,13 +45,6 @@ interface UserData {
   };
 }
 
-// 위험도 뱃지
-const getStatusBadge = (risk: "LOW" | "MID" | "HIGH") => {
-  if (risk === "LOW") return <Badge className="bg-green-600">안정군</Badge>;
-  if (risk === "MID") return <Badge className="bg-yellow-500">주의군</Badge>;
-  return <Badge className="bg-red-500">위험군</Badge>;
-};
-
 // 기간 → 날짜 범위 계산
 const getDateRange = (period: string) => {
   const to = new Date();
@@ -67,6 +60,13 @@ const getDateRange = (period: string) => {
     to: to.toISOString().slice(0, 10),
   };
 };
+
+const RISK_LABEL_MAP: Record<string, string> = {
+  LOW: "안정",
+  MID: "주의",
+  HIGH: "위험",
+};
+
 
 export function DiagnosisResults() {
   // 필터 상태
@@ -138,16 +138,24 @@ export function DiagnosisResults() {
     
         // ✅ 백엔드가 계산한 비율 그대로 사용
         map.get(label)![risk] += userPercentage;
+        console.log("비율", userPercentage)
       });
     
-      return Array.from(map.values()).map(item => ({
-        label: item.label,
-        LOW: +item.LOW.toFixed(1),
-        MID: +item.MID.toFixed(1),
-        HIGH: +item.HIGH.toFixed(1),
-      }));
-    };
-    
+      return Array.from(map.values()).map(item => {
+        const low = +item.LOW.toFixed(1);
+        const mid = +item.MID.toFixed(1);
+        const high = +(100 - low - mid).toFixed(1); // 합 100 보정
+      
+        return {
+          label: item.label,
+          LOW: low === 0 ? null : low,
+          MID: mid === 0 ? null : mid,
+          HIGH: high === 0 ? null : high,
+        };
+      });
+    }
+      
+      
     
 
   // 검사별 SCALE → RISK 매핑
@@ -350,7 +358,12 @@ const handleExport = async () => {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="label" />
             <YAxis />
-            <Tooltip />
+            <Tooltip
+              formatter={(value: number, name: string) => [
+                `${value}%`,
+                RISK_LABEL_MAP[name] ?? name,
+              ]}
+            />
             <Area type="monotone" dataKey="LOW" stackId="1" stroke="#10b981" fill="#10b981" />
             <Area type="monotone" dataKey="MID" stackId="1" stroke="#f59e0b" fill="#f59e0b" />
             <Area type="monotone" dataKey="HIGH" stackId="1" stroke="#ef4444" fill="#ef4444" />
