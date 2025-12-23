@@ -508,16 +508,32 @@ export function UserManagement() {
                 </TableBody>
               </Table>
               )}
-              {totalPages > 1 && filteredUsers.length > 0 &&(
-                <div className="flex justify-end mt-3 gap-2">
-                              <Button size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>이전</Button>
-                <span>{currentPage} / {totalPages}</span>
-                <Button size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>다음</Button>
-                
-                              </div>
+              </CardContent>
+            )}
+              
+              {totalPages > 1 && (
+                <div className="flex justify-end items-center px-6 pb-6 gap-2 bg-background">
+                  <Button
+                    size="sm"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(p => p - 1)}
+                  >
+                    이전
+                  </Button>
+              
+                  <span className="text-sm">
+                    {currentPage} / {totalPages}
+                  </span>
+              
+                  <Button
+                    size="sm"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(p => p + 1)}
+                  >
+                    다음
+                  </Button>
+                </div>
               )}
-            </CardContent>)
-          }
 
         </Card>
       </div>
