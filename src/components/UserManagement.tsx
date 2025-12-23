@@ -181,11 +181,11 @@ export function UserManagement() {
     const baseClasses = "text-xs";
     switch (status) {
       case 'low':
-        return <Badge variant="default" className={`${baseClasses} bg-green-100 text-green-800`}>{type === 'depression' ? '안정' : '낮음'}</Badge>;
+        return <Badge variant="default" className={`${baseClasses} bg-green-100 text-green-800`}>{'안정'}</Badge>;
       case 'medium':
-        return <Badge variant="secondary" className={`${baseClasses} bg-yellow-100 text-yellow-800`}>{type === 'depression' ? '주의' : '중간'}</Badge>;
+        return <Badge variant="secondary" className={`${baseClasses} bg-yellow-100 text-yellow-800`}>{'주의'}</Badge>;
       case 'high':
-        return <Badge variant="destructive" className={baseClasses}>{type === 'depression' ? '위험' : '높음'}</Badge>;
+        return <Badge variant="destructive" className={baseClasses}>{'위험'}</Badge>;
       default:
         return <Badge variant="outline" className={baseClasses}>알 수 없음</Badge>;
     }
@@ -397,35 +397,49 @@ export function UserManagement() {
               <div className="flex gap-4 joyride-user-filter">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="사용자 검색 (이름, 이메일, ID)"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
+                  <div className="flex flex-col gap-1 flex-1">
+                    <span className="text-xs text-muted-foreground">사용자 검색</span>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        value={searchTerm}
+                        placeholder="사용자 ID, 이메일, 이름"
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <Select value={depressionFilter} onValueChange={setDepressionFilter}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="우울증 상태" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">우울증</SelectItem>
-                    <SelectItem value="low">안정</SelectItem>
-                    <SelectItem value="medium">주의</SelectItem>
-                    <SelectItem value="high">위험</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={gamblingFilter} onValueChange={setGamblingFilter}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="도박 위험도" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">도박 위험도</SelectItem>
-                    <SelectItem value="low">낮음</SelectItem>
-                    <SelectItem value="medium">중간</SelectItem>
-                    <SelectItem value="high">높음</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-col gap-1 w-40">
+                  <span className="text-xs text-muted-foreground">우울증 위험도</span>
+                  <Select value={depressionFilter} onValueChange={setDepressionFilter}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">전체</SelectItem>
+                      <SelectItem value="low">안정</SelectItem>
+                      <SelectItem value="medium">주의</SelectItem>
+                      <SelectItem value="high">위험</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex flex-col gap-1 w-40">
+                  <span className="text-xs text-muted-foreground">도박 위험도</span>
+                  <Select value={gamblingFilter} onValueChange={setGamblingFilter}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">전체</SelectItem>
+                      <SelectItem value="low">낮음</SelectItem>
+                      <SelectItem value="medium">중간</SelectItem>
+                      <SelectItem value="high">높음</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
               </div>
             </div>
           </CardHeader>
@@ -454,7 +468,7 @@ export function UserManagement() {
                     <TableHead className="text-center">이름</TableHead>
                     <TableHead className="text-center">나이</TableHead>
                     <TableHead className="text-center">성별</TableHead>
-                    <TableHead className="text-center">우울증</TableHead>
+                    <TableHead className="text-center">우울증 위험도</TableHead>
                     <TableHead className="text-center">도박 위험도</TableHead>
                     <TableHead className="text-center">최근 진단일</TableHead>
                     <TableHead className="text-center">개선율</TableHead>
