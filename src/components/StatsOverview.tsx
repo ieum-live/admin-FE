@@ -310,7 +310,7 @@ export function StatsOverview() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 joyride-pot-toprank">
         {topUser && (
           <Card
         >
@@ -324,8 +324,8 @@ export function StatsOverview() {
                 }`}
             >
               {rankingPeriod === "weekly"
-                ? "🔥 주간 1위 사용자"
-                : "🏆 전체 1위 사용자"}
+                ? "🔥 주간 LV 1위 사용자"
+                : "🏆 전체 LV 1위 사용자"}
             </CardTitle>
         
           </CardHeader>
@@ -351,10 +351,10 @@ export function StatsOverview() {
 
 <Card>
   <CardHeader className="pb-2 flex flex-row items-center justify-between">
-    <CardTitle className="text-sm">🏅 사용자 순위 TOP 5</CardTitle>
+    <CardTitle className="text-sm">🏅 사용자 LV 순위 TOP 5</CardTitle>
 
     {/* 🔹 필터 버튼 */}
-    <div className="flex gap-1">
+    <div className="flex gap-1 joyride-pot-rank-filter">
       <button
         onClick={() => setRankingPeriod("all_time")}
         className={`px-2 py-1 text-xs rounded

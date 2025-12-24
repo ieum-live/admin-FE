@@ -59,6 +59,18 @@ export function OverviewJoyride() {
         disableBeacon: true,
       },
       {
+        target: ".joyride-pot-toprank",
+        content: "화분 레벨 1위의 상세 정보 및 TOP 5 사용자를 확인할 수 있어요.",
+        placement: "right",
+        disableBeacon: true,
+      },
+      {
+        target: ".joyride-pot-rank-filter",
+        content: "주간·전체 필터를 통해 화분 레벨 1위 및 TOP 5 사용자를 확인할 수 있어요.",
+        placement: "right",
+        disableBeacon: true,
+      },
+      {
         target: ".joyride-user-analytics",
         content: "진단별 색상 선 그래프로 개선 추이를 직관적으로 확인할 수 있어요.",
         placement: "right",
