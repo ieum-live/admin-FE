@@ -144,7 +144,6 @@ export function StatsOverview() {
         setMetrics({ 
           dau: data?.dau ?? 0,
           wau: data?.wau ?? 0,
-          wau: data?.wau ?? 0, 
           mau: data?.mau ?? 0,
           yau: data?.yau ?? 0,
           dauChangeRate: data?.dauChangeRate ?? 0,
