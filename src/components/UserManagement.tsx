@@ -51,6 +51,7 @@ export interface MappedUser {
   improvementRate: string;
   registrationDate: string;
   lastActive: string;
+  potLevel: number;
 }
 
 export function UserManagement() {
@@ -147,6 +148,7 @@ export function UserManagement() {
                   email: u.email,
                   depressionStatus: riskMap[u.depressionRisk] ?? 'low',
                   gamblingStatus: riskMap[u.gamblingRisk] ?? 'low',
+                  potLevel: u.potLevel ?? 0,
                   lastDiagnosis: u.updatedAt ? new Date(u.updatedAt).toISOString().split('T')[0] : '-',
                   diagnosisCount: u.totalAssessments ?? 0,
                   improvementRate: ((u.improvementRate ?? 0).toFixed(2)) + '%',
@@ -468,6 +470,7 @@ export function UserManagement() {
                     <TableHead className="text-center">이름</TableHead>
                     <TableHead className="text-center">나이</TableHead>
                     <TableHead className="text-center">성별</TableHead>
+                    <TableHead className="text-center">꽃송이 수</TableHead> 
                     <TableHead className="text-center">우울증 위험도</TableHead>
                     <TableHead className="text-center">도박 위험도</TableHead>
                     <TableHead className="text-center">최근 진단일</TableHead>
@@ -492,6 +495,7 @@ export function UserManagement() {
                       <TableCell className="text-center">{user.name}</TableCell>
                       <TableCell className="text-center">{user.age}세</TableCell>
                       <TableCell className="text-center">{user.gender}</TableCell>
+                      <TableCell className="text-center">🌸 {user.potLevel.toLocaleString()}</TableCell>
                       <TableCell className="text-center">{getStatusBadge(user.depressionStatus, 'depression')}</TableCell>
                       <TableCell className="text-center">{getStatusBadge(user.gamblingStatus, 'gambling')}</TableCell>
                       <TableCell className="text-center">{user.lastDiagnosis}</TableCell>
