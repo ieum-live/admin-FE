@@ -414,10 +414,10 @@ export function UserManagement() {
                   </Dialog>
                 </div>
               </div>
-              <div className="flex gap-4 joyride-user-filter">
+              <div className="flex gap-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <div className="flex flex-col gap-1 flex-1">
+                  <div className="flex flex-col gap-1 flex-1 joyride-user-search">
                     <span className="text-xs text-muted-foreground">사용자 검색</span>
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -430,7 +430,7 @@ export function UserManagement() {
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col gap-1 w-40">
+                <div className="flex flex-col gap-1 w-40 joyride-user-pot-filter">
                 <span className="text-xs text-muted-foreground">레벨</span>
                 <Select value={potSort} onValueChange={(v) => setPotSort(v as any)}>
                   <SelectTrigger>
@@ -443,7 +443,7 @@ export function UserManagement() {
                   </SelectContent>
                 </Select>
               </div>
-                <div className="flex flex-col gap-1 w-40">
+                <div className="flex flex-col gap-1 w-40 joyride-user-depression-filter">
                   <span className="text-xs text-muted-foreground">우울증 위험도</span>
                   <Select value={depressionFilter} onValueChange={setDepressionFilter}>
                     <SelectTrigger>
@@ -458,7 +458,7 @@ export function UserManagement() {
                   </Select>
                 </div>
 
-                <div className="flex flex-col gap-1 w-40">
+                <div className="flex flex-col gap-1 w-40 joyride-user-gambling-filter">
                   <span className="text-xs text-muted-foreground">도박 위험도</span>
                   <Select value={gamblingFilter} onValueChange={setGamblingFilter}>
                     <SelectTrigger>

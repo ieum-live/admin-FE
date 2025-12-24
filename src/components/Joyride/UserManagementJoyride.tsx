@@ -64,8 +64,26 @@ export function UserManagementJoyride({ handleUserClick, users }: UserManagement
       disableBeacon: true,
     },
     {
-      target: ".joyride-user-filter",
-      content: "사용자를 검색하거나 우울증·도박 위험도(안정·주의·위험)에 따라 필터링해 확인할 수 있어요.",
+      target: ".joyride-user-search",
+      content: "사용자 ID, 이메일, 이름으로 사용자를 검색할 수 있어요.",
+      placement: "right",
+      disableBeacon: true,
+    },
+    {
+      target: ".joyride-user-pot-filter",
+      content: "화분 레벨 수에 따라 많은 순/낮은 순으로 정렬할 수 있어요.",
+      placement: "right",
+      disableBeacon: true,
+    },
+    {
+      target: ".joyride-user-depression-filter",
+      content: "우울증 위험도(안정·주의·위험)에 따라 필터링해 확인할 수 있어요.",
+      placement: "right",
+      disableBeacon: true,
+    },
+    {
+      target: ".joyride-user-gambling-filter",
+      content: "도박 위험도(안정·주의·위험)에 따라 필터링해 확인할 수 있어요.",
       placement: "right",
       disableBeacon: true,
     },
@@ -77,7 +95,7 @@ export function UserManagementJoyride({ handleUserClick, users }: UserManagement
     },
     {
       target: ".joyride-user-detail",
-      content: "각 사용자의 ‘보기’ 버튼을 눌러 개인별 진단 지표와 현재 상태를 확인할 수 있어요.",
+      content: "각 사용자의 ‘보기’ 버튼을 눌러 개인별 상세 정보를 확인할 수 있어요.",
       placement: "right",
       disableBeacon: true,
     },
@@ -99,6 +117,18 @@ export function UserManagementJoyride({ handleUserClick, users }: UserManagement
         placement: "right",
         disableBeacon: true,
     },
+    {
+      target: ".joyride-user-pot",
+      content: "선택한 사용자의 성장 현황을 확인할 있어요.",
+      placement: "right",
+      disableBeacon: true,
+  },
+  {
+    target: ".joyride-user-pot-graph",
+    content: "선택한 사용자의 물주기 쿠폰 사용 기록을 그래프로 볼 수 있어요.",
+    placement: "right",
+    disableBeacon: true,
+},
   ];
 
   return (

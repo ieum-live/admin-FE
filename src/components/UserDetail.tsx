@@ -322,7 +322,7 @@ export function UserDetail({ userId }: UserDetailProps) {
           </div>
 
           <div className="row-equal">
-          <Card>
+          <Card className="joyride-user-pot">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 🌸 성장 현황
@@ -346,7 +346,7 @@ export function UserDetail({ userId }: UserDetailProps) {
         
 
           {/* ================= 🌱 꽃 심은 기록 (POT 사용 차트) ================= */}
-          <Card>
+          <Card className="joyride-user-pot-graph">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 🌱 쿠폰 사용 기록
