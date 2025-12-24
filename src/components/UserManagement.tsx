@@ -76,6 +76,8 @@ export function UserManagement() {
   const [isSending, setIsSending] = useState(false);
   const [notificationType, setNotificationType] = useState<AlertType>("GENERAL");
   const [allRawUsers, setAllRawUsers] = useState<any[]>([]);
+  const [potSort, setPotSort] = useState<"none" | "desc" | "asc">("none");
+
 
   useEffect(() => {
     const fetchStatistics = async () => {
@@ -122,42 +124,54 @@ export function UserManagement() {
           
               setComponentLoading(true);
               try {
-                // 1. 필터링
-                const filtered = allRawUsers.filter((u: any) => {
-                  const matchesSearch = (u.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-                                        (u.email?.toLowerCase() || "").includes(searchTerm.toLowerCase());
-                  const matchesDepression = depressionFilter === 'all' || (riskMap[u.depressionRisk] ?? 'low') === depressionFilter;
-                  const matchesGambling = gamblingFilter === 'all' || (riskMap[u.gamblingRisk] ?? 'low') === gamblingFilter;
+                let filtered = allRawUsers.filter((u: any) => {
+                  const matchesSearch =
+                    (u.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+                    (u.email?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+          
+                  const matchesDepression =
+                    depressionFilter === "all" ||
+                    (riskMap[u.depressionRisk] ?? "low") === depressionFilter;
+          
+                  const matchesGambling =
+                    gamblingFilter === "all" ||
+                    (riskMap[u.gamblingRisk] ?? "low") === gamblingFilter;
+          
                   return matchesSearch && matchesDepression && matchesGambling;
                 });
+  
+                if (potSort !== "none") {
+                  filtered = [...filtered].sort((a: any, b: any) => {
+                    const aPot = a.potLevel ?? 0;
+                    const bPot = b.potLevel ?? 0;
+                    return potSort === "desc" ? bPot - aPot : aPot - bPot;
+                  });
+                }
           
-                // 2. 총 페이지 수 계산
                 setTotalPages(Math.ceil(filtered.length / itemsPerPage));
           
-                // 3. 현재 페이지 slice
                 const startIndex = (currentPage - 1) * itemsPerPage;
-                const endIndex = startIndex + itemsPerPage;
-                const slicedUsers = filtered.slice(startIndex, endIndex);
+                const slicedUsers = filtered.slice(startIndex, startIndex + itemsPerPage);
           
-                // 4. 데이터 매핑
                 const mapped: MappedUser[] = slicedUsers.map((u: any) => ({
                   id: u.id,
                   name: u.name,
                   age: new Date().getFullYear() - new Date(u.birthDate).getFullYear(),
                   gender: u.gender,
                   email: u.email,
-                  depressionStatus: riskMap[u.depressionRisk] ?? 'low',
-                  gamblingStatus: riskMap[u.gamblingRisk] ?? 'low',
+                  depressionStatus: riskMap[u.depressionRisk] ?? "low",
+                  gamblingStatus: riskMap[u.gamblingRisk] ?? "low",
                   potLevel: u.potLevel ?? 0,
-                  lastDiagnosis: u.updatedAt ? new Date(u.updatedAt).toISOString().split('T')[0] : '-',
+                  lastDiagnosis: u.updatedAt
+                    ? new Date(u.updatedAt).toISOString().split("T")[0]
+                    : "-",
                   diagnosisCount: u.totalAssessments ?? 0,
-                  improvementRate: ((u.improvementRate ?? 0).toFixed(2)) + '%',
+                  improvementRate: ((u.improvementRate ?? 0).toFixed(2)) + "%",
                   registrationDate: u.createdAt,
-                  lastActive: u.updatedAt || '-',
+                  lastActive: u.updatedAt || "-",
                 }));
           
                 setUsers(mapped);
-          
               } catch (error) {
                 console.error("데이터 처리 중 오류:", error);
               } finally {
@@ -165,18 +179,22 @@ export function UserManagement() {
               }
             };
           
-            const timer = setTimeout(() => {
-              processUsers();
-            }, 300);
-          
+            const timer = setTimeout(processUsers, 300);
             return () => clearTimeout(timer);
-          }, [allRawUsers, searchTerm, depressionFilter, gamblingFilter, currentPage]);
+          }, [
+            allRawUsers,
+            searchTerm,
+            depressionFilter,
+            gamblingFilter,
+            potSort, 
+            currentPage,
+          ]);
           
   
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, depressionFilter, gamblingFilter]);
+  }, [searchTerm, depressionFilter, gamblingFilter, potSort]);
 
 
   const getStatusBadge = (status: string, type: 'depression' | 'gambling') => {
@@ -412,6 +430,19 @@ export function UserManagement() {
                     </div>
                   </div>
                 </div>
+                <div className="flex flex-col gap-1 w-40">
+                <span className="text-xs text-muted-foreground">꽃송이 수</span>
+                <Select value={potSort} onValueChange={(v) => setPotSort(v as any)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="정렬" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">정렬</SelectItem>
+                    <SelectItem value="desc">많은 순</SelectItem>
+                    <SelectItem value="asc">적은 순</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
                 <div className="flex flex-col gap-1 w-40">
                   <span className="text-xs text-muted-foreground">우울증 위험도</span>
                   <Select value={depressionFilter} onValueChange={setDepressionFilter}>
