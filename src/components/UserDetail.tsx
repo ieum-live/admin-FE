@@ -43,6 +43,16 @@ export function UserDetail({ userId }: UserDetailProps) {
   const [availableTypes, setAvailableTypes] = useState<string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
 
+  const [potSummary, setPotSummary] = useState({
+    potLevel: 0,
+    totalCouponsUsed: 0,
+  });
+  
+  const [potDailyUsage, setPotDailyUsage] = useState<
+    { date: string; usedCount: number }[]
+  >([]);
+  
+
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -82,6 +92,19 @@ export function UserDetail({ userId }: UserDetailProps) {
             return acc;
           }, {} as Record<string, Record<string, number>>)
         );
+        setPotSummary({
+          potLevel: detail.potUsage.potLevel,
+          totalCouponsUsed: detail.potUsage.totalCouponsUsed,
+        });
+        
+        setPotDailyUsage(
+          detail.potUsage.dailyUsage.map((d: any) => ({
+            date: d.date,
+            usedCount: d.used,
+          }))
+        );
+        console.log("totalCouponsUsed:", detail.potUsage.dailyUsage);
+        
 
       } catch (err) {
         console.error("유저 정보 불러오기 실패:", err);
@@ -109,13 +132,6 @@ export function UserDetail({ userId }: UserDetailProps) {
 
   const lastActiveTime = user.lastActive ? new Date(user.lastActive).getTime() : 0;
   const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
-
-  const activityData = [
-    { feature: '자가진단', sessions: 12, avgTime: 8.5 },
-    { feature: '교육 콘텐츠', sessions: 8, avgTime: 15.2 },
-    { feature: '상담 예약', sessions: 2, avgTime: 5.1 },
-    { feature: '커뮤니티', sessions: 6, avgTime: 12.3 },
-  ];
 
   const getStatusBadge = (status: string, type: 'depression' | 'gambling') => {
     const baseClasses = "text-xs";
@@ -161,37 +177,34 @@ export function UserDetail({ userId }: UserDetailProps) {
     <>
       <style>
         {`
-          .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            align-items: stretch;
-          }
+         .dashboard-column {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
 
-          .dashboard-column {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-          }
+        .row-equal {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+          align-items: stretch;
+        }
 
-          .dashboard-card {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-          }
+        .dashboard-card {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+        }
 
-          .dashboard-card-content {
-            flex: 1;
-            overflow: auto;
-            min-height: 300px;
-          }
+        .dashboard-card-content {
+          flex: 1;
+        }
         `}
         </style>
 
-
-      <div className="dashboard-grid">
-        <div className="dashboard-column joyride-user-dianosis-result">
-          <Card className="dashboard-card">
+      <div className="dashboard-column space-y-4">
+      <div className="row-equal">
+          <Card className="dashboard-card joyride-user-dianosis-result">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <TrendingUp className="h-4 w-4" />
@@ -241,11 +254,8 @@ export function UserDetail({ userId }: UserDetailProps) {
             </CardContent>
             
           </Card>
-        </div>
 
-        <div className="dashboard-column">
-          
-        <Card className="dashboard-card joyride-user-status">
+          <Card className="dashboard-card joyride-user-status">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4" />
@@ -309,6 +319,60 @@ export function UserDetail({ userId }: UserDetailProps) {
               </div>
             </CardContent>
           </Card>
+          </div>
+
+          <div className="row-equal">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                🌸 성장 현황
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">현재 꽃송이</span>
+                <span className="font-semibold">
+                  🌸 {potSummary.potLevel.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">총 쿠폰 사용</span>
+                <span className="font-semibold">
+                  🎟️ {potSummary.totalCouponsUsed.toLocaleString()}회
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        
+
+          {/* ================= 🌱 꽃 심은 기록 (POT 사용 차트) ================= */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                🌱 꽃 심은 기록
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={potDailyUsage}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(v) => v.slice(5)}
+                    fontSize={11}
+                  />
+                  <YAxis fontSize={11} />
+                  <Tooltip />
+                  <Bar
+                    dataKey="usedCount"
+                    fill="#22c55e"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
         </div>
       </div>
     </>
