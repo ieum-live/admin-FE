@@ -15,7 +15,7 @@ import {
   ClipboardList,
   CalendarRange,
 } from "lucide-react";
-import { getDiagnosisSummary, getMetricsOverview } from "../API/overviewAPI";
+import { getDiagnosisSummary, getMetricsOverview, getUserRanking } from "../API/overviewAPI";
 import LoadingSpinner from "./LoadingSpinner";
 import { Badge } from "./ui/badge";
 import { OverviewJoyride } from "./Joyride/OverviewJoyride";
@@ -46,6 +46,12 @@ type SummaryStat = {
   title: string;
   value: string;
   icon: any;
+};
+type RankingUser = {
+  userId: string;
+  userName: string;
+  potLevel: number;
+  totalCouponUsed: number;
 };
 
 /* ================= Badge ================= */
@@ -98,6 +104,10 @@ const getStableStyle = (value: number) => {
 export function StatsOverview() {
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingMetrics, setLoadingMetrics] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [topUser, setTopUser] = useState<RankingUser | null>(null);
+  const [rankingList, setRankingList] = useState<RankingUser[]>([]);
+
 
   const [summary, setSummary] = useState({
     improvementRate: 0,
@@ -117,39 +127,44 @@ export function StatsOverview() {
     yauChangeRate: 0,
   });
 
-  /* -------- 요약 -------- */
-  useEffect(() => {
+  useEffect(() => { 
     getDiagnosisSummary()
-      .then((data) => {
-        setSummary({
-          improvementRate: data?.improvementRate ?? 0,
-          stableRatio: data?.stableRatio ?? 0,
-          totalAssessments: data?.totalAssessments ?? 0,
-          avgAssessmentIntervalDays: data?.avgAssessmentIntervalDays ?? 0,
-        });
-      })
-      .finally(() => setLoadingSummary(false));
-  }, []);
-
-  /* -------- DAU -------- */
-  useEffect(() => {
-    getMetricsOverview()
-      .then((data) => {
-        setMetrics({
+    .then((data) => { 
+      setSummary({ improvementRate: data?.improvementRate ?? 0, 
+        stableRatio: data?.stableRatio ?? 0, 
+        totalAssessments: data?.totalAssessments ?? 0, 
+        avgAssessmentIntervalDays: data?.avgAssessmentIntervalDays ?? 0, 
+      }); 
+    }) .finally(() => setLoadingSummary(false)); }, []); 
+    
+    /* -------- DAU -------- */ 
+    useEffect(() => { 
+      getMetricsOverview() 
+      .then((data) => { 
+        setMetrics({ 
           dau: data?.dau ?? 0,
           wau: data?.wau ?? 0,
+          wau: data?.wau ?? 0, 
           mau: data?.mau ?? 0,
           yau: data?.yau ?? 0,
           dauChangeRate: data?.dauChangeRate ?? 0,
           wauChangeRate: data?.wauChangeRate ?? 0,
           mauChangeRate: data?.mauChangeRate ?? 0,
           yauChangeRate: data?.yauChangeRate ?? 0,
-        });
-      })
-      .finally(() => setLoadingMetrics(false));
-  }, []);
+        }); 
+      }) .finally(() => 
+        setLoadingMetrics(false)); }, []);
 
-  if (loadingSummary || loadingMetrics) {
+        useEffect(() => { 
+          getUserRanking("all_time", 5)
+          .then((data) => { 
+            setTopUser(data?.topUser ?? null);
+            setRankingList(data?.rankingList ?? []);
+            console.log("랭킹", data)
+          }) .finally(() => 
+            setLoading(false)); }, []);
+
+  if (loadingSummary || loadingMetrics || loading)  {
     return (
       <div className="flex justify-center items-center min-h-[240px]">
         <LoadingSpinner />
@@ -286,6 +301,54 @@ export function StatsOverview() {
           );
         })}
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        {topUser && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">🏆 전체 1위 사용자</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">닉네임</span>
+                <span className="font-semibold">{topUser.userName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">화분 레벨 (꽃 송이 수)</span>
+                <span>Lv.{topUser.potLevel}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">총 쿠폰 사용 수</span>
+                <span>
+                  {(topUser.totalCouponUsed ?? 0).toLocaleString()}회
+                </span>
+
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">🏅 사용자 순위 TOP 5</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            {rankingList.map((user, idx) => (
+              <div key={user.userId} className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="w-5 text-center font-medium">
+                  {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : idx + 1}
+                </span>
+                <span>{user.userName}</span>
+              </div>
+              <span className="text-muted-foreground">
+                Lv.{user.potLevel}
+              </span>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
     </>
   );
 }
