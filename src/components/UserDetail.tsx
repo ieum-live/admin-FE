@@ -330,13 +330,13 @@ export function UserDetail({ userId }: UserDetailProps) {
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">현재 꽃송이</span>
+                <span className="text-muted-foreground">화분 레벨 (꽃 송이 수)</span>
                 <span className="font-semibold">
                   🌸 {potSummary.potLevel.toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">총 쿠폰 사용</span>
+                <span className="text-muted-foreground">총 쿠폰 사용 수</span>
                 <span className="font-semibold">
                   🎟️ {potSummary.totalCouponsUsed.toLocaleString()}회
                 </span>
@@ -349,7 +349,7 @@ export function UserDetail({ userId }: UserDetailProps) {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
-                🌱 꽃 심은 기록
+                🌱 쿠폰 사용 기록
               </CardTitle>
             </CardHeader>
             <CardContent>

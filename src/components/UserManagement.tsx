@@ -431,15 +431,15 @@ export function UserManagement() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-1 w-40">
-                <span className="text-xs text-muted-foreground">꽃송이 수</span>
+                <span className="text-xs text-muted-foreground">레벨</span>
                 <Select value={potSort} onValueChange={(v) => setPotSort(v as any)}>
                   <SelectTrigger>
                     <SelectValue placeholder="정렬" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">정렬</SelectItem>
-                    <SelectItem value="desc">많은 순</SelectItem>
-                    <SelectItem value="asc">적은 순</SelectItem>
+                    <SelectItem value="desc">높은 순</SelectItem>
+                    <SelectItem value="asc">낮은 순</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -501,7 +501,7 @@ export function UserManagement() {
                     <TableHead className="text-center">이름</TableHead>
                     <TableHead className="text-center">나이</TableHead>
                     <TableHead className="text-center">성별</TableHead>
-                    <TableHead className="text-center">꽃송이 수</TableHead> 
+                    <TableHead className="text-center">레벨</TableHead> 
                     <TableHead className="text-center">우울증 위험도</TableHead>
                     <TableHead className="text-center">도박 위험도</TableHead>
                     <TableHead className="text-center">최근 진단일</TableHead>
