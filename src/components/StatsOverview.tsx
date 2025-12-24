@@ -107,7 +107,12 @@ export function StatsOverview() {
   const [loading, setLoading] = useState(true);
   const [topUser, setTopUser] = useState<RankingUser | null>(null);
   const [rankingList, setRankingList] = useState<RankingUser[]>([]);
+  type RankingPeriod = "all_time" | "weekly";
 
+    const [rankingPeriod, setRankingPeriod] =
+      useState<RankingPeriod>("all_time");
+
+    const [loadingRanking, setLoadingRanking] = useState(true);
 
   const [summary, setSummary] = useState({
     improvementRate: 0,
@@ -154,16 +159,20 @@ export function StatsOverview() {
       }) .finally(() => 
         setLoadingMetrics(false)); }, []);
 
-        useEffect(() => { 
-          getUserRanking("all_time", 5)
-          .then((data) => { 
-            setTopUser(data?.topUser ?? null);
-            setRankingList(data?.rankingList ?? []);
-            console.log("랭킹", data)
-          }) .finally(() => 
-            setLoading(false)); }, []);
+        useEffect(() => {
+          setLoadingRanking(true);
+        
+          getUserRanking(rankingPeriod, 5)
+            .then((data) => {
+              setTopUser(data?.topUser ?? null);
+              setRankingList(data?.rankingList ?? []);
+              console.log("랭킹", rankingPeriod, data);
+            })
+            .finally(() => setLoadingRanking(false));
+        }, [rankingPeriod]);
+        
 
-  if (loadingSummary || loadingMetrics || loading)  {
+  if (loadingSummary || loadingMetrics || loadingRanking)  {
     return (
       <div className="flex justify-center items-center min-h-[240px]">
         <LoadingSpinner />
@@ -303,10 +312,23 @@ export function StatsOverview() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         {topUser && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">🏆 전체 1위 사용자</CardTitle>
-            </CardHeader>
+          <Card
+        >
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <CardTitle
+              className={`text-sm font-semibold
+                ${
+                  rankingPeriod === "weekly"
+                    ? "text-orange-700"
+                    : "text-green-700"
+                }`}
+            >
+              {rankingPeriod === "weekly"
+                ? "🔥 주간 1위 사용자"
+                : "🏆 전체 1위 사용자"}
+            </CardTitle>
+        
+          </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">닉네임</span>
@@ -327,9 +349,36 @@ export function StatsOverview() {
           </Card>
         )}
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">🏅 사용자 순위 TOP 5</CardTitle>
+<Card>
+  <CardHeader className="pb-2 flex flex-row items-center justify-between">
+    <CardTitle className="text-sm">🏅 사용자 순위 TOP 5</CardTitle>
+
+    {/* 🔹 필터 버튼 */}
+    <div className="flex gap-1">
+      <button
+        onClick={() => setRankingPeriod("all_time")}
+        className={`px-2 py-1 text-xs rounded
+          ${
+            rankingPeriod === "all_time"
+              ? "bg-primary text-white"
+              : "bg-muted text-muted-foreground"
+                  }`}
+              >
+                전체
+              </button>
+
+              <button
+                onClick={() => setRankingPeriod("weekly")}
+                className={`px-2 py-1 text-xs rounded
+                  ${
+                    rankingPeriod === "weekly"
+                      ? "bg-primary text-white"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+              >
+                주간
+              </button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             {rankingList.map((user, idx) => (
