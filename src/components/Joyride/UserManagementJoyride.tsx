@@ -157,8 +157,8 @@ export function UserManagementJoyride({ handleUserClick, users }: UserManagement
         }
 
         if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
-          localStorage.setItem(JOYRIDE_KEY, "group-management");
-          navigate("/group-management");
+          localStorage.setItem(JOYRIDE_KEY, "done");
+          navigate("/");
         }
       }}
     />

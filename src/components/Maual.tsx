@@ -1,17 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import React from "react";
+import { useNavigate } from "react-router-dom";
+
+const JOYRIDE_KEY = "adminJoyrideStep";
 
 export function UserManualPage() {
+  const navigate = useNavigate();
   return (
     <div className="max-w-5xl mx-auto py-10 space-y-8">
-      {/* Joyride 다시 실행 */}
       <div className="text-center pt-2 pb-6">
-        <Button
+      <Button
           variant="outline"
           onClick={() => {
-            localStorage.removeItem("joyrideDone");
-            window.location.href = "/dashboard";
+            localStorage.setItem(JOYRIDE_KEY, "false");
+            navigate("/");
           }}
         >
           🔄 사용 가이드 다시 보기
@@ -28,6 +31,7 @@ export function UserManualPage() {
             "DAU / WAU / MAU / YAU",
             "전체 개선율 · 안정군 비율",
             "총 진단 횟수 · 평균 진단 간격",
+            "화분 레벨 순위",
             "진단별 개선 지표",
           ]}
         />
@@ -60,6 +64,7 @@ export function UserManualPage() {
             "전체 / 고위험군 / 활성 사용자 수",
             "사용자 목록 및 알림 발송",
             "개인별 진단 결과 및 위험 요소",
+            "개인 별 화분 레벨 상세 보기",
           ]}
         />
 

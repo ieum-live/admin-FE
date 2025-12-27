@@ -591,7 +591,6 @@ export function UserManagement() {
                       <DialogTitle>기본 정보</DialogTitle>
                     </DialogHeader>
 
-                    {/* ✅ 기본 정보만 표시 */}
                     <UserBasicInfo userId={selectedUser.id} />
                   </DialogContent>
                 </Dialog>
