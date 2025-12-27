@@ -105,14 +105,11 @@ export function DiagnosisResults() {
     
         const apiType = TEST_TYPE_TO_API[testType];
         const raw = await getRiskDistributionTrend(apiType, period);
-        console.log("raw", raw);
     
         const chartData = transformRiskTrend(raw, testType); // testType 전달
-        console.log("📊 chartData", chartData);
     
         setRiskTrend(chartData);
       } catch (err) {
-        console.error(err);
         setRiskTrend([]);
       } finally {
         setLoadingTrend(false);
@@ -136,15 +133,13 @@ export function DiagnosisResults() {
           map.set(label, { label, LOW: 0, MID: 0, HIGH: 0 });
         }
     
-        // ✅ 백엔드가 계산한 비율 그대로 사용
         map.get(label)![risk] += userPercentage;
-        console.log("비율", userPercentage)
       });
     
       return Array.from(map.values()).map(item => {
         const low = +item.LOW.toFixed(1);
         const mid = +item.MID.toFixed(1);
-        const high = +(100 - low - mid).toFixed(1); // 합 100 보정
+        const high = +(100 - low - mid).toFixed(1); 
       
         return {
           label: item.label,
@@ -223,12 +218,10 @@ const loadUsers = async (
         name: u.name,
       }
     }));
-    console.log("ttt", mappedUsers)
     setUsers(mappedUsers);
     setTotalUsers(res.page.totalElements);
     setTotalPages(res.page.totalPages);
   } catch (err) {
-    console.error(err);
     setUsers([]);
     setTotalUsers(0);
     setTotalPages(1);

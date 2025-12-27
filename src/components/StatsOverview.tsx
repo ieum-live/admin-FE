@@ -166,7 +166,6 @@ export function StatsOverview() {
             .then((data) => {
               setTopUser(data?.topUser ?? null);
               setRankingList(data?.rankingList ?? []);
-              console.log("랭킹", rankingPeriod, data);
             })
             .finally(() => setLoadingRanking(false));
         }, [rankingPeriod]);
@@ -179,8 +178,6 @@ export function StatsOverview() {
       </div>
     );
   }
-
-  /* ================= 카드 데이터 ================= */
 
   const dauStats: DAUStat[] = [
     {
@@ -239,8 +236,6 @@ export function StatsOverview() {
       icon: CalendarRange,
     },
   ];
-
-  /* ================= UI ================= */
 
   return (
     <>
