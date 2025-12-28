@@ -56,3 +56,15 @@ export const getMetricsOverview = async () => {
     throw err;
   }
 };
+
+export type RankingPeriod = "all_time" | "weekly";
+
+export const getUserRanking = async (
+  period: RankingPeriod = "all_time",
+  limit: number = 5
+) => {
+  const response = await instance.get("/api/ranking", {
+    params: { period, limit },
+  });
+  return response.data.data;
+};

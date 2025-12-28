@@ -14,6 +14,7 @@ import LoadingSpinner from "./LoadingSpinner";
 import { AlertType, sendBulkAlert } from "../API/alertAPI";
 import { UserBasicInfo } from "./UserBasicInfo";
 import React from "react";
+import {UserManagementJoyride} from "./Joyride/UserManagementJoyride"
 
 interface BasicUser {
   id: string;
@@ -37,7 +38,7 @@ interface FullUser {
   status: UserDetailStatus;
 }
 
-interface MappedUser {
+export interface MappedUser {
   id: string;
   name: string;
   age: number;
@@ -50,6 +51,7 @@ interface MappedUser {
   improvementRate: string;
   registrationDate: string;
   lastActive: string;
+  potLevel: number;
 }
 
 export function UserManagement() {
@@ -74,6 +76,8 @@ export function UserManagement() {
   const [isSending, setIsSending] = useState(false);
   const [notificationType, setNotificationType] = useState<AlertType>("GENERAL");
   const [allRawUsers, setAllRawUsers] = useState<any[]>([]);
+  const [potSort, setPotSort] = useState<"none" | "desc" | "asc">("none");
+
 
   useEffect(() => {
     const fetchStatistics = async () => {
@@ -120,41 +124,54 @@ export function UserManagement() {
           
               setComponentLoading(true);
               try {
-                // 1. 필터링
-                const filtered = allRawUsers.filter((u: any) => {
-                  const matchesSearch = (u.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-                                        (u.email?.toLowerCase() || "").includes(searchTerm.toLowerCase());
-                  const matchesDepression = depressionFilter === 'all' || (riskMap[u.depressionRisk] ?? 'low') === depressionFilter;
-                  const matchesGambling = gamblingFilter === 'all' || (riskMap[u.gamblingRisk] ?? 'low') === gamblingFilter;
+                let filtered = allRawUsers.filter((u: any) => {
+                  const matchesSearch =
+                    (u.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+                    (u.email?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+          
+                  const matchesDepression =
+                    depressionFilter === "all" ||
+                    (riskMap[u.depressionRisk] ?? "low") === depressionFilter;
+          
+                  const matchesGambling =
+                    gamblingFilter === "all" ||
+                    (riskMap[u.gamblingRisk] ?? "low") === gamblingFilter;
+          
                   return matchesSearch && matchesDepression && matchesGambling;
                 });
+  
+                if (potSort !== "none") {
+                  filtered = [...filtered].sort((a: any, b: any) => {
+                    const aPot = a.potLevel ?? 0;
+                    const bPot = b.potLevel ?? 0;
+                    return potSort === "desc" ? bPot - aPot : aPot - bPot;
+                  });
+                }
           
-                // 2. 총 페이지 수 계산
                 setTotalPages(Math.ceil(filtered.length / itemsPerPage));
           
-                // 3. 현재 페이지 slice
                 const startIndex = (currentPage - 1) * itemsPerPage;
-                const endIndex = startIndex + itemsPerPage;
-                const slicedUsers = filtered.slice(startIndex, endIndex);
+                const slicedUsers = filtered.slice(startIndex, startIndex + itemsPerPage);
           
-                // 4. 데이터 매핑
                 const mapped: MappedUser[] = slicedUsers.map((u: any) => ({
                   id: u.id,
                   name: u.name,
                   age: new Date().getFullYear() - new Date(u.birthDate).getFullYear(),
                   gender: u.gender,
                   email: u.email,
-                  depressionStatus: riskMap[u.depressionRisk] ?? 'low',
-                  gamblingStatus: riskMap[u.gamblingRisk] ?? 'low',
-                  lastDiagnosis: u.updatedAt ? new Date(u.updatedAt).toISOString().split('T')[0] : '-',
+                  depressionStatus: riskMap[u.depressionRisk] ?? "low",
+                  gamblingStatus: riskMap[u.gamblingRisk] ?? "low",
+                  potLevel: u.potLevel ?? 0,
+                  lastDiagnosis: u.updatedAt
+                    ? new Date(u.updatedAt).toISOString().split("T")[0]
+                    : "-",
                   diagnosisCount: u.totalAssessments ?? 0,
-                  improvementRate: ((u.improvementRate ?? 0).toFixed(2)) + '%',
+                  improvementRate: ((u.improvementRate ?? 0).toFixed(2)) + "%",
                   registrationDate: u.createdAt,
-                  lastActive: u.updatedAt || '-',
+                  lastActive: u.updatedAt || "-",
                 }));
           
                 setUsers(mapped);
-          
               } catch (error) {
                 console.error("데이터 처리 중 오류:", error);
               } finally {
@@ -162,29 +179,33 @@ export function UserManagement() {
               }
             };
           
-            const timer = setTimeout(() => {
-              processUsers();
-            }, 300);
-          
+            const timer = setTimeout(processUsers, 300);
             return () => clearTimeout(timer);
-          }, [allRawUsers, searchTerm, depressionFilter, gamblingFilter, currentPage]);
+          }, [
+            allRawUsers,
+            searchTerm,
+            depressionFilter,
+            gamblingFilter,
+            potSort, 
+            currentPage,
+          ]);
           
   
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, depressionFilter, gamblingFilter]);
+  }, [searchTerm, depressionFilter, gamblingFilter, potSort]);
 
 
   const getStatusBadge = (status: string, type: 'depression' | 'gambling') => {
     const baseClasses = "text-xs";
     switch (status) {
       case 'low':
-        return <Badge variant="default" className={`${baseClasses} bg-green-100 text-green-800`}>{type === 'depression' ? '안정' : '낮음'}</Badge>;
+        return <Badge variant="default" className={`${baseClasses} bg-green-100 text-green-800`}>{'안정'}</Badge>;
       case 'medium':
-        return <Badge variant="secondary" className={`${baseClasses} bg-yellow-100 text-yellow-800`}>{type === 'depression' ? '주의' : '중간'}</Badge>;
+        return <Badge variant="secondary" className={`${baseClasses} bg-yellow-100 text-yellow-800`}>{'주의'}</Badge>;
       case 'high':
-        return <Badge variant="destructive" className={baseClasses}>{type === 'depression' ? '위험' : '높음'}</Badge>;
+        return <Badge variant="destructive" className={baseClasses}>{'위험'}</Badge>;
       default:
         return <Badge variant="outline" className={baseClasses}>알 수 없음</Badge>;
     }
@@ -270,7 +291,7 @@ export function UserManagement() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr,500px] gap-6">
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 joyride-user-summary">
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">전체 사용자</CardTitle>
@@ -280,18 +301,6 @@ export function UserManagement() {
                 {totalUsers}
               </div>
               <p className="text-sm text-muted-foreground">등록된 사용자</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">고위험군</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold text-red-600">
-                {highRiskUsers}
-              </div>
-              <p className="text-sm text-muted-foreground">우울/도박 고위험</p>
             </CardContent>
           </Card>
 
@@ -309,6 +318,18 @@ export function UserManagement() {
 
           <Card>
             <CardHeader>
+              <CardTitle className="text-sm">고위험군</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-semibold text-red-600">
+                {highRiskUsers}
+              </div>
+              <p className="text-sm text-muted-foreground">우울/도박 고위험</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle className="text-sm">평균 진단 횟수</CardTitle>
             </CardHeader>
             <CardContent>
@@ -319,7 +340,7 @@ export function UserManagement() {
             </CardContent>
           </Card>
         </div>
-        <Card>
+        <Card className="joyride-user-table">
           <CardHeader>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
@@ -329,7 +350,7 @@ export function UserManagement() {
                     <DialogTrigger asChild>
                       <Button
                         variant="default"
-                        className="gap-2"
+                        className="gap-2 joyride-user-notification"
                         disabled={selectedUsers.length === 0}
                       >
                         <Bell className="h-4 w-4" />
@@ -396,35 +417,62 @@ export function UserManagement() {
               <div className="flex gap-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="사용자 검색 (이름, 이메일, ID)"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
+                  <div className="flex flex-col gap-1 flex-1 joyride-user-search">
+                    <span className="text-xs text-muted-foreground">사용자 검색</span>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        value={searchTerm}
+                        placeholder="사용자 ID, 이메일, 이름"
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <Select value={depressionFilter} onValueChange={setDepressionFilter}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="우울증 상태" />
+                <div className="flex flex-col gap-1 w-40 joyride-user-pot-filter">
+                <span className="text-xs text-muted-foreground">레벨</span>
+                <Select value={potSort} onValueChange={(v) => setPotSort(v as any)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="정렬" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">모든 상태</SelectItem>
-                    <SelectItem value="low">안정</SelectItem>
-                    <SelectItem value="medium">주의</SelectItem>
-                    <SelectItem value="high">위험</SelectItem>
+                    <SelectItem value="none">정렬</SelectItem>
+                    <SelectItem value="desc">높은 순</SelectItem>
+                    <SelectItem value="asc">낮은 순</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={gamblingFilter} onValueChange={setGamblingFilter}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="도박 위험도" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">모든 위험도</SelectItem>
-                    <SelectItem value="low">낮음</SelectItem>
-                    <SelectItem value="medium">중간</SelectItem>
-                    <SelectItem value="high">높음</SelectItem>
-                  </SelectContent>
-                </Select>
+              </div>
+                <div className="flex flex-col gap-1 w-40 joyride-user-depression-filter">
+                  <span className="text-xs text-muted-foreground">우울증 위험도</span>
+                  <Select value={depressionFilter} onValueChange={setDepressionFilter}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">전체</SelectItem>
+                      <SelectItem value="low">안정</SelectItem>
+                      <SelectItem value="medium">주의</SelectItem>
+                      <SelectItem value="high">위험</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex flex-col gap-1 w-40 joyride-user-gambling-filter">
+                  <span className="text-xs text-muted-foreground">도박 위험도</span>
+                  <Select value={gamblingFilter} onValueChange={setGamblingFilter}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">전체</SelectItem>
+                      <SelectItem value="low">낮음</SelectItem>
+                      <SelectItem value="medium">중간</SelectItem>
+                      <SelectItem value="high">높음</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
               </div>
             </div>
           </CardHeader>
@@ -453,7 +501,8 @@ export function UserManagement() {
                     <TableHead className="text-center">이름</TableHead>
                     <TableHead className="text-center">나이</TableHead>
                     <TableHead className="text-center">성별</TableHead>
-                    <TableHead className="text-center">우울증</TableHead>
+                    <TableHead className="text-center">레벨</TableHead> 
+                    <TableHead className="text-center">우울증 위험도</TableHead>
                     <TableHead className="text-center">도박 위험도</TableHead>
                     <TableHead className="text-center">최근 진단일</TableHead>
                     <TableHead className="text-center">개선율</TableHead>
@@ -477,12 +526,13 @@ export function UserManagement() {
                       <TableCell className="text-center">{user.name}</TableCell>
                       <TableCell className="text-center">{user.age}세</TableCell>
                       <TableCell className="text-center">{user.gender}</TableCell>
+                      <TableCell className="text-center">🌸 {user.potLevel.toLocaleString()}</TableCell>
                       <TableCell className="text-center">{getStatusBadge(user.depressionStatus, 'depression')}</TableCell>
                       <TableCell className="text-center">{getStatusBadge(user.gamblingStatus, 'gambling')}</TableCell>
                       <TableCell className="text-center">{user.lastDiagnosis}</TableCell>
                       <TableCell className={`text-center ${getImprovementColor(user.improvementRate)}`}>{user.improvementRate}</TableCell>
                       <TableCell className="text-center">{user.diagnosisCount}회</TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-center joyride-user-detail">
                         <Button variant="ghost" size="sm" onClick={() => handleUserClick(user)} className="gap-2">
                           <Eye className="h-4 w-4" />
                           보기
@@ -493,21 +543,36 @@ export function UserManagement() {
                 </TableBody>
               </Table>
               )}
-              {totalPages > 1 && filteredUsers.length > 0 &&(
-                <div className="flex justify-end mt-3 gap-2">
-                              <Button size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>이전</Button>
-                <span>{currentPage} / {totalPages}</span>
-                <Button size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>다음</Button>
-                
-                              </div>
+              </CardContent>
+            )}
+              
+              {totalPages > 1 && (
+                <div className="flex justify-end items-center px-6 pb-6 gap-2 bg-background">
+                  <Button
+                    size="sm"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(p => p - 1)}
+                  >
+                    이전
+                  </Button>
+              
+                  <span className="text-sm">
+                    {currentPage} / {totalPages}
+                  </span>
+              
+                  <Button
+                    size="sm"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(p => p + 1)}
+                  >
+                    다음
+                  </Button>
+                </div>
               )}
-            </CardContent>)
-          }
 
         </Card>
       </div>
 
-      {/* 오른쪽: 사용자 상세 정보 (항상 표시) */}
       <div className="lg:sticky lg:top-6 lg:h-fit">
         <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -516,7 +581,7 @@ export function UserManagement() {
               {selectedUser && (
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="joyride-user-info-detail">
                       정보 더보기
                     </Button>
                   </DialogTrigger>
@@ -526,7 +591,6 @@ export function UserManagement() {
                       <DialogTitle>기본 정보</DialogTitle>
                     </DialogHeader>
 
-                    {/* ✅ 기본 정보만 표시 */}
                     <UserBasicInfo userId={selectedUser.id} />
                   </DialogContent>
                 </Dialog>
@@ -549,6 +613,10 @@ export function UserManagement() {
           </CardContent>
         </Card>
       </div>
+      <UserManagementJoyride
+        handleUserClick={handleUserClick}
+        users={users}
+      />
     </div>
   );
 }

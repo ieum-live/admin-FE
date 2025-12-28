@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { PasswordChangeModal } from "./PasswordChangeModal";
+import { AdminJoyride } from "./Joyride/SidebarJoyride";
 import React from "react";
 
 export function WelcomePage() {
@@ -9,6 +10,7 @@ export function WelcomePage() {
 
   return (
     <>
+     <AdminJoyride />
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Card className="w-[420px]">
           <CardContent className="py-10 flex flex-col items-center text-center gap-6">

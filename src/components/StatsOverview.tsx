@@ -1,4 +1,3 @@
-// 📌 StatsOverview.tsx
 import { useEffect, useState } from "react";
 import React from "react";
 import {
@@ -16,9 +15,10 @@ import {
   ClipboardList,
   CalendarRange,
 } from "lucide-react";
-import { getDiagnosisSummary, getMetricsOverview } from "../API/overviewAPI";
+import { getDiagnosisSummary, getMetricsOverview, getUserRanking } from "../API/overviewAPI";
 import LoadingSpinner from "./LoadingSpinner";
 import { Badge } from "./ui/badge";
+import { OverviewJoyride } from "./Joyride/OverviewJoyride";
 
 /* ================= 타입 ================= */
 
@@ -34,7 +34,6 @@ type Metrics = {
 };
 
 type DAUStat = {
-  kind: "dau";
   title: string;
   value: number;
   icon: any;
@@ -44,13 +43,16 @@ type DAUStat = {
 };
 
 type SummaryStat = {
-  kind: "summary";
   title: string;
   value: string;
   icon: any;
 };
-
-type CombinedStat = DAUStat | SummaryStat;
+type RankingUser = {
+  userId: string;
+  userName: string;
+  potLevel: number;
+  totalCouponUsed: number;
+};
 
 /* ================= Badge ================= */
 
@@ -100,15 +102,18 @@ const getStableStyle = (value: number) => {
 /* ================= 컴포넌트 ================= */
 
 export function StatsOverview() {
-  /** 로딩 */
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingMetrics, setLoadingMetrics] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [topUser, setTopUser] = useState<RankingUser | null>(null);
+  const [rankingList, setRankingList] = useState<RankingUser[]>([]);
+  type RankingPeriod = "all_time" | "weekly";
 
-  /** 에러 상태 */
-  const [errorSummary, setErrorSummary] = useState<string | null>(null);
-  const [errorMetrics, setErrorMetrics] = useState<string | null>(null);
+    const [rankingPeriod, setRankingPeriod] =
+      useState<RankingPeriod>("all_time");
 
-  /** 데이터 */
+    const [loadingRanking, setLoadingRanking] = useState(true);
+
   const [summary, setSummary] = useState({
     improvementRate: 0,
     stableRatio: 0,
@@ -127,30 +132,21 @@ export function StatsOverview() {
     yauChangeRate: 0,
   });
 
-  /* -------- 요약 -------- */
-  useEffect(() => {
+  useEffect(() => { 
     getDiagnosisSummary()
-      .then((data) => {
-        setSummary({
-          improvementRate: data?.improvementRate ?? 0,
-          stableRatio: data?.stableRatio ?? 0,
-          totalAssessments: data?.totalAssessments ?? 0,
-          avgAssessmentIntervalDays: data?.avgAssessmentIntervalDays ?? 0,
-        });
-        setErrorSummary(null);
-      })
-      .catch((err) => {
-        console.error("진단 요약 데이터 로드 실패:", err);
-        setErrorSummary("진단 요약 데이터를 불러오는데 실패했습니다.");
-      })
-      .finally(() => setLoadingSummary(false));
-  }, []);
-
-  /* -------- DAU -------- */
-  useEffect(() => {
-    getMetricsOverview()
-      .then((data) => {
-        setMetrics({
+    .then((data) => { 
+      setSummary({ improvementRate: data?.improvementRate ?? 0, 
+        stableRatio: data?.stableRatio ?? 0, 
+        totalAssessments: data?.totalAssessments ?? 0, 
+        avgAssessmentIntervalDays: data?.avgAssessmentIntervalDays ?? 0, 
+      }); 
+    }) .finally(() => setLoadingSummary(false)); }, []); 
+    
+    /* -------- DAU -------- */ 
+    useEffect(() => { 
+      getMetricsOverview() 
+      .then((data) => { 
+        setMetrics({ 
           dau: data?.dau ?? 0,
           wau: data?.wau ?? 0,
           mau: data?.mau ?? 0,
@@ -159,19 +155,23 @@ export function StatsOverview() {
           wauChangeRate: data?.wauChangeRate ?? 0,
           mauChangeRate: data?.mauChangeRate ?? 0,
           yauChangeRate: data?.yauChangeRate ?? 0,
-        });
-        setErrorMetrics(null);
-      })
-      .catch((err) => {
-        console.error("활성 사용자 지표 로드 실패:", err);
-        setErrorMetrics("활성 사용자 지표를 불러오는데 실패했습니다.");
-      })
-      .finally(() => setLoadingMetrics(false));
-  }, []);
+        }); 
+      }) .finally(() => 
+        setLoadingMetrics(false)); }, []);
 
-  /* ================= 🔥 핵심: 전체 로딩 컷 ================= */
+        useEffect(() => {
+          setLoadingRanking(true);
+        
+          getUserRanking(rankingPeriod, 5)
+            .then((data) => {
+              setTopUser(data?.topUser ?? null);
+              setRankingList(data?.rankingList ?? []);
+            })
+            .finally(() => setLoadingRanking(false));
+        }, [rankingPeriod]);
+        
 
-  if (loadingSummary || loadingMetrics) {
+  if (loadingSummary || loadingMetrics || loadingRanking)  {
     return (
       <div className="flex justify-center items-center min-h-[240px]">
         <LoadingSpinner />
@@ -179,11 +179,8 @@ export function StatsOverview() {
     );
   }
 
-  /* ================= 카드 데이터 ================= */
-
   const dauStats: DAUStat[] = [
     {
-      kind: "dau",
       title: "일일 활성 사용자 (DAU)",
       value: metrics.dau,
       change: metrics.dauChangeRate,
@@ -192,7 +189,6 @@ export function StatsOverview() {
       period: "전일 대비",
     },
     {
-      kind: "dau",
       title: "주간 활성 사용자 (WAU)",
       value: metrics.wau,
       change: metrics.wauChangeRate,
@@ -201,7 +197,6 @@ export function StatsOverview() {
       period: "전주 대비",
     },
     {
-      kind: "dau",
       title: "월간 활성 사용자 (MAU)",
       value: metrics.mau,
       change: metrics.mauChangeRate,
@@ -210,7 +205,6 @@ export function StatsOverview() {
       period: "전월 대비",
     },
     {
-      kind: "dau",
       title: "연간 활성 사용자 (YAU)",
       value: metrics.yau,
       change: metrics.yauChangeRate,
@@ -222,88 +216,182 @@ export function StatsOverview() {
 
   const summaryStats: SummaryStat[] = [
     {
-      kind: "summary",
       title: "전체 개선율",
       value: `${summary.improvementRate.toFixed(1)}%`,
       icon: TrendingUp,
     },
     {
-      kind: "summary",
       title: "안정군 비율",
       value: `${summary.stableRatio.toFixed(1)}%`,
       icon: ShieldCheck,
     },
     {
-      kind: "summary",
       title: "총 진단 횟수",
       value: summary.totalAssessments.toLocaleString(),
       icon: ClipboardList,
     },
     {
-      kind: "summary",
       title: "평균 진단 간격",
       value: `${summary.avgAssessmentIntervalDays.toFixed(1)}일`,
       icon: CalendarRange,
     },
   ];
 
-  const combinedStats: CombinedStat[] = [
-    ...dauStats,
-    ...summaryStats,
-  ];
-
-  /* ================= UI ================= */
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {combinedStats.map((stat, index) => {
-        const Icon = stat.icon;
+    <>
+      <OverviewJoyride />
 
-        const improvement =
-          stat.kind === "summary" && stat.title === "전체 개선율"
-            ? getImprovementStyle(summary.improvementRate)
-            : null;
+      {/* 🔹 DAU 영역 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 joyride-dau-row">
+        {dauStats.map((stat, index) => {
+          const Icon = stat.icon;
 
-        const stable =
-          stat.kind === "summary" && stat.title === "안정군 비율"
-            ? getStableStyle(summary.stableRatio)
-            : null;
+          return (
+            <Card key={index}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm">{stat.title}</CardTitle>
+                <Icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
 
-        return (
-          <Card key={index}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm">{stat.title}</CardTitle>
-              <Icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-
-            <CardContent className="space-y-2">
-              <div className="flex items-center gap-2">
+              <CardContent className="space-y-2">
                 <div className="text-2xl font-bold">
-                  {stat.kind === "dau"
-                    ? stat.value.toLocaleString()
-                    : stat.value}
+                  {stat.value.toLocaleString()}
                 </div>
+                <div className="joyride-dau-badge">
+                {getStatusBadge(
+                  stat.changeType === "increase" ? "low" : "high",
+                  `${stat.change >= 0 ? "+" : ""}${stat.change.toFixed(
+                    1
+                  )}% · ${stat.period}`
+                )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
-                {improvement &&
-                  getStatusBadge(improvement.status, "개선")}
-                {stable &&
-                  getStatusBadge(stable.status, "안정")}
+      {/* 🔹 Summary 영역 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 joyride-summary-row">
+        {summaryStats.map((stat, index) => {
+          const Icon = stat.icon;
+
+          const improvement =
+            stat.title === "전체 개선율"
+              ? getImprovementStyle(summary.improvementRate)
+              : null;
+
+          const stable =
+            stat.title === "안정군 비율"
+              ? getStableStyle(summary.stableRatio)
+              : null;
+
+          return (
+            <Card key={index}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm">{stat.title}</CardTitle>
+                <Icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+
+              <CardContent className="flex items-center gap-2">
+                <div className="text-2xl font-bold ">{stat.value}</div>
+                <div className="joyride-summary-badge">
+                {improvement && getStatusBadge(improvement.status, "개선")}
+                {stable && getStatusBadge(stable.status, "안정")}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 joyride-pot-toprank">
+        {topUser && (
+          <Card
+        >
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <CardTitle
+              className={`text-sm font-semibold
+                ${
+                  rankingPeriod === "weekly"
+                    ? "text-orange-700"
+                    : "text-green-700"
+                }`}
+            >
+              {rankingPeriod === "weekly"
+                ? "🔥 주간 LV 1위 사용자"
+                : "🏆 전체 LV 1위 사용자"}
+            </CardTitle>
+        
+          </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">닉네임</span>
+                <span className="font-semibold">{topUser.userName}</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">화분 레벨 (꽃 송이 수)</span>
+                <span>Lv.{topUser.potLevel}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">총 쿠폰 사용 수</span>
+                <span>
+                  {(topUser.totalCouponUsed ?? 0).toLocaleString()}회
+                </span>
 
-              {stat.kind === "dau" && (
-                <div>
-                  {getStatusBadge(
-                    stat.changeType === "increase" ? "low" : "high",
-                    `${stat.change >= 0 ? "+" : ""}${stat.change.toFixed(
-                      1
-                    )}% · ${stat.period}`
-                  )}
-                </div>
-              )}
+              </div>
             </CardContent>
           </Card>
-        );
-      })}
+        )}
+
+<Card>
+  <CardHeader className="pb-2 flex flex-row items-center justify-between">
+    <CardTitle className="text-sm">🏅 사용자 LV 순위 TOP 5</CardTitle>
+
+    {/* 🔹 필터 버튼 */}
+    <div className="flex gap-1 joyride-pot-rank-filter">
+      <button
+        onClick={() => setRankingPeriod("all_time")}
+        className={`px-2 py-1 text-xs rounded
+          ${
+            rankingPeriod === "all_time"
+              ? "bg-primary text-white"
+              : "bg-muted text-muted-foreground"
+                  }`}
+              >
+                전체
+              </button>
+
+              <button
+                onClick={() => setRankingPeriod("weekly")}
+                className={`px-2 py-1 text-xs rounded
+                  ${
+                    rankingPeriod === "weekly"
+                      ? "bg-primary text-white"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+              >
+                주간
+              </button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            {rankingList.map((user, idx) => (
+              <div key={user.userId} className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="w-5 text-center font-medium">
+                  {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : idx + 1}
+                </span>
+                <span>{user.userName}</span>
+              </div>
+              <span className="text-muted-foreground">
+                Lv.{user.potLevel}
+              </span>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
     </div>
+    </>
   );
 }

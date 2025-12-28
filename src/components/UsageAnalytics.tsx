@@ -41,10 +41,8 @@ import {
   TopFeatureItem,
   FeatureTrendItem,
 } from "../API/usageAnalyticsAPI";
+import { UsageAnalyticsJoyride } from "./Joyride/UsageAnalyticsJoyride";
 
-/* =======================
-   타입
-======================= */
 
 type TopPeriod = "today" | "2weeks" | "1month";
 type UiPeriod = "2weeks" | "1month" | "3months" | "6months";
@@ -66,9 +64,6 @@ type FeatureType =
   | "MEDITATION_QUEST"
   | "ACTIVITY_QUEST";
 
-/* =======================
-   날짜 유틸
-======================= */
 
 const formatDate = (d: Date) => d.toISOString().slice(0, 10);
 
@@ -79,7 +74,6 @@ const getTopDateRange = (period: TopPeriod) => {
 
   switch (period) {
     case "today":
-      // 오늘 하루
       return { from: to, to };
 
     case "2weeks":
@@ -106,9 +100,6 @@ const getDateRange = (period: PeriodType) => {
   return { from: formatDate(from), to };
 };
 
-/* =======================
-   라벨
-======================= */
 
 const getPeriodLabel = (p: PeriodType) => {
   switch (p) {
@@ -135,10 +126,6 @@ const getFeatureLabel = (f: string) => {
   }
 };
 
-/* =======================
-   컴포넌트
-======================= */
-
 export function UsageAnalytics() {
   const [period, setPeriod] = useState<PeriodType>("2weeks");
   const [feature, setFeature] = useState<FeatureType>("PHQ9");
@@ -152,7 +139,6 @@ export function UsageAnalytics() {
   const [loadingTop, setLoadingTop] = useState(false);
   const [loadingChart, setLoadingChart] = useState(false);
 
-  /* ---------- TOP5 ---------- */
   useEffect(() => {
     const loadTop5 = async () => {
       try {
@@ -181,17 +167,11 @@ useEffect(() => {
       setLoadingChart(true);
 
       const apiPeriod = periodToApi[period];
-      console.log("📈 트렌드 조회:", feature, apiPeriod);
 
       const res = await getFeatureUsageTrend(feature, apiPeriod);
-
-        console.log("🔥 그래프 raw 응답", res);
-        console.log("🔥 그래프에 들어갈 배열", res.data);
-
-        setChartData(res.data); // ✅ 배열
+        setChartData(res.data);
 
     } catch (e) {
-      console.error("❌ 트렌드 조회 실패 (catch 진입)", e);
       setChartData([]);
     } finally {
       setLoadingChart(false);
@@ -199,15 +179,14 @@ useEffect(() => {
   };
 
   loadTrend();
+
 }, [feature, period]);
 
   
 
   return (
     <div className="space-y-6">
-
-      {/* ================= TOP 5 ================= */}
-      <Card>
+      <Card className="joyride-top5">
         <CardHeader className="flex flex-row justify-between items-center">
           <CardTitle>활성 기능 순위</CardTitle>
 
@@ -216,7 +195,7 @@ useEffect(() => {
             value={topPeriod}
             onValueChange={(v) => setTopPeriod(v as TopPeriod)}
           >
-            <SelectTrigger className="w-36">
+            <SelectTrigger className="w-36 joyride-top5-filter">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -231,7 +210,11 @@ useEffect(() => {
         <CardContent>
             {loadingTop ? (
               <LoadingSpinner />
-            ) : (
+            ) : topFeatures.length === 0 ||
+            topFeatures.every((f) => f.totalSessions === 0) ? (
+            <div className="flex flex-col items-center justify-center py-12 text-sm text-muted-foreground">
+              📭 활성 기능이 없습니다
+            </div>):(
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -257,7 +240,7 @@ useEffect(() => {
           </CardContent>
       </Card>
 
-      {/* ================= 필터 ================= */}
+      <div className="joyride-trend">
       <Card>
         <CardHeader>
           <CardTitle>필터 선택</CardTitle>
@@ -265,7 +248,7 @@ useEffect(() => {
 
         <CardContent className="flex gap-4">
           <Select value={feature} onValueChange={(v) => setFeature(v as FeatureType)}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-40 joyride-trend-filter1">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -282,7 +265,7 @@ useEffect(() => {
           </Select>
 
           <Select value={period} onValueChange={(v) => setPeriod(v as PeriodType)}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-40 joyride-trend-filter2">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -295,7 +278,6 @@ useEffect(() => {
         </CardContent>
       </Card>
 
-      {/* ================= 그래프 ================= */}
       <Card>
         <CardHeader>
           <CardTitle>
@@ -328,6 +310,8 @@ useEffect(() => {
 
 
       </Card>
+    </div>
+    <UsageAnalyticsJoyride />
     </div>
   );
 }

@@ -53,7 +53,7 @@ export function AdminSidebar({ onLogout }: AdminSidebarProps) {
   ];
 
     return (
-        <div className="w-64 bg-card border-r border-border h-screen p-4 flex flex-col">
+        <div className="w-64 bg-card border-r border-border h-screen p-4 flex flex-col joyride-sidebar">
             <div>
             <Link to="/">
                 <div className="mb-8">
@@ -75,6 +75,21 @@ export function AdminSidebar({ onLogout }: AdminSidebarProps) {
                 <nav className="space-y-2">
                     {menuItems.map((item) => {
                         const Icon = item.icon;
+
+                        const joyClass =
+                        item.path === "/dashboard"
+                          ? "joyride-dashboard-card"
+                          : item.path === "/usage-analytics"
+                          ? "joyride-usage-analytics"
+                          : item.path === "/diagnosis-results"
+                          ? "joyride-diagnosis-results"
+                          : item.path === "/user-management"
+                          ? "joyride-user-management"
+                          : item.path === "/group-management"
+                          ? "joyride-group-management"
+                          : item.path === "/settings"
+                          ? "joyride-settings"
+                          : "";
                         return (
                             <Link to={item.path} key={item.path}>
                                 <Button
@@ -83,7 +98,7 @@ export function AdminSidebar({ onLogout }: AdminSidebarProps) {
                                             ? "default"
                                             : "ghost"
                                     }
-                                    className="w-full justify-start gap-3"
+                                    className={`w-full justify-start gap-3 ${joyClass}`}
                                 >
                                     <Icon className="h-4 w-4" />
                                     {item.label}

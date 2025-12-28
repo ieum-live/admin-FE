@@ -7,6 +7,7 @@ import {
   exportDiagnosisCSV,
   getRiskDistributionTrend,
 } from "../API/diagnosisAPI";
+import { DiagnosisResultsJoyride } from "./Joyride/DiagnosisResultsJoyride";
 
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -44,13 +45,6 @@ interface UserData {
   };
 }
 
-// 위험도 뱃지
-const getStatusBadge = (risk: "LOW" | "MID" | "HIGH") => {
-  if (risk === "LOW") return <Badge className="bg-green-600">안정군</Badge>;
-  if (risk === "MID") return <Badge className="bg-yellow-500">주의군</Badge>;
-  return <Badge className="bg-red-500">위험군</Badge>;
-};
-
 // 기간 → 날짜 범위 계산
 const getDateRange = (period: string) => {
   const to = new Date();
@@ -66,6 +60,13 @@ const getDateRange = (period: string) => {
     to: to.toISOString().slice(0, 10),
   };
 };
+
+const RISK_LABEL_MAP: Record<string, string> = {
+  LOW: "안정",
+  MID: "주의",
+  HIGH: "위험",
+};
+
 
 export function DiagnosisResults() {
   // 필터 상태
@@ -104,14 +105,11 @@ export function DiagnosisResults() {
     
         const apiType = TEST_TYPE_TO_API[testType];
         const raw = await getRiskDistributionTrend(apiType, period);
-        console.log("raw", raw);
     
         const chartData = transformRiskTrend(raw, testType); // testType 전달
-        console.log("📊 chartData", chartData);
     
         setRiskTrend(chartData);
       } catch (err) {
-        console.error(err);
         setRiskTrend([]);
       } finally {
         setLoadingTrend(false);
@@ -135,18 +133,24 @@ export function DiagnosisResults() {
           map.set(label, { label, LOW: 0, MID: 0, HIGH: 0 });
         }
     
-        // ✅ 백엔드가 계산한 비율 그대로 사용
         map.get(label)![risk] += userPercentage;
       });
     
-      return Array.from(map.values()).map(item => ({
-        label: item.label,
-        LOW: +item.LOW.toFixed(1),
-        MID: +item.MID.toFixed(1),
-        HIGH: +item.HIGH.toFixed(1),
-      }));
-    };
-    
+      return Array.from(map.values()).map(item => {
+        const low = +item.LOW.toFixed(1);
+        const mid = +item.MID.toFixed(1);
+        const high = +(100 - low - mid).toFixed(1); 
+      
+        return {
+          label: item.label,
+          LOW: low === 0 ? null : low,
+          MID: mid === 0 ? null : mid,
+          HIGH: high === 0 ? null : high,
+        };
+      });
+    }
+      
+      
     
 
   // 검사별 SCALE → RISK 매핑
@@ -214,12 +218,10 @@ const loadUsers = async (
         name: u.name,
       }
     }));
-    console.log("ttt", mappedUsers)
     setUsers(mappedUsers);
     setTotalUsers(res.page.totalElements);
     setTotalPages(res.page.totalPages);
   } catch (err) {
-    console.error(err);
     setUsers([]);
     setTotalUsers(0);
     setTotalPages(1);
@@ -300,7 +302,7 @@ const handleExport = async () => {
 
   return (
     <div className="space-y-6">
-
+    <div className="joyride-risk-trend">
       {/* ---------------------- 필터 영역 ---------------------- */}
       <Card className="p-4">
         <CardHeader className="pb-2">
@@ -311,7 +313,7 @@ const handleExport = async () => {
 
           {/* 검사 선택 */}
           <Select value={testType} onValueChange={(v) => setTestType(v as any)}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-40 joyride-risk-trend-filter1">
               <SelectValue placeholder="검사 선택" />
             </SelectTrigger>
             <SelectContent>
@@ -323,7 +325,7 @@ const handleExport = async () => {
 
           {/* 기간 선택 */}
           <Select value={period} onValueChange={(v) => setPeriod(v as any)}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-40 joyride-risk-trend-filter2">
               <SelectValue placeholder="기간 선택" />
             </SelectTrigger>
             <SelectContent>
@@ -337,43 +339,48 @@ const handleExport = async () => {
         </CardContent>
       </Card>
 
-      {/* ---------------------- 위험도 차트 ---------------------- */}
       <Card>
-  <CardHeader>
-    <CardTitle>위험도별 사용자 분포 추이</CardTitle>
-  </CardHeader>
+      <CardHeader>
+        <CardTitle>위험도별 사용자 분포 추이</CardTitle>
+      </CardHeader>
 
-  <CardContent>
-  <div style={{ width: '100%', height: 400 }}>
-  <ResponsiveContainer width="100%" height="100%">
-  <AreaChart data={riskTrend}>
-      <CartesianGrid strokeDasharray="3 3" />
-      <XAxis dataKey="label" />
-      <YAxis />
-      <Tooltip />
-      <Area type="monotone" dataKey="LOW" stackId="1" stroke="#10b981" fill="#10b981" />
-      <Area type="monotone" dataKey="MID" stackId="1" stroke="#f59e0b" fill="#f59e0b" />
-      <Area type="monotone" dataKey="HIGH" stackId="1" stroke="#ef4444" fill="#ef4444" />
-    </AreaChart>
-  </ResponsiveContainer>
-</div>
-
+        <CardContent>
+        <div style={{ width: '100%', height: 400 }}>
+        <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={riskTrend}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="label" />
+            <YAxis />
+            <Tooltip
+              formatter={(value: number, name: string) => [
+                `${value}%`,
+                RISK_LABEL_MAP[name] ?? name,
+              ]}
+            />
+            <Area type="monotone" dataKey="LOW" stackId="1" stroke="#10b981" fill="#10b981" />
+            <Area type="monotone" dataKey="MID" stackId="1" stroke="#f59e0b" fill="#f59e0b" />
+            <Area type="monotone" dataKey="HIGH" stackId="1" stroke="#ef4444" fill="#ef4444" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
 </CardContent>
-
 </Card>
+</div>
 
 
       {/* ---------------------- 사용자 테이블 ---------------------- */}
+      <div className="joyride-user-diagnosis-results">
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center w-full">
             <CardTitle>
               {`${getPeriodLabel(period)} 동안 · ${getTestLabel(testType)} 검사를 한 사용자`}
             </CardTitle>
-
+            <div className="joyride-user-diagnosis-results-csv">
             <Button variant="outline" onClick={handleExport}>
               CSV 다운로드
             </Button>
+            </div>
           </div>
         </CardHeader>
 
@@ -422,7 +429,8 @@ const handleExport = async () => {
           )}
         </CardContent>
       </Card>
-
+    </div>
+    <DiagnosisResultsJoyride />
     </div>
   );
 }
