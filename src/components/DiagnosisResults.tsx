@@ -25,7 +25,6 @@ import {
 } from "recharts";
 import LoadingSpinner from "./LoadingSpinner";
 
-// 사용자 타입 정의
 interface UserData {
   id: string;
   name: string;
@@ -45,7 +44,6 @@ interface UserData {
   };
 }
 
-// 기간 → 날짜 범위 계산
 const getDateRange = (period: string) => {
   const to = new Date();
   const from = new Date();
@@ -69,13 +67,11 @@ const RISK_LABEL_MAP: Record<string, string> = {
 
 
 export function DiagnosisResults() {
-  // 필터 상태
   type TestTypeUI = "PHQ9" | "GAD7" | "CAGI";
   const [testType, setTestType] = useState<TestTypeUI>("PHQ9");
 
   const [period, setPeriod] = useState<"2weeks" | "1month" | "3months" | "6months">("1month");
 
-  // 데이터 상태
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [users, setUsers] = useState<UserData[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
@@ -86,7 +82,6 @@ export function DiagnosisResults() {
   const [loadingTrend, setLoadingTrend] = useState(true);
 
 
-  // 페이지네이션
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 7;
   
@@ -106,7 +101,7 @@ export function DiagnosisResults() {
         const apiType = TEST_TYPE_TO_API[testType];
         const raw = await getRiskDistributionTrend(apiType, period);
     
-        const chartData = transformRiskTrend(raw, testType); // testType 전달
+        const chartData = transformRiskTrend(raw, testType);
     
         setRiskTrend(chartData);
       } catch (err) {
@@ -150,10 +145,6 @@ export function DiagnosisResults() {
       });
     }
       
-      
-    
-
-  // 검사별 SCALE → RISK 매핑
 const SCALE_TO_RISK_MAP: Record<TestTypeUI, Record<string, "LOW" | "MID" | "HIGH">> = {
   PHQ9: {
     "정상": "LOW",
@@ -200,7 +191,6 @@ const loadUsers = async (
     const apiType = TEST_TYPE_TO_API[testType];
     const res = await getRecentUsers({ type: apiType, period, page, size });
 
-    // 서버 데이터 → 화면용 UserData로 변환
     const mappedUsers: UserData[] = res.content.map(u => ({
       id: u.email,
       name: u.name,
@@ -230,7 +220,6 @@ const loadUsers = async (
   }
 };
 
-// 위험도 뱃지
 const getStatusBadge = (risk: "LOW" | "MID" | "HIGH") => {
     const baseClasses = "text-xs";
     switch (risk) {
@@ -279,7 +268,6 @@ const handleExport = async () => {
 };
 
 
-  // 필터 텍스트 생성 함수
   const getPeriodLabel = (period: string) => {
     switch (period) {
       case "2weeks": return "최근 2주";
@@ -303,7 +291,6 @@ const handleExport = async () => {
   return (
     <div className="space-y-6">
     <div className="joyride-risk-trend">
-      {/* ---------------------- 필터 영역 ---------------------- */}
       <Card className="p-4">
         <CardHeader className="pb-2">
           필터 선택
@@ -311,7 +298,6 @@ const handleExport = async () => {
 
         <CardContent className="flex gap-4 items-center">
 
-          {/* 검사 선택 */}
           <Select value={testType} onValueChange={(v) => setTestType(v as any)}>
             <SelectTrigger className="w-40 joyride-risk-trend-filter1">
               <SelectValue placeholder="검사 선택" />
@@ -323,7 +309,6 @@ const handleExport = async () => {
             </SelectContent>
           </Select>
 
-          {/* 기간 선택 */}
           <Select value={period} onValueChange={(v) => setPeriod(v as any)}>
             <SelectTrigger className="w-40 joyride-risk-trend-filter2">
               <SelectValue placeholder="기간 선택" />
@@ -368,7 +353,6 @@ const handleExport = async () => {
 </div>
 
 
-      {/* ---------------------- 사용자 테이블 ---------------------- */}
       <div className="joyride-user-diagnosis-results">
       <Card>
         <CardHeader>
@@ -418,7 +402,6 @@ const handleExport = async () => {
 
               </Table>
 
-              {/* 페이지네이션 */}
               <div className="flex justify-end mt-3 gap-2">
               <Button size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>이전</Button>
 <span>{currentPage} / {totalPages}</span>

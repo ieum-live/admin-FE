@@ -20,8 +20,6 @@ import LoadingSpinner from "./LoadingSpinner";
 import { Badge } from "./ui/badge";
 import { OverviewJoyride } from "./Joyride/OverviewJoyride";
 
-/* ================= 타입 ================= */
-
 type Metrics = {
   dau: number;
   wau: number;
@@ -54,8 +52,6 @@ type RankingUser = {
   totalCouponUsed: number;
 };
 
-/* ================= Badge ================= */
-
 const getStatusBadge = (
   status: "low" | "medium" | "high",
   label: string
@@ -85,8 +81,6 @@ const getStatusBadge = (
   );
 };
 
-/* ================= 기준 ================= */
-
 const getImprovementStyle = (value: number) => {
   if (value >= 50) return { status: "low" as const };
   if (value >= 30) return { status: "medium" as const };
@@ -98,8 +92,6 @@ const getStableStyle = (value: number) => {
   if (value >= 40) return { status: "medium" as const };
   return { status: "high" as const };
 };
-
-/* ================= 컴포넌트 ================= */
 
 export function StatsOverview() {
   const [loadingSummary, setLoadingSummary] = useState(true);
@@ -141,8 +133,7 @@ export function StatsOverview() {
         avgAssessmentIntervalDays: data?.avgAssessmentIntervalDays ?? 0, 
       }); 
     }) .finally(() => setLoadingSummary(false)); }, []); 
-    
-    /* -------- DAU -------- */ 
+
     useEffect(() => { 
       getMetricsOverview() 
       .then((data) => { 
@@ -240,8 +231,6 @@ export function StatsOverview() {
   return (
     <>
       <OverviewJoyride />
-
-      {/* 🔹 DAU 영역 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 joyride-dau-row">
         {dauStats.map((stat, index) => {
           const Icon = stat.icon;
@@ -271,7 +260,6 @@ export function StatsOverview() {
         })}
       </div>
 
-      {/* 🔹 Summary 영역 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 joyride-summary-row">
         {summaryStats.map((stat, index) => {
           const Icon = stat.icon;
