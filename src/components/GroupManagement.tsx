@@ -19,9 +19,6 @@ import { getAdminAPI, getAdminsAPI, addAdminAPI, deleteAdminAPI } from "../API/g
 import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
-import { getMyId } from "../API/authAPI";
-
-/* ================= 타입 ================= */
 interface Admin {
   id: string;
   name: string;
@@ -49,25 +46,17 @@ const initialAssignments: Record<string, string[]> = {
 
 export function GroupManagement() {
 
-  const [me, setMe] = useState<Admin | null>(null);
+  const me = JSON.parse(localStorage.getItem("me") || "null");
 
-useEffect(() => {
-  const myAdminId = getMyId();
-  if (!myAdminId) return;
-
-  const fetchAdmin = async () => {
-    const res = await getAdminAPI(myAdminId);
-    setMe(res.data);
-  };
-
-  fetchAdmin();
-}, []);
+  const currentAdminId = me?.id;
+  const myRole = me?.role;
+  const isSuperAdmin = me?.role === "SUPER_ADMIN";
+  
 
   useEffect(() => {
     const fetchAdmins = async () => {
       try {
         const data = await getAdminsAPI();
-        console.log("목록", data)
         setAdmins(data);
   
       } catch (e) {
@@ -81,9 +70,6 @@ useEffect(() => {
   const [admins, setAdmins] = useState<Admin[]>([])
   const [students] = useState(mockStudents);
   const [assignments, setAssignments] = useState(initialAssignments);
-
-  const currentAdminId = me?.id;
-  const isSuperAdmin = me?.role === "SUPER_ADMIN";
 
 
   /* ================= 상태 ================= */

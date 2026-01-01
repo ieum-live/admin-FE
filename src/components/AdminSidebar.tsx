@@ -17,7 +17,17 @@ interface AdminSidebarProps {
     onLogout: () => void;
 }
 
-export function AdminSidebar({ onLogout }: AdminSidebarProps) {
+const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("me");
+  
+    window.location.href = "/login";
+  };
+
+  export function AdminSidebar({
+    onLogout = handleLogout,
+  }: AdminSidebarProps) {
     const location = useLocation();
     const activeTab = location.pathname;
     const [isDark, setIsDark] = useState(false);

@@ -1,13 +1,35 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { PasswordChangeModal } from "./PasswordChangeModal";
 import { AdminJoyride } from "./Joyride/SidebarJoyride";
 import React from "react";
+import { getMyId } from "../API/authAPI";
+import { getAdminAPI } from "../API/groupManagementAPI"
 
 export function WelcomePage() {
   const [openPwModal, setOpenPwModal] = useState(false);
 
+  useEffect(() => {
+    const fetchMe = async () => {
+      try {
+        const myId = await getMyId();
+        if (!myId) return;
+  
+        const adminRes = await getAdminAPI(myId);
+  
+        localStorage.setItem(
+          "me",
+          JSON.stringify(adminRes.data)
+        );
+      } catch (e) {
+        console.error("내 정보 초기화 실패", e);
+      }
+    };
+  
+    fetchMe();
+  }, []);
+  
   return (
     <>
      <AdminJoyride />
