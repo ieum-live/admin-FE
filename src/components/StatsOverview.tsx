@@ -46,10 +46,11 @@ type SummaryStat = {
   icon: any;
 };
 type RankingUser = {
+  weeklyCouponsUsed: number;
   userId: string;
   userName: string;
   potLevel: number;
-  totalCouponUsed: number;
+  totalCouponsUsed: number;
 };
 
 const getStatusBadge = (
@@ -324,9 +325,11 @@ export function StatsOverview() {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">총 쿠폰 사용 수</span>
                 <span>
-                  {(topUser.totalCouponUsed ?? 0).toLocaleString()}회
+                  {rankingPeriod === "weekly"
+                    ? (topUser.weeklyCouponsUsed ?? 0).toLocaleString()
+                    : (topUser.totalCouponsUsed ?? 0).toLocaleString()
+                  }회
                 </span>
-
               </div>
             </CardContent>
           </Card>
@@ -336,7 +339,6 @@ export function StatsOverview() {
   <CardHeader className="pb-2 flex flex-row items-center justify-between">
     <CardTitle className="text-sm">🏅 사용자 LV 순위 TOP 5</CardTitle>
 
-    {/* 🔹 필터 버튼 */}
     <div className="flex gap-1 joyride-pot-rank-filter">
       <button
         onClick={() => setRankingPeriod("all_time")}
@@ -364,19 +366,19 @@ export function StatsOverview() {
             </div>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            {rankingList.map((user, idx) => (
-              <div key={user.userId} className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <span className="w-5 text-center font-medium">
-                  {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : idx + 1}
-                </span>
-                <span>{user.userName}</span>
-              </div>
-              <span className="text-muted-foreground">
-                Lv.{user.potLevel}
+          {rankingList.map((user, idx) => (
+          <div key={user.userId} className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <span className="w-5 text-center font-medium">
+                {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : idx + 1}
               </span>
+              <span>{user.userName}</span>
             </div>
-          ))}
+            <div className="flex gap-4">
+              <span className="text-muted-foreground">Lv.{user.potLevel}</span>
+            </div>
+          </div>
+        ))}
         </CardContent>
       </Card>
     </div>
