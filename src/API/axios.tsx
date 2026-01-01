@@ -82,4 +82,31 @@ instance.interceptors.response.use(
     }
 );
 
+export const forceLogout = (message?: string) => {
+    if (message) {
+      alert(message);
+    }
+  
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("me");
+  
+    window.location.href = "/login";
+  };
+
+  
+instance.interceptors.response.use(
+    (res) => res,
+    (error) => {
+      const status = error?.response?.status;
+  
+      // 🔥 토큰 만료 / 인증 실패
+      if (status === 401) {
+        forceLogout("로그인 시간이 만료되었습니다. 다시 로그인해주세요.");
+      }
+  
+      return Promise.reject(error);
+    }
+  );
+
 export default instance;

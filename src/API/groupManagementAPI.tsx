@@ -39,3 +39,32 @@ export const getAdminsAPI = async (): Promise<Admin[]> => {
   const res = await instance.get("/api/admin-management/admins");
   return res.data.data;
 };
+
+export const getAdminStudentsAPI = async (adminId: string) => {
+    const res = await instance.get(`/api/admin-management/admins/${adminId}/students`);
+    console.log("그룹 API", res.data)
+    return res.data.data;
+  };
+
+  export const assignStudentsAPI = async (adminId: string, studentIds: string[]) => {
+    const res = await instance.post(
+      `/api/admin-management/admins/${adminId}/assign-students`,
+      { studentIds }
+    );
+    return res.data;
+  };
+  
+  
+  export const unassignStudentsAPI = async (adminId: string, studentIds: string[]) => {
+    const res = await instance.post(`/api/admin-management/admins/${adminId}/unassign-students`, { studentIds });
+    return res.data;
+  };
+
+  export const updateAdminRoleAPI = async (adminId: string, role: AdminRole) => {
+    const res = await instance.put(`/api/admin-management/admins/${adminId}`, {
+      role,
+    });
+  
+    return res.data;
+  };
+  
