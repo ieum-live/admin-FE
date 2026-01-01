@@ -110,8 +110,6 @@ export function UserManagement() {
     };
     fetchAllUsers();
   }, []);
-
-          // MID / LOW / HIGH → medium / low / high 매핑
           const riskMap: Record<string, 'low' | 'medium' | 'high'> = {
             LOW: 'low',
             MID: 'medium',
@@ -252,7 +250,6 @@ export function UserManagement() {
     setIsSending(true);
 
     try {
-      // 2. 일괄 발송 API 호출 (반복문 X)
       await sendBulkAlert({
         userIds: selectedUsers,
         title: notificationTitle,
@@ -262,7 +259,6 @@ export function UserManagement() {
 
       alert("성공적으로 알림이 발송되었습니다.");
 
-      // 3. 초기화 및 모달 닫기
       setIsNotificationOpen(false);
       setNotificationMessage("");
       setNotificationTitle("");
@@ -384,7 +380,6 @@ export function UserManagement() {
                           </Select>
                         </div>
 
-                        {/* 제목 입력 */}
                         <div className="space-y-2">
                           <label className="text-sm font-medium">제목</label>
                           <Input
@@ -394,7 +389,6 @@ export function UserManagement() {
                           />
                         </div>
 
-                        {/* 메시지 입력 */}
                         <div className="space-y-2">
                           <label className="text-sm font-medium">내용</label>
                           <Textarea
@@ -405,7 +399,6 @@ export function UserManagement() {
                           />
                         </div>
 
-                        {/* 버튼 연결 */}
                         <Button onClick={handleSendNotification} disabled={isSending}>
                           {isSending ? "발송 중..." : "전송하기"}
                         </Button>
