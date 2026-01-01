@@ -15,7 +15,11 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { getAdminAPI, getAdminsAPI, addAdminAPI, deleteAdminAPI } from "../API/groupManagementAPI";
 import React from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+
+import { getMyId } from "../API/authAPI";
 
 /* ================= 타입 ================= */
 interface Admin {
@@ -31,13 +35,6 @@ interface Student {
   email: string;
 }
 
-/* ================= Mock ================= */
-const mockAdmins: Admin[] = [
-  { id: "a1", name: "김OO", email: "kim@admin.com", role: "SUPER_ADMIN" },
-  { id: "a2", name: "박OO", email: "park@admin.com", role: "ADMIN" },
-  { id: "a3", name: "이OO", email: "lee@admin.com", role: "ADMIN" },
-];
-
 const mockStudents: Student[] = [
   { id: "u1", name: "김학생", email: "kim@student.com" },
   { id: "u2", name: "이학생", email: "lee@student.com" },
@@ -51,15 +48,43 @@ const initialAssignments: Record<string, string[]> = {
 };
 
 export function GroupManagement() {
-  /* ================= 로그인 정보 ================= */
-  const currentAdminId = "a1"; // 👉 슈퍼 관리자
 
-  const [admins, setAdmins] = useState(mockAdmins);
+  const [me, setMe] = useState<Admin | null>(null);
+
+useEffect(() => {
+  const myAdminId = getMyId();
+  if (!myAdminId) return;
+
+  const fetchAdmin = async () => {
+    const res = await getAdminAPI(myAdminId);
+    setMe(res.data);
+  };
+
+  fetchAdmin();
+}, []);
+
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      try {
+        const data = await getAdminsAPI();
+        console.log("목록", data)
+        setAdmins(data);
+  
+      } catch (e) {
+        console.error("관리자 목록 조회 실패", e);
+      }
+    };
+  
+    fetchAdmins();
+  }, []);
+
+  const [admins, setAdmins] = useState<Admin[]>([])
   const [students] = useState(mockStudents);
   const [assignments, setAssignments] = useState(initialAssignments);
 
-  const currentAdmin = admins.find(a => a.id === currentAdminId);
-  const isSuperAdmin = currentAdmin?.role === "SUPER_ADMIN";
+  const currentAdminId = me?.id;
+  const isSuperAdmin = me?.role === "SUPER_ADMIN";
+
 
   /* ================= 상태 ================= */
   const [selectedAdminId, setSelectedAdminId] = useState<string | null>(null);
@@ -76,32 +101,8 @@ export function GroupManagement() {
   >(null);
 
   const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [newAdminRole, setNewAdminRole] = useState<"ADMIN" | "SUPER_ADMIN">("ADMIN");
 
-  /* ================= 초기 선택 ================= */
-  useEffect(() => {
-    setSelectedAdminId(currentAdminId);
-    setCheckedStudents(assignments[currentAdminId]);
-  }, []);
-
-  const selectedAdmin = admins.find(a => a.id === selectedAdminId);
-
-  /* ================= 관리자 필터 ================= */
-  const filteredAdmins = useMemo(() => {
-    return admins.filter(
-      a =>
-        a.name.includes(adminSearch) ||
-        a.email.includes(adminSearch)
-    );
-  }, [admins, adminSearch]);
-
-  /* ================= 학생 토글 ================= */
-  const toggleStudent = (id: string) => {
-    setCheckedStudents(prev =>
-      prev.includes(id)
-        ? prev.filter(v => v !== id)
-        : [...prev, id]
-    );
-  };
 
   /* ================= 관리자 추가 ================= */
   const addAdmin = () => {
@@ -116,6 +117,59 @@ export function GroupManagement() {
     ]);
     setNewAdminEmail("");
     setAddModal(false);
+  };
+  /*const addAdmin = async () => {
+    if (!newAdminEmail) return;
+  
+    try {
+      await addAdminAPI({
+        email: newAdminEmail,
+        role: newAdminRole,
+      });
+  
+      setAddModal(false);
+      setNewAdminEmail("");
+      setNewAdminRole("ADMIN");
+  
+    } catch (e) {
+      console.error("관리자 추가 실패", e);
+    }
+  };*/
+
+
+  useEffect(() => {
+    if (!currentAdminId) return;
+  
+    setSelectedAdminId(currentAdminId);
+    setCheckedStudents(assignments[currentAdminId] ?? []);
+  }, [currentAdminId]);
+  
+
+  const selectedAdmin = admins.find(a => a.id === selectedAdminId);
+
+  const filteredAdmins = useMemo(() => {
+    if (!me) return [];
+  
+    const base = isSuperAdmin
+      ? admins
+      : admins.filter(a => a.id === me.id);
+  
+    return base.filter(
+      a =>
+        a.name.includes(adminSearch) ||
+        a.email.includes(adminSearch)
+    );
+  }, [admins, adminSearch, isSuperAdmin, me]);
+  
+  
+
+  /* ================= 학생 토글 ================= */
+  const toggleStudent = (id: string) => {
+    setCheckedStudents(prev =>
+      prev.includes(id)
+        ? prev.filter(v => v !== id)
+        : [...prev, id]
+    );
   };
 
   /* ================= 권한 변경 ================= */
@@ -148,6 +202,38 @@ export function GroupManagement() {
     setSelectedAdmins([]);
     setConfirmModal(null);
   };
+
+  /* const deleteAdmins = async () => {
+    try {
+      // 본인 제외한 삭제 대상
+      const targetAdminIds = selectedAdmins.filter(
+        (id) => id !== currentAdminId
+      );
+  
+      if (targetAdminIds.length === 0) {
+        setConfirmModal(null);
+        setSelectedAdmins([]);
+        return;
+      }
+  
+      // DELETE 요청 병렬 처리
+      await Promise.all(
+        targetAdminIds.map((adminId) => deleteAdminAPI(adminId))
+      );
+  
+      // 성공 시 로컬 상태 갱신
+      setAdmins((prev) =>
+        prev.filter(
+          (admin) => !targetAdminIds.includes(admin.id)
+        )
+      );
+  
+      setSelectedAdmins([]);
+      setConfirmModal(null);
+    } catch (e) {
+      console.error("관리자 삭제 실패", e);
+    }
+  }; */
 
   /* ================= 학생 담당 저장 ================= */
 const saveAssignment = () => {
@@ -211,6 +297,8 @@ const saveAssignment = () => {
                 <div
                 key={admin.id}
                 onClick={() => {
+                  if (!isSuperAdmin && admin.id !== currentAdminId) return;
+                
                   setSelectedAdminId(admin.id);
                   setCheckedStudents(assignments[admin.id]);
                 }}
@@ -345,7 +433,6 @@ const saveAssignment = () => {
         </CardContent>
       </Card>
 
-      {/* ================= 관리자 추가 모달 ================= */}
       {addModal && (
         <ConfirmModal
           title="관리자 추가"
@@ -355,14 +442,32 @@ const saveAssignment = () => {
           <Input
             placeholder="관리자 이메일"
             value={newAdminEmail}
-            onChange={e => setNewAdminEmail(e.target.value)}
+            onChange={(e) => setNewAdminEmail(e.target.value)}
           />
-          <p className="text-sm text-muted-foreground mt-2">
-            계정이 자동 생성되며 기본 비밀번호는
-            <b> ieum1234!</b> 입니다.
-          </p>
+
+          <Select
+            value={newAdminRole}
+            onValueChange={(v) => setNewAdminRole(v as "ADMIN" | "SUPER_ADMIN")}
+          >
+            <SelectTrigger className="mt-3">
+              <SelectValue placeholder="관리자 역할 선택" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ADMIN">일반 관리자</SelectItem>
+              <SelectItem value="SUPER_ADMIN">슈퍼 관리자</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <div className="text-sm text-muted-foreground mt-3 space-y-1">
+            <p>• 이름: 이메일 주소의 @ 앞부분으로 자동 설정</p>
+            <p>
+              • 기본 비밀번호: <b>ieum1234!</b>
+            </p>
+            <p>• 최초 로그인 후 이름/비밀번호 변경 권장</p>
+          </div>
         </ConfirmModal>
       )}
+
 
       {/* ================= 확인 모달 ================= */}
       {confirmModal && (
