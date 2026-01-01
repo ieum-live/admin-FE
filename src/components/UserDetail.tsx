@@ -100,10 +100,9 @@ export function UserDetail({ userId }: UserDetailProps) {
         setPotDailyUsage(
           detail.potUsage.dailyUsage.map((d: any) => ({
             date: d.date,
-            usedCount: d.used,
+            usedCount: d.usedCount,
           }))
         );
-        console.log("totalCouponsUsed:", detail.potUsage.dailyUsage);
         
 
       } catch (err) {
@@ -344,8 +343,6 @@ export function UserDetail({ userId }: UserDetailProps) {
             </CardContent>
           </Card>
         
-
-          {/* ================= 🌱 꽃 심은 기록 (POT 사용 차트) ================= */}
           <Card className="joyride-user-pot-graph">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -365,6 +362,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                   <Tooltip />
                   <Bar
                     dataKey="usedCount"
+                    name="쿠폰 사용 수"
                     fill="#22c55e"
                     radius={[4, 4, 0, 0]}
                   />
