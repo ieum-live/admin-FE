@@ -37,6 +37,18 @@ export function AdminJoyride() {
       ),
     },
     {
+      target: ".joyride-user-manual",
+      content: "사용자 메뉴얼을 글과 가이드로 볼 수 있어요.",
+      placement: "right",
+      disableBeacon: true,
+    },
+    {
+      target: ".joyride-user-update",
+      content: "관리자 ID와 이메일을 확인하고 이름과 비밀번호를 수정할 수 있어요.",
+      placement: "right",
+      disableBeacon: true,
+    },
+    {
       target: ".joyride-sidebar",
       content: "왼쪽 사이드바에서 모든 관리자 기능으로 이동할 수 있어요.",
       placement: "right",
