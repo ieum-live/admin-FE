@@ -66,7 +66,7 @@ const handleLogout = () => {
         <div className="w-64 bg-card border-r border-border h-screen p-4 flex flex-col joyride-sidebar">
             <div>
             <Link to="/">
-                <div className="mb-8">
+                <div className="mb-8 joyride-welcome-page">
                     <img
                         src={
                             isDark
@@ -77,7 +77,7 @@ const handleLogout = () => {
                         className="h-12 w-auto mb-2"
                     />
                     <p className="text-sm text-muted-foreground">
-                        이음 관리자 대시보드
+                        사용자 메뉴얼 / 정보 수정
                     </p>
                 </div>
                 </Link>

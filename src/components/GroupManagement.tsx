@@ -20,6 +20,7 @@ import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { getUsers } from "../API/userManagementAPI";
 import LoadingSpinner from "./LoadingSpinner";
+import { GroupManagementJoyride } from "./Joyride/GroupManagementJoyride"
 
 interface Admin {
   id: string;
@@ -33,6 +34,13 @@ interface Student {
   id: string;
   name: string;
   email: string;
+}
+
+interface ConfirmModalProps {
+  title: string;
+  children?: React.ReactNode;
+  onClose: () => void;
+  onConfirm: () => void;
 }
 
 const initialAssignments: Record<string, string[]> = {
@@ -53,6 +61,27 @@ export const forceLogout = (message?: string) => {
   window.location.href = "/login";
 };
 
+export function ConfirmModal({ title, children, onClose, onConfirm }: ConfirmModalProps) {
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <Card className="w-[360px]">
+        <CardHeader className="flex justify-between">
+          <CardTitle>{title}</CardTitle>
+          <button onClick={onClose}>
+            <X />
+          </button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>{children}</div>
+          <div className="flex gap-2 justify-center">
+            <Button variant="outline" onClick={onClose}>취소</Button>
+            <Button variant="destructive" onClick={onConfirm}>확인</Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 export function GroupManagement() {
 
@@ -371,137 +400,103 @@ const saveAssignment = async () => {
 };
 
 
-  /* ================= UI ================= */
-  return (
+return (
+  <>
     <div className="grid grid-cols-[360px,1fr] gap-6">
       {/* ================= 관리자 목록 ================= */}
-      <Card>
+      <Card className="joyride-admin-list">
         <CardHeader className="space-y-3">
           <div className="flex justify-between items-center">
             <CardTitle>관리자 목록</CardTitle>
-
             {isSuperAdmin && (
               <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => setAddModal(true)}
-                >
-                  <ShieldPlus className="h-4 w-4 mr-1" />
-                  관리자 추가
+                <Button size="sm" onClick={() => setAddModal(true)} className="joyride-admin-add">
+                  <ShieldPlus className="h-4 w-4 mr-1" /> 관리자 추가
                 </Button>
-
                 <Button
                   size="sm"
+                  className="joyride-admin-delete"
                   variant="destructive"
                   disabled={!selectedAdmins.length}
-                  onClick={() =>
-                    setConfirmModal({ type: "delete" })
-                  }
+                  onClick={() => setConfirmModal({ type: "delete" })}
                 >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  삭제
+                  <Trash2 className="h-4 w-4 mr-1" /> 삭제
                 </Button>
               </div>
             )}
           </div>
-
+          <div className="mb-2 joyride-admin-search">
+          <label className="flex items-center gap-1 text-sm font-medium text-muted-foreground mb-2">
+            <Search className="w-4 h-4" /> 관리자 검색
+          </label>
           <Input
-            placeholder="관리자 검색"
-            value={adminSearch}
-            onChange={e => setAdminSearch(e.target.value)}
+            placeholder="이름, 이메일"
+           value={adminSearch}
+            onChange={(e) => setAdminSearch(e.target.value)}
+            className="text-sm placeholder:text-sm"
           />
+          </div>
         </CardHeader>
 
         <CardContent className="space-y-2">
-        {filteredAdminsPaginated.map(admin => {
+          {filteredAdminsPaginated.map((admin) => {
             const isMe = admin.id === currentAdminId;
-
             return (
-                <div
+              <div
                 key={admin.id}
-                onClick={() => () => handleSelectAdmin(admin.id)} 
-                className={`p-3 rounded-lg border cursor-pointer transition
-                  ${
-                    selectedAdminId === admin.id
-                      ? "bg-muted border-primary"
-                      : "hover:bg-muted"
-                  }
-                `}
+                onClick={() => handleSelectAdmin(admin.id)}
+                className={`p-3 rounded-lg border cursor-pointer transition ${
+                  selectedAdminId === admin.id ? "bg-muted border-primary" : "hover:bg-muted"
+                }`}
               >
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="flex gap-2 items-center">
                       <span className="font-medium">{admin.name}</span>
-              
                       {isMe && <Badge>내 그룹</Badge>}
-              
-                      <Badge
-                        variant={
-                          admin.role === "SUPER_ADMIN"
-                            ? "destructive"
-                            : "secondary"
-                        }
-                      >
-                        {admin.role === "SUPER_ADMIN"
-                          ? "슈퍼 관리자"
-                          : "관리자"}
+                      <Badge variant={admin.role === "SUPER_ADMIN" ? "destructive" : "secondary"}>
+                        {admin.role === "SUPER_ADMIN" ? "슈퍼 관리자" : "관리자"}
                       </Badge>
                     </div>
-              
-                    <div className="text-xs text-muted-foreground">
-                      {admin.email}
-                    </div>
+                    <div className="text-xs text-muted-foreground">{admin.email}</div>
                   </div>
-              
-                  {/* 오른쪽 액션 */}
                   {isSuperAdmin && !isMe && (
-                    <div
-                      className="flex gap-1"
-                      onClick={e => e.stopPropagation()} // ⭐ 핵심
-                    >
+                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={selectedAdmins.includes(admin.id)}
                         onChange={() =>
-                          setSelectedAdmins(prev =>
+                          setSelectedAdmins((prev) =>
                             prev.includes(admin.id)
-                              ? prev.filter(v => v !== admin.id)
+                              ? prev.filter((v) => v !== admin.id)
                               : [...prev, admin.id]
                           )
                         }
                       />
-              
                       <Button
                         size="icon"
                         variant="ghost"
-                        onClick={() =>
-                          setConfirmModal({
-                            type: "role",
-                            target: admin,
-                          })
-                        }
+                        className="joyride-admin-change-role"
+                        onClick={() => setConfirmModal({ type: "role", target: admin })}
                       >
                         <ShieldCheck className="h-4 w-4" />
                       </Button>
                     </div>
                   )}
                 </div>
-              </div>              
+              </div>
             );
           })}
 
-        <div className="flex justify-between mt-4">
-            <Button
-              onClick={() => setAdminCurrentPage(p => Math.max(1, p - 1))}
-              disabled={adminCurrentPage === 1}
-            >
+          <div className="flex justify-between mt-4">
+            <Button onClick={() => setAdminCurrentPage((p) => Math.max(1, p - 1))} disabled={adminCurrentPage === 1}>
               이전
             </Button>
             <span className="text-sm">
               {adminCurrentPage} / {adminTotalPages}
             </span>
             <Button
-              onClick={() => setAdminCurrentPage(p => Math.min(adminTotalPages, p + 1))}
+              onClick={() => setAdminCurrentPage((p) => Math.min(adminTotalPages, p + 1))}
               disabled={adminCurrentPage === adminTotalPages}
             >
               다음
@@ -511,28 +506,28 @@ const saveAssignment = async () => {
       </Card>
 
       {/* ================= 학생 관리 ================= */}
-      <Card>
+      <Card className="joyride-student-list">
         <CardHeader>
-          <CardTitle>
-            {selectedAdmin
-              ? `${selectedAdmin.name} 담당 학생`
-              : "담당 학생"}
-          </CardTitle>
+          <CardTitle>{selectedAdmin ? `${selectedAdmin.name} 담당 학생` : "담당 학생"}</CardTitle>
         </CardHeader>
-
         <CardContent>
+        <div className="mb-2 joyride-group-student-search">
+          <label className="flex items-center gap-1 text-sm font-medium text-muted-foreground mb-2">
+            <Search className="w-4 h-4" /> 학생 검색
+          </label>
           <Input
-            placeholder="학생 검색"
+            placeholder="이름, 이메일"
             value={studentSearch}
-            onChange={e => setStudentSearch(e.target.value)}
-            className="mb-3"
+            onChange={(e) => setStudentSearch(e.target.value)}
+            className="text-sm placeholder:text-sm"
           />
+          </div>
 
-          {loadingStudents || saving  ? (
+          {loadingStudents || saving ? (
             <LoadingSpinner />
           ) : (
             <div className="space-y-2">
-              {paginatedStudents.map(student => (
+              {paginatedStudents.map((student) => (
                 <label key={student.id} className="flex gap-2 p-2 hover:bg-muted rounded">
                   <input
                     type="checkbox"
@@ -548,123 +543,67 @@ const saveAssignment = async () => {
             </div>
           )}
 
-        <div className="flex justify-between mt-4">
-            <Button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >
+          <div className="flex justify-between mt-4">
+            <Button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
               이전
             </Button>
             <span className="text-sm">
               {currentPage} / {totalPages}
             </span>
-            <Button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-            >
+            <Button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
               다음
             </Button>
           </div>
-          <Button
-    className="w-full mt-4"
-    onClick={saveAssignment}
-    disabled={!selectedAdminId}
-  >
-    담당 학생 저장
-  </Button>
-        </CardContent>
-      </Card>
 
-      {addModal && (
-        <ConfirmModal
-          title="관리자 추가"
-          onClose={() => setAddModal(false)}
-          onConfirm={addAdmin}
-        >
-          <Input
-            placeholder="관리자 이메일"
-            value={newAdminEmail}
-            onChange={(e) => setNewAdminEmail(e.target.value)}
-          />
-
-          <Select
-            value={newAdminRole}
-            onValueChange={(v) => setNewAdminRole(v as "ADMIN" | "SUPER_ADMIN")}
-          >
-            <SelectTrigger className="mt-3">
-              <SelectValue placeholder="관리자 역할 선택" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ADMIN">일반 관리자</SelectItem>
-              <SelectItem value="SUPER_ADMIN">슈퍼 관리자</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <div className="text-sm text-muted-foreground mt-3 space-y-1">
-            <p>• 이름: 이메일 주소의 @ 앞부분으로 자동 설정</p>
-            <p>
-              • 기본 비밀번호: <b>ieum1234!</b>
-            </p>
-            <p>• 최초 로그인 후 이름/비밀번호 변경 권장</p>
-          </div>
-        </ConfirmModal>
-      )}
-
-      {confirmModal && (
-        <ConfirmModal
-          title={
-            confirmModal.type === "delete"
-              ? "관리자 삭제"
-              : "권한 변경"
-          }
-          onClose={() => setConfirmModal(null)}
-          onConfirm={() =>
-            confirmModal.type === "delete"
-              ? deleteAdmins()
-              : confirmModal.target &&
-                changeRole(confirmModal.target)
-          }
-        >
-          정말 진행하시겠습니까?
-        </ConfirmModal>
-      )}
-    </div>
-  );
-}
-
-/* ================= 공용 확인 모달 ================= */
-function ConfirmModal({
-  title,
-  children,
-  onClose,
-  onConfirm,
-}: any) {
-  return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <Card className="w-[360px]">
-        <CardHeader className="flex flex-row justify-between">
-          <CardTitle>{title}</CardTitle>
-          <button onClick={onClose}>
-            <X />
-          </button>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="mb-4">
-            {children}
-          </div>
-          <div className="flex gap-2 justify-center">
-            <Button variant="outline" onClick={onClose}>
-              취소
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={onConfirm}
-            >
-              확인
-            </Button>
-          </div>
+          <Button className="w-full mt-4 joyride-student-save" onClick={saveAssignment} disabled={!selectedAdminId}>
+            담당 학생 저장
+          </Button>
         </CardContent>
       </Card>
     </div>
-  );
+
+    {/* ================= 모달 ================= */}
+    {addModal && (
+      <ConfirmModal
+        title="관리자 추가"
+        onClose={() => setAddModal(false)}
+        onConfirm={addAdmin}
+      >
+        <Input
+          placeholder="관리자 이메일"
+          value={newAdminEmail}
+          onChange={(e) => setNewAdminEmail(e.target.value)}
+        />
+
+        <Select value={newAdminRole} onValueChange={(v) => setNewAdminRole(v as "ADMIN" | "SUPER_ADMIN")}>
+          <SelectTrigger className="mt-3">
+            <SelectValue placeholder="관리자 역할 선택" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ADMIN">일반 관리자</SelectItem>
+            <SelectItem value="SUPER_ADMIN">슈퍼 관리자</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="text-sm text-muted-foreground mt-3 space-y-1"> 
+          <p>• 이름: 이메일 주소의 @ 앞부분으로 자동 설정</p>
+          <p> • 기본 비밀번호: <b>ieum1234!</b> </p>
+          <p>• 최초 로그인 후 이름/비밀번호 변경 권장</p> </div>
+      </ConfirmModal>
+    )}
+
+    {confirmModal && (
+      <ConfirmModal
+        title={confirmModal.type === "delete" ? "관리자 삭제" : "권한 변경"}
+        onClose={() => setConfirmModal(null)}
+        onConfirm={() =>
+          confirmModal.type === "delete" ? deleteAdmins() : confirmModal.target && changeRole(confirmModal.target)
+        }
+      >
+        정말 진행하시겠습니까?
+      </ConfirmModal>
+    )}
+
+    <GroupManagementJoyride />
+  </>
+);
 }

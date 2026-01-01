@@ -46,7 +46,7 @@ export function UserManagementJoyride({ handleUserClick, users }: UserManagement
         <div>
           <h3 className="font-semibold mb-2">👥 사용자 관리</h3>
           <p className="text-sm text-muted-foreground">
-            활성 사용자 현황과 평균 진단 횟수를 확인하고, 전체 사용자 목록을 조회하며 알림을 발송할 수 있는 페이지입니다.
+            활성 사용자 현황과 평균 진단 횟수를 확인하고, 전체 사용자 목록을 조회하며 알림을 발송할 수 있어요.
           </p>
         </div>
       ),
@@ -157,8 +157,8 @@ export function UserManagementJoyride({ handleUserClick, users }: UserManagement
         }
 
         if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
-          localStorage.setItem(JOYRIDE_KEY, "done");
-          navigate("/");
+          localStorage.setItem(JOYRIDE_KEY, "group-management");
+          navigate("/group-management");
         }
       }}
     />
