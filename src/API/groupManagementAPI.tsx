@@ -2,6 +2,12 @@ import instance from "./axios";
 
 export type AdminRole = "ADMIN" | "SUPER_ADMIN";
 
+export interface UpdateAdminRequest {
+    name?: string;
+    password?: string;
+  }
+  
+
 export interface Admin {
     id: string;
     name: string;
@@ -65,6 +71,15 @@ export const getAdminStudentsAPI = async (adminId: string) => {
       role,
     });
   
+    return res.data;
+  };
+
+  export const updateAdminAPI = async (adminId: string, body: UpdateAdminRequest) => {
+    const payload: UpdateAdminRequest = {};
+    if (body.name) payload.name = body.name;
+    if (body.password) payload.password = body.password;
+  
+    const res = await instance.put(`/api/admin-management/admins/${adminId}`, payload);
     return res.data;
   };
   
