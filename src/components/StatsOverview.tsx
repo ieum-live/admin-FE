@@ -20,8 +20,6 @@ import LoadingSpinner from "./LoadingSpinner";
 import { Badge } from "./ui/badge";
 import { OverviewJoyride } from "./Joyride/OverviewJoyride";
 
-/* ================= 타입 ================= */
-
 type Metrics = {
   dau: number;
   wau: number;
@@ -48,13 +46,12 @@ type SummaryStat = {
   icon: any;
 };
 type RankingUser = {
+  weeklyCouponsUsed: number;
   userId: string;
   userName: string;
   potLevel: number;
-  totalCouponUsed: number;
+  totalCouponsUsed: number;
 };
-
-/* ================= Badge ================= */
 
 const getStatusBadge = (
   status: "low" | "medium" | "high",
@@ -85,8 +82,6 @@ const getStatusBadge = (
   );
 };
 
-/* ================= 기준 ================= */
-
 const getImprovementStyle = (value: number) => {
   if (value >= 50) return { status: "low" as const };
   if (value >= 30) return { status: "medium" as const };
@@ -98,8 +93,6 @@ const getStableStyle = (value: number) => {
   if (value >= 40) return { status: "medium" as const };
   return { status: "high" as const };
 };
-
-/* ================= 컴포넌트 ================= */
 
 export function StatsOverview() {
   const [loadingSummary, setLoadingSummary] = useState(true);
@@ -141,8 +134,7 @@ export function StatsOverview() {
         avgAssessmentIntervalDays: data?.avgAssessmentIntervalDays ?? 0, 
       }); 
     }) .finally(() => setLoadingSummary(false)); }, []); 
-    
-    /* -------- DAU -------- */ 
+
     useEffect(() => { 
       getMetricsOverview() 
       .then((data) => { 
@@ -240,8 +232,6 @@ export function StatsOverview() {
   return (
     <>
       <OverviewJoyride />
-
-      {/* 🔹 DAU 영역 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 joyride-dau-row">
         {dauStats.map((stat, index) => {
           const Icon = stat.icon;
@@ -271,7 +261,6 @@ export function StatsOverview() {
         })}
       </div>
 
-      {/* 🔹 Summary 영역 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 joyride-summary-row">
         {summaryStats.map((stat, index) => {
           const Icon = stat.icon;
@@ -336,9 +325,11 @@ export function StatsOverview() {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">총 쿠폰 사용 수</span>
                 <span>
-                  {(topUser.totalCouponUsed ?? 0).toLocaleString()}회
+                  {rankingPeriod === "weekly"
+                    ? (topUser.weeklyCouponsUsed ?? 0).toLocaleString()
+                    : (topUser.totalCouponsUsed ?? 0).toLocaleString()
+                  }회
                 </span>
-
               </div>
             </CardContent>
           </Card>
@@ -348,7 +339,6 @@ export function StatsOverview() {
   <CardHeader className="pb-2 flex flex-row items-center justify-between">
     <CardTitle className="text-sm">🏅 사용자 LV 순위 TOP 5</CardTitle>
 
-    {/* 🔹 필터 버튼 */}
     <div className="flex gap-1 joyride-pot-rank-filter">
       <button
         onClick={() => setRankingPeriod("all_time")}
@@ -376,19 +366,19 @@ export function StatsOverview() {
             </div>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            {rankingList.map((user, idx) => (
-              <div key={user.userId} className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <span className="w-5 text-center font-medium">
-                  {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : idx + 1}
-                </span>
-                <span>{user.userName}</span>
-              </div>
-              <span className="text-muted-foreground">
-                Lv.{user.potLevel}
+          {rankingList.map((user, idx) => (
+          <div key={user.userId} className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <span className="w-5 text-center font-medium">
+                {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : idx + 1}
               </span>
+              <span>{user.userName}</span>
             </div>
-          ))}
+            <div className="flex gap-4">
+              <span className="text-muted-foreground">Lv.{user.potLevel}</span>
+            </div>
+          </div>
+        ))}
         </CardContent>
       </Card>
     </div>

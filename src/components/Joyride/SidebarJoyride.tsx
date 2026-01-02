@@ -29,48 +29,65 @@ export function AdminJoyride() {
           <p className="text-sm text-muted-foreground">
             지금부터 주요 기능을 간단히 안내해드릴게요.
             <br />
-            <b>건너뛰기</b>를 누르면 다음 페이지로 넘어갈 수 있습니다.
+            <b>건너뛰기</b>를 누르면 다음 페이지로 넘어갈 수 있어요.
             <br/>
             메뉴얼을 보고 싶다면 <b>다음</b>을 눌러주세요🙂
           </p>
         </div>
       ),
     },
-
+    {
+      target: ".joyride-user-manual",
+      content: "사용자 메뉴얼을 글과 가이드로 볼 수 있어요.",
+      placement: "right",
+      disableBeacon: true,
+    },
+    {
+      target: ".joyride-user-update",
+      content: "관리자 ID와 이메일을 확인하고 이름과 비밀번호를 수정할 수 있어요.",
+      placement: "right",
+      disableBeacon: true,
+    },
     {
       target: ".joyride-sidebar",
-      content: "왼쪽 사이드바에서 모든 관리자 기능으로 이동할 수 있습니다.",
+      content: "왼쪽 사이드바에서 모든 관리자 기능으로 이동할 수 있어요.",
+      placement: "right",
+      disableBeacon: true,
+    },
+    {
+      target: ".joyride-welcome-page",
+      content: "로고를 누르면 WELCOME 페이지로 이동해 메뉴얼 보기, 관리자 정보 수정을 할 수 있어요.",
       placement: "right",
       disableBeacon: true,
     },
     {
       target: ".joyride-dashboard-card",
-      content: "서비스 전체 현황을 한눈에 확인할 수 있습니다.",
+      content: "서비스 전체 현황을 한눈에 확인할 수 있어요.",
       disableBeacon: true,
     },
     {
       target: ".joyride-usage-analytics",
-      content: "기능별 사용 현황과 추이를 분석할 수 있습니다.",
+      content: "기능별 사용 현황과 추이를 분석할 수 있어요.",
       disableBeacon: true,
     },
     {
       target: ".joyride-diagnosis-results",
-      content: "사용자 검사 결과를 확인하고 파일로 다운로드할 수 있습니다.",
+      content: "사용자 검사 결과를 확인하고 파일로 다운로드할 수 있어요.",
       disableBeacon: true,
     },
     {
       target: ".joyride-user-management",
-      content: "사용자 상태를 확인하고 알림을 발송할 수 있습니다.",
+      content: "사용자 상태를 확인하고 알림을 발송할 수 있어요.",
       disableBeacon: true,
     },
     {
       target: ".joyride-group-management",
-      content: "관리자 권한과 학생 그룹을 관리할 수 있습니다.",
+      content: "관리자 권한과 학생 그룹을 관리할 수 있어요.",
       disableBeacon: true,
     },
     {
       target: ".joyride-settings",
-      content: "화면 테마와 관리자 정보를 설정할 수 있습니다.",
+      content: "화면 테마와 관리자 정보를 설정할 수 있어요.",
       disableBeacon: true,
     },
   ];

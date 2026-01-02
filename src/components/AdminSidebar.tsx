@@ -17,7 +17,17 @@ interface AdminSidebarProps {
     onLogout: () => void;
 }
 
-export function AdminSidebar({ onLogout }: AdminSidebarProps) {
+const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("me");
+  
+    window.location.href = "/login";
+  };
+
+  export function AdminSidebar({
+    onLogout = handleLogout,
+  }: AdminSidebarProps) {
     const location = useLocation();
     const activeTab = location.pathname;
     const [isDark, setIsDark] = useState(false);
@@ -56,7 +66,7 @@ export function AdminSidebar({ onLogout }: AdminSidebarProps) {
         <div className="w-64 bg-card border-r border-border h-screen p-4 flex flex-col joyride-sidebar">
             <div>
             <Link to="/">
-                <div className="mb-8">
+                <div className="mb-8 joyride-welcome-page">
                     <img
                         src={
                             isDark
@@ -67,7 +77,7 @@ export function AdminSidebar({ onLogout }: AdminSidebarProps) {
                         className="h-12 w-auto mb-2"
                     />
                     <p className="text-sm text-muted-foreground">
-                        이음 관리자 대시보드
+                        사용자 메뉴얼 / 정보 수정
                     </p>
                 </div>
                 </Link>

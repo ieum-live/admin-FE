@@ -1,5 +1,6 @@
 import axios from "./axios";
 import ApiResponseDTO, { RefreshAccessTokenResponse } from "./common";
+import { jwtDecode } from "jwt-decode";
 
 const setTokens = (accessToken: string, refreshToken: string) => {
     localStorage.setItem("accessToken", accessToken);
@@ -49,3 +50,19 @@ export const signOut = async () => {
         window.location.href = "/login";
     }
 };
+
+interface TokenPayload {
+  userId: string;
+}
+
+export const getMyId = (): string | null => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return null;
+  
+    try {
+      const decoded = jwtDecode<TokenPayload>(token);
+      return decoded.userId;
+    } catch {
+      return null;
+    }
+  };

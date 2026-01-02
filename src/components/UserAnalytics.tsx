@@ -26,7 +26,6 @@ import {
   PeriodType,
 } from "../API/userAnalyticsAPI";
 
-// ---------------- 타입 ----------------
 type TrendItem = {
   label: string;
   phq9: number;
@@ -35,7 +34,6 @@ type TrendItem = {
   totalUsers: number;
 };
 
-// UI용 기간 타입
 type RangeType = "2w" | "3m";
 
 export function UserAnalytics() {
@@ -43,30 +41,17 @@ export function UserAnalytics() {
   const [trendData, setTrendData] = useState<TrendItem[]>([]);
   const [loadingTrend, setLoadingTrend] = useState(true);
 
-  // 📌 range → API period 변환
   const mapRangeToPeriod = (range: RangeType): PeriodType => {
     if (range === "2w") return "WEEK_2";
     return "MONTH_3";
   };
 
-  // 📌 API 데이터 로드
   const loadTrendData = async () => {
     setLoadingTrend(true);
     try {
       const period = mapRangeToPeriod(range);
-      
-      console.log("====================================");
-      console.log("📊 진단별 개선 지표 API 호출");
-      console.log("📌 선택된 range:", range);
-      console.log("📌 API period:", period);
-
       const data: DiagnosticsTrendItem[] =
         await getDiagnosticsTrend(period);
-
-      console.log("📌 API 원본 응답 data:", data);
-      console.log("📌 데이터 개수:", data.length);
-
-      // 📌 API → 차트 데이터 변환
       const mapped: TrendItem[] = data.map((item) => ({
         label: item.weekLabel,
         phq9: item.phq9Avg,
@@ -99,7 +84,6 @@ export function UserAnalytics() {
             </p>
           </div>
 
-          {/* 📌 그래프 내부 필터 */}
           <Select
             value={range}
             onValueChange={(v) => setRange(v as RangeType)}
