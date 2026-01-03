@@ -103,7 +103,7 @@ export function DiagnosisResults() {
   const [exporting, setExporting] = useState(false);
 
 
-  const me = JSON.parse(localStorage.getItem("me") || "null");
+  const myAdminId =  localStorage.getItem("adminId") ?? undefined;
 
   const getCsvFileName = () => {
     const testLabel = getTestLabel(testType);  
@@ -123,7 +123,7 @@ export function DiagnosisResults() {
       const blob = await exportDiagnosisCSV(
         apiType,
         period,
-        scope === "MY_GROUP" ? me?.id : undefined
+        scope === "MY_GROUP" ? myAdminId : undefined
       );
   
       saveAs(blob, getCsvFileName());
@@ -158,7 +158,7 @@ export function DiagnosisResults() {
         const raw = await getRiskDistributionTrend(
           apiType,
           period,
-          scope === "MY_GROUP" ? me?.id : undefined
+          scope === "MY_GROUP" ? myAdminId : undefined
         );
     
         const chartData = transformRiskTrend(raw, testType);
@@ -262,8 +262,8 @@ const loadUsers = async (
       period,
       page,
       size,
-      ...(scope === "MY_GROUP" && me?.id
-        ? { filterByAdminId: me.id}
+      ...(scope === "MY_GROUP" && myAdminId 
+        ? { filterByAdminId: myAdminId }
         : {}), });
 
     const mappedUsers: UserData[] = res.content.map(u => ({
