@@ -34,6 +34,7 @@ export const signOut = async () => {
     try {
         const accessToken = localStorage.getItem("accessToken");
         const refreshToken = localStorage.getItem("refreshToken");
+        localStorage.removeItem("adminId");
 
         if (!accessToken && !refreshToken) {
             return;
