@@ -15,18 +15,21 @@ interface DiagnosticsTrendResponse {
   data: DiagnosticsTrendItem[];
 }
 
+export interface DiagnosticsTrendParams {
+  period: PeriodType;
+  adminId?: string;
+}
+
 export async function getDiagnosticsTrend(
-  period: PeriodType
+  params: DiagnosticsTrendParams
 ): Promise<DiagnosticsTrendItem[]> {
   try {
     const res = await instance.get<DiagnosticsTrendResponse>(
       "/api/metrics/diagnostics/trend",
       {
-        params: { period },
+        params,
       }
     );
-
-    // axios는 res.data가 실제 body
     return res.data.data;
   } catch (error) {
     console.error("❌ 진단 추세 API 호출 실패:", error);

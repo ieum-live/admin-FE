@@ -94,6 +94,18 @@ const getStableStyle = (value: number) => {
   return { status: "high" as const };
 };
 
+export const forceLogout = (message?: string) => {
+  if (message) {
+    alert(message);
+  }
+
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("me");
+
+  window.location.href = "/login";
+};
+
 export function StatsOverview() {
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingMetrics, setLoadingMetrics] = useState(true);
@@ -101,6 +113,10 @@ export function StatsOverview() {
   const [topUser, setTopUser] = useState<RankingUser | null>(null);
   const [rankingList, setRankingList] = useState<RankingUser[]>([]);
   type RankingPeriod = "all_time" | "weekly";
+  type SummaryFilter = "ALL" | "MY_GROUP";
+
+  const [summaryFilter, setSummaryFilter] = useState<SummaryFilter>("ALL");
+
 
     const [rankingPeriod, setRankingPeriod] =
       useState<RankingPeriod>("all_time");
@@ -124,16 +140,37 @@ export function StatsOverview() {
     mauChangeRate: 0,
     yauChangeRate: 0,
   });
+  const me = JSON.parse(localStorage.getItem("me") || "null");
+  useEffect(() => {
+      if (!me) {
+        forceLogout("로그인이 만료되었습니다. 다시 로그인해주세요.");
+      }
+    }, []);
 
-  useEffect(() => { 
-    getDiagnosisSummary()
-    .then((data) => { 
-      setSummary({ improvementRate: data?.improvementRate ?? 0, 
-        stableRatio: data?.stableRatio ?? 0, 
-        totalAssessments: data?.totalAssessments ?? 0, 
-        avgAssessmentIntervalDays: data?.avgAssessmentIntervalDays ?? 0, 
-      }); 
-    }) .finally(() => setLoadingSummary(false)); }, []); 
+  useEffect(() => {
+    const currentAdminId = me?.id;
+    const isSuperAdmin = me?.role === "SUPER_ADMIN";
+  
+    setLoadingSummary(true);
+  
+    getDiagnosisSummary({
+      ...(summaryFilter === "MY_GROUP" &&
+        isSuperAdmin &&
+        currentAdminId && {
+          filterByAdminId: currentAdminId,
+        }),
+    })
+      .then((data) => {
+        setSummary({
+          improvementRate: data?.improvementRate ?? 0,
+          stableRatio: data?.stableRatio ?? 0,
+          totalAssessments: data?.totalAssessments ?? 0,
+          avgAssessmentIntervalDays: data?.avgAssessmentIntervalDays ?? 0,
+        });
+      })
+      .finally(() => setLoadingSummary(false));
+  }, [summaryFilter]);
+  
 
     useEffect(() => { 
       getMetricsOverview() 
@@ -232,67 +269,110 @@ export function StatsOverview() {
   return (
     <>
       <OverviewJoyride />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 joyride-dau-row">
-        {dauStats.map((stat, index) => {
-          const Icon = stat.icon;
+      <Card className="joyride-dau-row">
+  <CardHeader className="pb-3">
+    <CardTitle className="text-base">📈 사용자 활동 요약</CardTitle>
+  </CardHeader>
 
-          return (
-            <Card key={index}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm">{stat.title}</CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
+  <CardContent>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {dauStats.map((stat, index) => {
+        const Icon = stat.icon;
 
-              <CardContent className="space-y-2">
-                <div className="text-2xl font-bold">
-                  {stat.value.toLocaleString()}
-                </div>
-                <div className="joyride-dau-badge">
+        return (
+          <Card key={index}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm">{stat.title}</CardTitle>
+              <Icon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+
+            <CardContent className="space-y-2">
+              <div className="text-2xl font-bold">
+                {stat.value.toLocaleString()}
+              </div>
+
+              <div className="joyride-dau-badge">
                 {getStatusBadge(
                   stat.changeType === "increase" ? "low" : "high",
-                  `${stat.change >= 0 ? "+" : ""}${stat.change.toFixed(
-                    1
-                  )}% · ${stat.period}`
+                  `${stat.change >= 0 ? "+" : ""}${stat.change.toFixed(1)}% · ${stat.period}`
                 )}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  </CardContent>
+</Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 joyride-summary-row">
-        {summaryStats.map((stat, index) => {
-          const Icon = stat.icon;
 
-          const improvement =
-            stat.title === "전체 개선율"
-              ? getImprovementStyle(summary.improvementRate)
-              : null;
+  <Card className="mt-6 joyride-summary-row">
+  <CardHeader className="flex flex-row items-center justify-between pb-3">
+    <CardTitle className="text-base">📊 진단 요약</CardTitle>
 
-          const stable =
-            stat.title === "안정군 비율"
-              ? getStableStyle(summary.stableRatio)
-              : null;
+    <div className="flex gap-1">
+      <button
+        onClick={() => setSummaryFilter("ALL")}
+        className={`px-2 py-1 text-xs rounded
+          ${
+            summaryFilter === "ALL"
+              ? "bg-primary text-white"
+              : "bg-muted text-muted-foreground"
+          }`}
+      >
+        전체
+      </button>
 
-          return (
-            <Card key={index}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm">{stat.title}</CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
+      <button
+        onClick={() => setSummaryFilter("MY_GROUP")}
+        className={`px-2 py-1 text-xs rounded
+          ${
+            summaryFilter === "MY_GROUP"
+              ? "bg-primary text-white"
+              : "bg-muted text-muted-foreground"
+          }`}
+      >
+        내 그룹
+      </button>
+    </div>
+  </CardHeader>
 
-              <CardContent className="flex items-center gap-2">
-                <div className="text-2xl font-bold ">{stat.value}</div>
-                <div className="joyride-summary-badge">
+  <CardContent>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {summaryStats.map((stat, index) => {
+        const Icon = stat.icon;
+
+        const improvement =
+          stat.title === "전체 개선율"
+            ? getImprovementStyle(summary.improvementRate)
+            : null;
+
+        const stable =
+          stat.title === "안정군 비율"
+            ? getStableStyle(summary.stableRatio)
+            : null;
+
+        return (
+          <Card key={index}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm">{stat.title}</CardTitle>
+              <Icon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+
+            <CardContent className="flex items-center gap-2">
+              <div className="text-2xl font-bold">{stat.value}</div>
+              <div className="joyride-summary-badge">
                 {improvement && getStatusBadge(improvement.status, "개선")}
                 {stable && getStatusBadge(stable.status, "안정")}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  </CardContent>
+</Card>
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 joyride-pot-toprank">
         {topUser && (
@@ -315,7 +395,7 @@ export function StatsOverview() {
           </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">닉네임</span>
+                <span className="text-muted-foreground">이름</span>
                 <span className="font-semibold">{topUser.userName}</span>
               </div>
               <div className="flex justify-between">

@@ -54,6 +54,20 @@ export interface MappedUser {
   potLevel: number;
 }
 
+const me = JSON.parse(localStorage.getItem("me") || "null");
+
+export const forceLogout = (message?: string) => {
+  if (message) {
+    alert(message);
+  }
+
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("me");
+
+  window.location.href = "/login";
+};
+
 export function UserManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [depressionFilter, setDepressionFilter] = useState("all");
@@ -77,39 +91,63 @@ export function UserManagement() {
   const [notificationType, setNotificationType] = useState<AlertType>("GENERAL");
   const [allRawUsers, setAllRawUsers] = useState<any[]>([]);
   const [potSort, setPotSort] = useState<"none" | "desc" | "asc">("none");
+  const [scopeStatics, setScopeStatics] = useState<"ALL" | "MY_GROUP">("ALL");
+  const [scopeUsers, setScopeUsers] = useState<"ALL" | "MY_GROUP">("ALL");
+  const [loadingSummary, setLoadingSummary] = useState(false);
 
-
-  useEffect(() => {
-    const fetchStatistics = async () => {
-      try {
-        const data = await getUserStatistics();
-        console.log('User statistics:', data);
-        setTotalUsers(data.totalUsers);
-        setHighRiskUsers(data.highRiskUsers);
-        setActiveUsers(data.activeUsersLastWeek);
-        setAverageDiagnoses(data.avgDiagnosisCount);
-      }
-      catch (error) {
-      }
-    };
-    fetchStatistics();
-  }, [])
+  const myAdminId = me?.id;
 
   useEffect(() => {
-    const fetchAllUsers = async () => {
-      setComponentLoading(true);
-      try {
-        const data = await getUsers({ page: 0, size: 10000 });
-
-        setAllRawUsers(data.content);
-      } catch (error) {
-        console.error("전체 유저 목록 불러오기 실패:", error);
-      } finally {
-        setComponentLoading(false);
+      if (!me) {
+        forceLogout("로그인이 만료되었습니다. 다시 로그인해주세요.");
       }
-    };
-    fetchAllUsers();
-  }, []);
+    }, []);
+
+
+    useEffect(() => {
+      const fetchStatistics = async () => {
+        try {
+          setLoadingSummary(true);
+    
+          const data = await getUserStatistics(
+            scopeStatics === "MY_GROUP" ? myAdminId : undefined
+          );
+    
+          setTotalUsers(data.totalUsers);
+          setHighRiskUsers(data.highRiskUsers);
+          setActiveUsers(data.activeUsersLastWeek);
+          setAverageDiagnoses(data.avgDiagnosisCount);
+        } catch (error) {
+          console.error("사용자 통계 조회 실패", error);
+        } finally {
+          setLoadingSummary(false);
+        }
+      };
+    
+      fetchStatistics();
+    }, [scopeStatics]);
+
+    useEffect(() => {
+      const fetchAllUsers = async () => {
+        setComponentLoading(true);
+        try {
+          const data = await getUsers({
+            page: 0,
+            size: 10000,
+            filterByAdminId: scopeUsers === "MY_GROUP" ? myAdminId : undefined,
+          });
+    
+          setAllRawUsers(data.content);
+        } catch (error) {
+          console.error("전체 유저 목록 불러오기 실패:", error);
+        } finally {
+          setComponentLoading(false);
+        }
+      };
+    
+      fetchAllUsers();
+    }, [scopeUsers]);
+    
           const riskMap: Record<string, 'low' | 'medium' | 'high'> = {
             LOW: 'low',
             MID: 'medium',
@@ -192,7 +230,23 @@ export function UserManagement() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, depressionFilter, gamblingFilter, potSort]);
+  }, [searchTerm, depressionFilter, gamblingFilter, potSort, scopeUsers]);
+
+  useEffect(() => {
+    setSelectedUser(null);
+    setSelectedUsers([]); // 체크박스도 같이 초기화 추천
+  }, [
+    scopeUsers,
+    searchTerm,
+    depressionFilter,
+    gamblingFilter,
+    potSort,
+    currentPage,
+  ]);
+
+  
+
+
 
 
   const getStatusBadge = (status: string, type: 'depression' | 'gambling') => {
@@ -287,61 +341,129 @@ export function UserManagement() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr,500px] gap-6">
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 joyride-user-summary">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">전체 사용자</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold">
-                {totalUsers}
-              </div>
-              <p className="text-sm text-muted-foreground">등록된 사용자</p>
-            </CardContent>
-          </Card>
+        <Card className="joyride-user-summary">
+  <CardHeader className="flex flex-row items-center justify-between pb-3">
+      <CardTitle className="text-base">📊 사용자 요약</CardTitle>
+  
+      <div className="flex gap-1">
+        <button
+          onClick={() => setScopeStatics("ALL")}
+          className={`px-2 py-1 text-xs rounded
+            ${
+              scopeStatics === "ALL"
+                ? "bg-primary text-white"
+                : "bg-muted text-muted-foreground"
+            }`}
+        >
+          전체
+        </button>
+  
+        <button
+          onClick={() => setScopeStatics("MY_GROUP")}
+          className={`px-2 py-1 text-xs rounded
+            ${
+              scopeStatics === "MY_GROUP"
+                ? "bg-primary text-white"
+                : "bg-muted text-muted-foreground"
+            }`}
+        >
+          내 그룹
+        </button>
+      </div>
+    </CardHeader>
+  
+    <CardContent>
+    {loadingSummary ? (
+    <div className="flex items-center justify-center py-16">
+      <LoadingSpinner />
+    </div>
+  ) : (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">전체 사용자</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-semibold">{totalUsers}</div>
+          <p className="text-sm text-muted-foreground">등록된 사용자</p>
+        </CardContent>
+      </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">활성 사용자</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold text-green-600">
-                {activeUsers}
-              </div>
-              <p className="text-sm text-muted-foreground">최근 1주일</p>
-            </CardContent>
-          </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">활성 사용자</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-semibold text-green-600">
+            {activeUsers}
+          </div>
+          <p className="text-sm text-muted-foreground">최근 1주일</p>
+        </CardContent>
+      </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">고위험군</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold text-red-600">
-                {highRiskUsers}
-              </div>
-              <p className="text-sm text-muted-foreground">우울/도박 고위험</p>
-            </CardContent>
-          </Card>
+      {/* 고위험군 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">고위험군</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-semibold text-red-600">
+            {highRiskUsers}
+          </div>
+          <p className="text-sm text-muted-foreground">우울/도박 고위험</p>
+        </CardContent>
+      </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">평균 진단 횟수</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold">
-                {averageDiagnoses}
-              </div>
-              <p className="text-sm text-muted-foreground">사용자당</p>
-            </CardContent>
-          </Card>
-        </div>
+      {/* 평균 진단 횟수 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">평균 진단 횟수</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-semibold">
+            {averageDiagnoses}
+          </div>
+          <p className="text-sm text-muted-foreground">사용자당</p>
+        </CardContent>
+      </Card>
+    </div>
+  )}
+  </CardContent>
+</Card>
         <Card className="joyride-user-table">
           <CardHeader>
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <CardTitle>사용자 목록</CardTitle>
-                <div className="flex gap-2">
+                              <div className="flex justify-between items-center">
+                                <CardTitle>사용자 목록</CardTitle>
+                                <div className="flex gap-2">
+                                <div className="flex gap-2 items-center">
+                  {/* 전체 / 내 그룹 토글 */}
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setScopeUsers("ALL")}
+                      className={`px-2 py-1 text-xs rounded
+                        ${
+                          scopeUsers === "ALL"
+                            ? "bg-primary text-white"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                    >
+                      전체
+                    </button>
+
+                    <button
+                      onClick={() => setScopeUsers("MY_GROUP")}
+                      className={`px-2 py-1 text-xs rounded
+                        ${
+                          scopeUsers === "MY_GROUP"
+                            ? "bg-primary text-white"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                    >
+                      내 그룹
+                    </button>
+                  </div>
+
                   <Dialog open={isNotificationOpen} onOpenChange={setIsNotificationOpen}>
                     <DialogTrigger asChild>
                       <Button
@@ -403,8 +525,10 @@ export function UserManagement() {
                           {isSending ? "발송 중..." : "전송하기"}
                         </Button>
                       </div>
+                      
                     </DialogContent>
                   </Dialog>
+                  </div>
                 </div>
               </div>
               <div className="flex gap-4">
@@ -475,7 +599,7 @@ export function UserManagement() {
             ) : (<CardContent className="overflow-auto">
               {filteredUsers.length === 0 ? (
                 <div className="py-12 text-center text-sm text-muted-foreground">
-                  일치하는 사용자가 없습니다.
+                  해당하는 사용자가 없습니다.
                 </div>
               ) : (
                 <Table>
