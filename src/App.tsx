@@ -46,14 +46,18 @@ export default function App() {
   useEffect(() => {
     const syncAuth = () => {
       const token = localStorage.getItem("accessToken");
-      if (!token) {
+      const adminId = localStorage.getItem("adminId");
+  
+      if (!token || !adminId) {
+        localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
+        localStorage.removeItem("adminId");
         setIsAuthenticated(false);
       } else {
         setIsAuthenticated(true);
       }
     };
-
+  
     window.addEventListener("storage", syncAuth);
     return () => window.removeEventListener("storage", syncAuth);
   }, []);
