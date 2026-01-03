@@ -260,11 +260,12 @@ const addAdmin = async () => {
     }
   };
 
-  const deleteAdmins = async (admin: Admin) => {
+  const deleteAdmin = async (admin: Admin) => {
     try {
-      await deleteAdminAPI(admin.id);
-      await fetchAdmins();
-      setConfirmModal(null);
+      console.log(admin.id)
+      await deleteAdminAPI(admin.id); 
+      await fetchAdmins(); 
+      setConfirmModal(null); // 모달 닫기
       alert(`${admin.name} 관리자가 삭제되었습니다.`);
     } catch (e) {
       console.error("관리자 삭제 실패", e);
@@ -532,7 +533,7 @@ const addAdmin = async () => {
           onClose={() => setConfirmModal(null)}
           onConfirm={() => {
             if (confirmModal.type === "delete" && confirmModal.target) {
-              deleteAdmins(confirmModal.target);
+              deleteAdmin(confirmModal.target);
             } else if (confirmModal.type === "role" && confirmModal.target) {
               changeRole(confirmModal.target);
             }
