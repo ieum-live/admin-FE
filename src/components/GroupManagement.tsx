@@ -87,7 +87,7 @@ export function GroupManagement() {
 
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [newAdminRole, setNewAdminRole] = useState<"ADMIN" | "SUPER_ADMIN">("ADMIN");
-
+  const [loadingAdmins, setLoadingAdmins] = useState(false);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -112,11 +112,14 @@ export function GroupManagement() {
 
   /* ================= 관리자 목록 ================= */
   const fetchAdmins = async () => {
+    setLoadingAdmins(true);
     try {
       const data = await getAdminsAPI();
       setAdmins(data);
     } catch (e) {
       console.error("관리자 목록 조회 실패", e);
+    }finally {
+      setLoadingAdmins(false);
     }
   };
 
@@ -352,61 +355,96 @@ const addAdmin = async () => {
                 </div>
               )}
             </div>
-            <div className="mb-2">
-              <label className="flex items-center gap-1 text-sm font-medium text-muted-foreground mb-2">
-                <Search className="w-4 h-4" /> 관리자 검색
-              </label>
-              <Input
-                placeholder="이름, 이메일"
-                value={adminSearch}
-                onChange={(e) => setAdminSearch(e.target.value)}
-                className="text-sm placeholder:text-sm"
-              />
-            </div>
           </CardHeader>
           <CardContent className="space-y-2">
-            {filteredAdminsPaginated.map(admin => {
-              const isMe = admin.id === myAdminId;
-              return (
-                <div
-                  key={admin.id}
-                  onClick={() => handleSelectAdmin(admin.id)}
-                  className={`p-3 rounded-lg border cursor-pointer transition ${selectedAdminId === admin.id ? "bg-muted border-primary" : "hover:bg-muted"}`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex gap-2 items-center">
-                        <span className="font-medium">{admin.name}</span>
-                        {isMe && <Badge>내 그룹</Badge>}
-                        <Badge variant={admin.role === "SUPER_ADMIN" ? "destructive" : "secondary"}>
-                          {admin.role === "SUPER_ADMIN" ? "슈퍼 관리자" : "관리자"}
-                        </Badge>
-                      </div>
-                      <div className="text-xs text-muted-foreground">{admin.email}</div>
-                    </div>
-                    {myRole === "SUPER_ADMIN" && !isMe && (
-                      <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          checked={selectedAdmins.includes(admin.id)}
-                          onChange={() => setSelectedAdmins(prev => prev.includes(admin.id) ? prev.filter(v => v !== admin.id) : [...prev, admin.id])}
-                        />
-                        <Button size="icon" variant="ghost" onClick={() => setConfirmModal({ type: "role", target: admin })}>
-                          <ShieldCheck className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+  {loadingAdmins ? (
+    <LoadingSpinner />
+  ) : filteredAdminsPaginated.length === 0 ? (
+    <div className="text-center text-sm text-muted-foreground py-4">
+      등록된 관리자가 없습니다.
+    </div>
+  ) : (
+    <>
+      {/* 검색 */}
+      <div className="mb-2">
+        <label className="flex items-center gap-1 text-sm font-medium text-muted-foreground mb-2">
+          <Search className="w-4 h-4" /> 관리자 검색
+        </label>
+        <Input
+          placeholder="이름, 이메일"
+          value={adminSearch}
+          onChange={(e) => setAdminSearch(e.target.value)}
+          className="text-sm placeholder:text-sm"
+        />
+      </div>
 
-            <div className="flex justify-between mt-4">
-              <Button onClick={() => setAdminCurrentPage(p => Math.max(1, p - 1))} disabled={adminCurrentPage === 1}>이전</Button>
-              <span className="text-sm">{adminCurrentPage} / {adminTotalPages}</span>
-              <Button onClick={() => setAdminCurrentPage(p => Math.min(adminTotalPages, p + 1))} disabled={adminCurrentPage === adminTotalPages}>다음</Button>
+      {filteredAdminsPaginated.map(admin => {
+        const isMe = admin.id === myAdminId;
+        return (
+          <div
+            key={admin.id}
+            onClick={() => handleSelectAdmin(admin.id)}
+            className={`p-3 rounded-lg border cursor-pointer transition ${
+              selectedAdminId === admin.id ? "bg-muted border-primary" : "hover:bg-muted"
+            }`}
+          >
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium">{admin.name}</span>
+                  {isMe && <Badge>내 그룹</Badge>}
+                  <Badge variant={admin.role === "SUPER_ADMIN" ? "destructive" : "secondary"}>
+                    {admin.role === "SUPER_ADMIN" ? "슈퍼 관리자" : "관리자"}
+                  </Badge>
+                </div>
+                <div className="text-xs text-muted-foreground">{admin.email}</div>
+              </div>
+              {myRole === "SUPER_ADMIN" && !isMe && (
+                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={selectedAdmins.includes(admin.id)}
+                    onChange={() =>
+                      setSelectedAdmins(prev =>
+                        prev.includes(admin.id)
+                          ? prev.filter(v => v !== admin.id)
+                          : [...prev, admin.id]
+                      )
+                    }
+                  />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => setConfirmModal({ type: "role", target: admin })}
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
-          </CardContent>
+          </div>
+        );
+      })}
+
+      {/* 페이지네이션 */}
+      <div className="flex justify-between mt-4">
+        <Button
+          onClick={() => setAdminCurrentPage(p => Math.max(1, p - 1))}
+          disabled={adminCurrentPage === 1}
+        >
+          이전
+        </Button>
+        <span className="text-sm">{adminCurrentPage} / {adminTotalPages}</span>
+        <Button
+          onClick={() => setAdminCurrentPage(p => Math.min(adminTotalPages, p + 1))}
+          disabled={adminCurrentPage === adminTotalPages}
+        >
+          다음
+        </Button>
+      </div>
+    </>
+  )}
+</CardContent>
         </Card>
 
         {/* 학생 관리 */}
@@ -415,46 +453,63 @@ const addAdmin = async () => {
             <CardTitle>{selectedAdmin ? `${selectedAdmin.name} 담당 그룹` : "담당 그룹"}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="mb-2">
-              <label className="flex items-center gap-1 text-sm font-medium text-muted-foreground mb-2">
-                <Search className="w-4 h-4" /> 학생 검색
-              </label>
-              <Input
-                placeholder="이름, 이메일"
-                value={studentSearch}
-                onChange={(e) => setStudentSearch(e.target.value)}
-                className="text-sm placeholder:text-sm"
-              />
+  {loadingStudents || saving ? (
+    <LoadingSpinner />
+  ) : paginatedStudents.length === 0 ? (
+    <div className="text-center text-sm text-muted-foreground py-4">
+      등록된 학생이 없습니다.
+    </div>
+  ) : (
+    <>
+      {/* 검색 */}
+      <div className="mb-2">
+        <label className="flex items-center gap-1 text-sm font-medium text-muted-foreground mb-2">
+          <Search className="w-4 h-4" /> 학생 검색
+        </label>
+        <Input
+          placeholder="이름, 이메일"
+          value={studentSearch}
+          onChange={(e) => setStudentSearch(e.target.value)}
+          className="text-sm placeholder:text-sm"
+        />
+      </div>
+
+      <div className="space-y-2">
+        {paginatedStudents.map(student => (
+          <label key={student.id} className="flex gap-2 p-2 hover:bg-muted rounded">
+            <input
+              type="checkbox"
+              checked={checkedStudents.includes(student.id)}
+              onChange={() => toggleStudent(student.id)}
+            />
+            <div>
+              <div className="text-sm font-medium">{student.name}</div>
+              <div className="text-xs text-muted-foreground">{student.email}</div>
             </div>
+          </label>
+        ))}
+      </div>
 
-            {loadingStudents || saving ? (
-              <LoadingSpinner />
-            ) : paginatedStudents.length === 0 ? (
-              <div className="text-center text-sm text-muted-foreground py-4">
-                해당하는 학생이 없습니다.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {paginatedStudents.map(student => (
-                  <label key={student.id} className="flex gap-2 p-2 hover:bg-muted rounded">
-                    <input type="checkbox" checked={checkedStudents.includes(student.id)} onChange={() => toggleStudent(student.id)} />
-                    <div>
-                      <div className="text-sm font-medium">{student.name}</div>
-                      <div className="text-xs text-muted-foreground">{student.email}</div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            )}
+      {/* 페이지네이션 */}
+      <div className="flex justify-between mt-4">
+        <Button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>이전</Button>
+        <span className="text-sm">{currentPage} / {totalPages}</span>
+        <Button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>다음</Button>
+      </div>
 
-            <div className="flex justify-between mt-4">
-              <Button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>이전</Button>
-              <span className="text-sm">{currentPage} / {totalPages}</span>
-              <Button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>다음</Button>
-            </div>
-
-            <Button className="w-full mt-4" onClick={saveAssignment} disabled={!selectedAdminId}>담당 학생 저장</Button>
-          </CardContent>
+      {/* 학생 저장 버튼 */}
+      <Button
+        className="w-full mt-4"
+        onClick={saveAssignment}
+        disabled={
+          !selectedAdminId || JSON.stringify(checkedStudents) === JSON.stringify(assignedStudents)
+        }
+      >
+        담당 학생 저장
+      </Button>
+    </>
+  )}
+</CardContent>
         </Card>
       </div>
 
