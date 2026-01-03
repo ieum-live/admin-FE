@@ -303,7 +303,7 @@ export function StatsOverview() {
   <CardHeader className="flex flex-row items-center justify-between pb-3">
     <CardTitle className="text-base">📊 진단 요약</CardTitle>
 
-    <div className="flex gap-1">
+    <div className="flex gap-1 joyride-summary-row-group">
       <button
         onClick={() => setSummaryFilter("ALL")}
         className={`px-2 py-1 text-xs rounded

@@ -337,7 +337,7 @@ export function UserManagement() {
   <CardHeader className="flex flex-row items-center justify-between pb-3">
       <CardTitle className="text-base">📊 사용자 요약</CardTitle>
   
-      <div className="flex gap-1">
+      <div className="flex gap-1 joyride-user-summary-group">
         <button
           onClick={() => setScopeStatics("ALL")}
           className={`px-2 py-1 text-xs rounded
@@ -430,7 +430,7 @@ export function UserManagement() {
                                 <div className="flex gap-2">
                                 <div className="flex gap-2 items-center">
                   {/* 전체 / 내 그룹 토글 */}
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 joyride-user-table-group">
                     <button
                       onClick={() => setScopeUsers("ALL")}
                       className={`px-2 py-1 text-xs rounded
@@ -722,10 +722,10 @@ export function UserManagement() {
           </CardContent>
         </Card>
       </div>
-      <UserManagementJoyride
+      {!loadingSummary&& <UserManagementJoyride
         handleUserClick={handleUserClick}
         users={users}
-      />
+      />}
     </div>
   );
 }

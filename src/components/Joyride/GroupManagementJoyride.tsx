@@ -43,23 +43,24 @@ export function GroupManagementJoyride() {
       disableBeacon: true,
     },
     {
-      target: ".joyride-admin-add",
-      content: "슈퍼 관리자는 새 관리자를 추가할 수 있어요.",
-      placement: "right",
-      disableBeacon: true,
-    },
-    {
-      target: ".joyride-admin-delete",
-      content: "슈퍼 관리자는 체크한 관리자를 삭제할 수 있어요.",
-      placement: "right",
-      disableBeacon: true,
-    },
-    {
         target: ".joyride-admin-search",
         content: "이름과 이메일으로 관리자을 검색할 수 있어요.",
         placement: "right",
         disableBeacon: true,
       },
+      {
+        target: ".joyride-admin-badge",
+        content: "내 그룹과 내 권한은 항상 상단에 표시되고, 그 뒤로는 슈퍼관리자 > 관리자 순으로 자동 정렬돼요.",
+        placement: "right",
+        disableBeacon: true,
+      },
+      {
+        target: ".joyride-admin-add",
+        content: "슈퍼 관리자는 새 관리자를 추가할 수 있어요.",
+        placement: "right",
+        disableBeacon: true,
+      },
+      
     {
         target: ".joyride-admin-change-role",
         content: "슈퍼 관리자는 슈퍼 관리지 <-> 관리자 권한 변경을 할 수 있어요 (본인 제외).",
@@ -67,23 +68,23 @@ export function GroupManagementJoyride() {
         disableBeacon: true,
     },
     {
-      target: ".joyride-student-list",
-      content: "선택한 관리자의 담당 학생 목록을 확인하고 추가/삭제할 수 있어요.",
+      target: ".joyride-admin-delete",
+      content: "슈퍼 관리자는 관리자를 삭제할 수 있어요.",
       placement: "right",
       disableBeacon: true,
     },
+    {
+      target: ".joyride-student-list",
+      content: "선택한 관리자의 담당 학생을 확인하고 추가하거나 삭제할 수 있어요. 상단에는 이미 배정된 학생들이 보여요.",
+      placement: "right",
+      disableBeacon: true,
+    },    
     {
         target: ".joyride-group-student-search",
         content: "이름과 이메일으로 학생을 검색할 수 있어요.",
         placement: "right",
         disableBeacon: true,
       },
-    {
-      target: ".joyride-student-save",
-      content: "변경한 학생 배정을 저장하려면 여기를 클릭하세요.",
-      placement: "bottom",
-      disableBeacon: true,
-    },
   ];
 
   return (
@@ -108,8 +109,8 @@ export function GroupManagementJoyride() {
       }}
       callback={(data) => {
         if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
-          localStorage.setItem(JOYRIDE_KEY, "done");
-          navigate("/"); // 필요 시 이동
+          localStorage.setItem(JOYRIDE_KEY, "setting");
+          navigate("/settings");
         }
       }}
     />

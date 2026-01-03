@@ -107,7 +107,6 @@ export function GroupManagement() {
     fetchMyRole();
   }, [myAdminId]);
 
-  /* ================= 관리자 목록 ================= */
   const fetchAdmins = async () => {
     setLoadingAdmins(true);
     try {
@@ -333,7 +332,7 @@ const addAdmin = async () => {
               <CardTitle>관리자 목록</CardTitle>
               {myRole === "SUPER_ADMIN"&& (
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={() => setAddModal(true)}>
+                  <Button className="joyride-admin-add" size="sm" onClick={() => setAddModal(true)}>
                     <ShieldPlus className="h-4 w-4 mr-1" /> 관리자 추가
                   </Button>
                 </div>
@@ -350,7 +349,7 @@ const addAdmin = async () => {
   ) : (
     <>
       {/* 검색 */}
-      <div className="mb-4">
+      <div className="mb-4 joyride-admin-search">
         <label className="flex items-center gap-1 text-sm font-medium text-muted-foreground mb-2">
           <Search className="w-4 h-4" /> 관리자 검색
         </label>
@@ -374,7 +373,7 @@ const addAdmin = async () => {
     >
       <div className="flex justify-between items-start">
         <div>
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center joyride-admin-badge">
             <span className="font-medium">{admin.name}</span>
             {isMe && <Badge>내 그룹</Badge>}
             <Badge variant={admin.role === "SUPER_ADMIN" ? "destructive" : "secondary"}>
@@ -387,7 +386,7 @@ const addAdmin = async () => {
         {myRole === "SUPER_ADMIN" && !isMe && (
           <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
             {/* 권한 변경 */}
-            <Button
+            <Button className="joyride-admin-change-role"
               size="icon"
               variant="ghost"
               onClick={() => setConfirmModal({ type: "role", target: admin })}
@@ -396,7 +395,7 @@ const addAdmin = async () => {
             </Button>
 
             {/* 삭제 버튼 */}
-            <Button
+            <Button className="joyride-admin-delete"
               size="icon"
               variant="destructive"
               onClick={() => setConfirmModal({ type: "delete", target: admin })}
@@ -447,7 +446,7 @@ const addAdmin = async () => {
   ) : (
     <>
       {/* 검색 */}
-      <div className="mb-4">
+      <div className="mb-4 joyride-group-student-search">
         <label className="flex items-center gap-1 text-sm font-medium text-muted-foreground mb-2">
           <Search className="w-4 h-4" /> 학생 검색
         </label>
@@ -540,7 +539,7 @@ const addAdmin = async () => {
       )}
 
 
-      <GroupManagementJoyride />
+      {!loadingAdmins && !loadingStudents && <GroupManagementJoyride />}
     </>
   );
 }

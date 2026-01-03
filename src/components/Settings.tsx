@@ -24,6 +24,7 @@ import { useEffect, useState } from "react";
 import { getSettings, SettingsData, updateSettings } from "../API/settingAPI";
 import NotiBar from "./ui/notiBar";
 import React from "react";
+import { SettingJoyride } from "./Joyride/SettingJoyRide"
 
 export function Settings() {
   const [email, setEmail] = useState("");
@@ -83,12 +84,13 @@ export function Settings() {
 
 
   return (
+    <>
     <div className="space-y-6">
       <NotiBar message={msg} />
       <ThemeSettings />
 
       {/* 시스템 설정 */}
-      <Card>
+      <Card className="joyride-setting-info">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
@@ -128,5 +130,7 @@ export function Settings() {
         </Button>
       </div>
     </div>
+    <SettingJoyride />
+    </>
   );
 }

@@ -44,7 +44,7 @@ export function ThemeSettings() {
   };
 
   return (
-    <Card>
+    <Card className="joyride-setting-theme">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Monitor className="h-5 w-5" />

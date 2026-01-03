@@ -111,7 +111,7 @@ export function UserAnalytics() {
 
           <div className="flex gap-2">
             <Select value={filter} onValueChange={(v) => setFilter(v as FilterType)}>
-              <SelectTrigger className="w-[130px]">
+              <SelectTrigger className="w-[130px] joyride-user-analytics-group">
                 <SelectValue placeholder="범위" />
               </SelectTrigger>
               <SelectContent>

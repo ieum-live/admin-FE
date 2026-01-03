@@ -209,7 +209,7 @@ useEffect(() => {
           <CardTitle>활성 기능 순위</CardTitle>
           <div className="flex gap-2">
           <Select value={scopeTop} onValueChange={(v) => setScopeTop(v as ScopeFilter)}>
-          <SelectTrigger className="w-32">
+          <SelectTrigger className="w-32 joyride-top5-filter-group">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -275,7 +275,7 @@ useEffect(() => {
 
         <CardContent className="flex gap-4">
         <Select value={scopeTrend} onValueChange={(v) => setScopeTrend(v as ScopeFilter)}>
-          <SelectTrigger className="w-32">
+          <SelectTrigger className="w-32 joyride-trend-filter-group">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -347,7 +347,7 @@ useEffect(() => {
 
       </Card>
     </div>
-    <UsageAnalyticsJoyride />
+    {!loadingTop && !loadingChart && <UsageAnalyticsJoyride />}
     </div>
   );
 }

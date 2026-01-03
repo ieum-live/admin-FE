@@ -407,7 +407,7 @@ const getStatusBadge = (risk: "LOW" | "MID" | "HIGH") => {
             </CardTitle>
             <div className="joyride-user-diagnosis-results-csv flex gap-2 items-center">
             <Select value={scope} onValueChange={(v) => setScope(v as ScopeFilter)}>
-          <SelectTrigger className="w-32">
+          <SelectTrigger className="w-32 joyride-user-diagnosis-results-csv-filter">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -484,7 +484,7 @@ const getStatusBadge = (risk: "LOW" | "MID" | "HIGH") => {
         </CardContent>
       </Card>
     </div>
-    <DiagnosisResultsJoyride />
+    {!loadingUsers && !loadingTrend && <DiagnosisResultsJoyride />}
     </div>
   );
 }

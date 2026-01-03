@@ -40,14 +40,26 @@ export function UsageAnalyticsJoyride() {
         disableBeacon: true,
       },
       {
+        target: ".joyride-top5-filter-group",
+        content: "전체·내 그룹 필터로 데이터를 선택해 볼 수 있어요.",
+        placement: "right",
+        disableBeacon: true,
+      },
+      {
         target: ".joyride-top5-filter",
-        content: "필터로 오늘·최근 2주·3개월 데이터를 선택해 볼 수 있어요.",
+        content: "기간 필터로 오늘·최근 2주·3개월 데이터를 선택해 볼 수 있어요.",
         placement: "right",
         disableBeacon: true,
       },
       {
         target: ".joyride-trend",
         content: "주요 기능별로 사용량 추이를 볼 수 있어요.",
+        placement: "right",
+        disableBeacon: true,
+      },
+      {
+        target: ".joyride-trend-filter-group",
+        content: "전체·내 그룹 필터로 데이터를 선택해 볼 수 있어요.",
         placement: "right",
         disableBeacon: true,
       },
