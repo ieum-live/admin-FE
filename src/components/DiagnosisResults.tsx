@@ -65,6 +65,18 @@ const RISK_LABEL_MAP: Record<string, string> = {
   HIGH: "위험",
 };
 
+export const forceLogout = (message?: string) => {
+  if (message) {
+    alert(message);
+  }
+
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("me");
+
+  window.location.href = "/login";
+};
+
 
 export function DiagnosisResults() {
   type TestTypeUI = "PHQ9" | "GAD7" | "CAGI";
@@ -84,7 +96,56 @@ export function DiagnosisResults() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 7;
+
+  type ScopeFilter = "ALL" | "MY_GROUP";
+
+  const [scope, setScope] = useState<ScopeFilter>("ALL");
+  const [exporting, setExporting] = useState(false);
+
+
+  const me = JSON.parse(localStorage.getItem("me") || "null");
+
+  const getCsvFileName = () => {
+    const testLabel = getTestLabel(testType);  
+    const periodLabel = getPeriodLabel(period);  
+    const scopeLabel = scope === "MY_GROUP" ? "내 그룹" : "전체";
   
+    return `${testLabel}_${periodLabel}_${scopeLabel}_사용자목록.csv`;
+  };
+  
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+  
+      const apiType = TEST_TYPE_TO_API[testType];
+  
+      const blob = await exportDiagnosisCSV(
+        apiType,
+        period,
+        scope === "MY_GROUP" ? me?.id : undefined
+      );
+  
+      saveAs(blob, getCsvFileName());
+    } catch {
+      alert("CSV 다운로드 실패");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  useEffect(() => {
+    setExporting(false);
+  }, [scope]);
+  
+  
+
+  useEffect(() => {
+      if (!me) {
+        forceLogout("로그인이 만료되었습니다. 다시 로그인해주세요.");
+      }
+    }, []);
+
   const TEST_TYPE_TO_API: Record<
       TestTypeUI,
       "PHQ-9" | "GAD-7" | "CAGI"
@@ -99,18 +160,21 @@ export function DiagnosisResults() {
         setLoadingTrend(true);
     
         const apiType = TEST_TYPE_TO_API[testType];
-        const raw = await getRiskDistributionTrend(apiType, period);
+    
+        const raw = await getRiskDistributionTrend(
+          apiType,
+          period,
+          scope === "MY_GROUP" ? me?.id : undefined
+        );
     
         const chartData = transformRiskTrend(raw, testType);
-    
         setRiskTrend(chartData);
-      } catch (err) {
+      } catch {
         setRiskTrend([]);
       } finally {
         setLoadingTrend(false);
       }
     };
-    
     
     
     const transformRiskTrend = (
@@ -171,13 +235,24 @@ const SCALE_TO_RISK_MAP: Record<TestTypeUI, Record<string, "LOW" | "MID" | "HIGH
     loadUsers(testType, period);
     loadRiskTrend();
     setCurrentPage(1);
-  }, [testType, period]);
+  }, [testType, period, scope]);
 
   const mapScaleToRisk = (testType: TestTypeUI, scaleName: string): "LOW" | "MID" | "HIGH" => {
     const SCALE_TO_RISK = SCALE_TO_RISK_MAP[testType];
     return SCALE_TO_RISK[scaleName] || "LOW";
   };
   
+
+const isNoRiskData = (data: any[]) => {
+  if (!data || data.length === 0) return true;
+
+  return data.every(item =>
+    item.LOW == null &&
+    item.MID == null &&
+    item.HIGH == null
+  );
+};
+
   
 const loadUsers = async (
   testType: TestTypeUI,
@@ -189,7 +264,13 @@ const loadUsers = async (
     setLoadingUsers(true);
 
     const apiType = TEST_TYPE_TO_API[testType];
-    const res = await getRecentUsers({ type: apiType, period, page, size });
+    const res = await getRecentUsers({  type: apiType,
+      period,
+      page,
+      size,
+      ...(scope === "MY_GROUP" && me?.id
+        ? { filterByAdminId: me.id}
+        : {}), });
 
     const mappedUsers: UserData[] = res.content.map(u => ({
       id: u.email,
@@ -246,28 +327,10 @@ const getStatusBadge = (risk: "LOW" | "MID" | "HIGH") => {
     }
   };
 
-
-useEffect(() => {
-  loadUsers(testType, period, currentPage - 1, usersPerPage);
-}, [testType, period, currentPage]);
-
+  useEffect(() => {
+    loadUsers(testType, period, currentPage - 1, usersPerPage);
+  }, [testType, period, currentPage, scope]);
   
-const handleExport = async () => {
-  try {
-    const apiType = TEST_TYPE_TO_API[testType];
-
-    const blob = await exportDiagnosisCSV(apiType, period);
-
-    saveAs(
-      blob,
-      `diagnostics_${apiType}_${period}.csv`
-    );
-  } catch (err) {
-    alert("CSV 다운로드 실패");
-  }
-};
-
-
   const getPeriodLabel = (period: string) => {
     switch (period) {
       case "2weeks": return "최근 2주";
@@ -360,10 +423,32 @@ const handleExport = async () => {
             <CardTitle>
               {`${getPeriodLabel(period)} 동안 · ${getTestLabel(testType)} 검사를 한 사용자`}
             </CardTitle>
-            <div className="joyride-user-diagnosis-results-csv">
-            <Button variant="outline" onClick={handleExport}>
-              CSV 다운로드
-            </Button>
+            <div className="joyride-user-diagnosis-results-csv flex gap-2 items-center">
+            <Select value={scope} onValueChange={(v) => setScope(v as ScopeFilter)}>
+          <SelectTrigger className="w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">전체</SelectItem>
+            <SelectItem value="MY_GROUP">내 그룹</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="relative">
+        <Button
+          variant="outline"
+          onClick={handleExport}
+          disabled={exporting || totalUsers === 0}
+          className="relative"
+        >
+          CSV 다운로드
+        </Button>
+
+        {exporting && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/70 rounded-md">
+            <LoadingSpinner/>
+          </div>
+        )}
+      </div>
             </div>
           </div>
         </CardHeader>
@@ -371,6 +456,10 @@ const handleExport = async () => {
         <CardContent>
           {loadingUsers ? (
             <LoadingSpinner />
+          ) : users.length === 0 ? (
+            <div className="flex justify-center items-center py-16 text-sm text-muted-foreground">
+              해당 조건에 해당하는 사용자가 없습니다.
+            </div>
           ) : (
             <>
               <Table>
