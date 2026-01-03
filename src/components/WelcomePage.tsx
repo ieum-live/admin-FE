@@ -1,28 +1,49 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { AdminJoyride } from "./Joyride/SidebarJoyride";
-
-import { updateAdminAPI } from "../API/groupManagementAPI";
 import { Input } from "./ui/input";
+import { getAdminAPI, updateAdminAPI } from "../API/groupManagementAPI";
 
 interface AdminMe {
   id: string;
   name: string;
+  email: string;
   role: "ADMIN" | "SUPER_ADMIN";
 }
 
-interface AdminEditModalProps {
-  me: AdminMe;
-  onClose: () => void;
-  onUpdate: (updated: Partial<{ name: string; password: string }>) => void;
-}
+export function WelcomePage() {
+  const [me, setMe] = useState<AdminMe | null>(null);
+  const [openEditModal, setOpenEditModal] = useState(false);
 
-function AdminEditModal({ me, onClose, onUpdate }: AdminEditModalProps) {
-  const [name, setName] = useState(me.name);
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
 
+  useEffect(() => {
+    const fetchMyInfo = async () => {
+      const adminId = localStorage.getItem("adminId");
+      if (!adminId) return;
+
+      try {
+        const res = await getAdminAPI(adminId);
+        const data = res.data; // data.data 안에 id, name, email, role 있음
+        setMe({
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          role: data.role,
+        });
+        setName(data.name);
+      } catch (err) {
+        console.error("내 관리자 정보 조회 실패", err);
+      }
+    };
+
+    fetchMyInfo();
+  }, []);
+
   const handleSave = async () => {
+    if (!me) return;
     const body: Partial<{ name: string; password: string }> = {};
     if (name !== me.name) body.name = name;
     if (password) body.password = password;
@@ -35,60 +56,18 @@ function AdminEditModal({ me, onClose, onUpdate }: AdminEditModalProps) {
     try {
       await updateAdminAPI(me.id, body);
       alert("정보가 업데이트되었습니다.");
-      onUpdate(body);
-      onClose();
+      setMe(prev => prev ? { ...prev, ...body } : prev);
+      setPassword("");
+      setOpenEditModal(false);
     } catch (e) {
       console.error("관리자 정보 수정 실패", e);
       alert("업데이트에 실패했습니다.");
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-       <Card className="w-full max-w-lg max-h-[80vh] overflow-y-auto">
-        <CardContent className="space-y-6">
-          <h2 className="mt-4 text-lg font-semibold">관리자 정보 수정</h2>
-
-          <div>
-            <label className="block mb-1 font-medium">ID</label>
-            <Input value={me.id} disabled />
-          </div>
-
-          <div>
-            <label className="block mb-1 font-medium">역할</label>
-            <Input value={me.role} disabled />
-          </div>
-
-          <div>
-            <label className="block mb-1 font-medium">이름</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-
-          <div>
-            <label className="block mb-1 font-medium">비밀번호</label>
-            <Input
-              type="password"
-              placeholder="변경할 비밀번호 입력"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={onClose}>
-              취소
-            </Button>
-            <Button onClick={handleSave}>저장</Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-
-export function WelcomePage() {
-  const [openEditModal, setOpenEditModal] = useState(false);
+  if (!me) {
+    return <div className="min-h-screen flex items-center justify-center">로딩 중...</div>;
+  }
 
   return (
     <>
@@ -111,10 +90,17 @@ export function WelcomePage() {
             </div>
 
             <div className="flex flex-col gap-3 w-full">
-              <Button onClick={() => window.location.href = "/manual"} className="joyride-user-manual">
+              <Button
+                onClick={() => (window.location.href = "/manual")}
+                className="joyride-user-manual"
+              >
                 📘 사용자 메뉴얼 보기
               </Button>
-              <Button variant="outline" onClick={() => setOpenEditModal(true)} className="joyride-user-update">
+              <Button
+                variant="outline"
+                onClick={() => setOpenEditModal(true)}
+                className="joyride-user-update"
+              >
                 🔐 관리자 정보 수정
               </Button>
             </div>
@@ -127,11 +113,42 @@ export function WelcomePage() {
           <Card className="w-full max-w-lg max-h-[80vh] overflow-y-auto">
             <CardContent className="space-y-6">
               <h2 className="mt-4 text-lg font-semibold">관리자 정보 수정</h2>
-              <p className="text-sm text-muted-foreground">관리자 정보 수정 기능은 현재 구현되지 않았습니다.</p>
+
+              <div>
+                <label className="block mb-1 font-medium">ID</label>
+                <Input value={me.id} disabled />
+              </div>
+
+              <div>
+                <label className="block mb-1 font-medium">이메일</label>
+                <Input value={me.email} disabled />
+              </div>
+
+              <div>
+                <label className="block mb-1 font-medium">역할</label>
+                <Input value={me.role} disabled />
+              </div>
+
+              <div>
+                <label className="block mb-1 font-medium">이름</label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} />
+              </div>
+
+              <div>
+                <label className="block mb-1 font-medium">비밀번호</label>
+                <Input
+                  type="password"
+                  placeholder="변경할 비밀번호 입력"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setOpenEditModal(false)}>
-                  닫기
+                  취소
                 </Button>
+                <Button onClick={handleSave}>저장</Button>
               </div>
             </CardContent>
           </Card>
