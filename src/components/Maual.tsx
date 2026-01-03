@@ -17,7 +17,7 @@ export function UserManualPage() {
             navigate("/");
           }}
         >
-          🔄 사용 가이드 다시 보기
+          🔄 사용 가이드 보기
         </Button>
       </div>
 
