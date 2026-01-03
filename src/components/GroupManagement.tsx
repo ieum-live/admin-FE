@@ -143,23 +143,29 @@ export function GroupManagement() {
       return filtered;
     }, [admins, adminSearch, myRole, myAdminId]);
     
-  /* ================= 학생 관리 ================= */
-  const fetchStudents = async (adminId: string) => {
-    setLoadingStudents(true);
-    try {
-      const res = await getUsers({ page: 0, size: 10000 });
-      setAllStudents(res.content);
-
-      const assignedRes = await getAdminStudentsAPI(adminId);
-      const assignedIds = assignedRes.flat().map((s: any) => s.id);
-      setAssignedStudents(assignedIds);
-      setCheckedStudents(assignedIds);
-    } catch (e) {
-      console.error("학생 조회 실패", e);
-    } finally {
-      setLoadingStudents(false);
-    }
-  };
+    const fetchStudents = async (adminId: string) => {
+      setLoadingStudents(true);
+      try {
+        // 전체 학생 조회
+        const res = await getUsers({ page: 0, size: 10000 });
+        const allUsers = Array.isArray(res.content) ? res.content : [];
+        setAllStudents(allUsers);
+    
+        // 담당 학생 조회
+        const assignedRes = await getUsers({ filterByAdminId: adminId, page: 0, size: 10000 });
+        const assignedIds = Array.isArray(assignedRes.content) ? assignedRes.content.map(s => s.id) : [];
+    
+        setAssignedStudents(assignedIds);
+        setCheckedStudents(assignedIds);
+      } catch (e) {
+        console.error("학생 조회 실패", e);
+        setAllStudents([]);
+        setAssignedStudents([]);
+        setCheckedStudents([]);
+      } finally {
+        setLoadingStudents(false);
+      }
+    };
 
   useEffect(() => {
     if (selectedAdminId) {
@@ -268,10 +274,10 @@ const addAdmin = async () => {
     }
   };
 
-  /* ================= 관리자 선택 ================= */
   const handleSelectAdmin = (adminId: string) => {
     if (myRole != "SUPER_ADMIN" && adminId !== myAdminId) return;
     setSelectedAdminId(adminId);
+    setCurrentPage(1); // 관리자 선택 시 페이지 초기화
   };
 
   /* ================= 페이지네이션 ================= */
@@ -406,7 +412,7 @@ const addAdmin = async () => {
         {/* 학생 관리 */}
         <Card className="joyride-student-list">
           <CardHeader>
-            <CardTitle>{selectedAdmin ? `${selectedAdmin.name} 담당 학생` : "담당 학생"}</CardTitle>
+            <CardTitle>{selectedAdmin ? `${selectedAdmin.name} 담당 그룹` : "담당 그룹"}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="mb-2">
@@ -423,6 +429,10 @@ const addAdmin = async () => {
 
             {loadingStudents || saving ? (
               <LoadingSpinner />
+            ) : paginatedStudents.length === 0 ? (
+              <div className="text-center text-sm text-muted-foreground py-4">
+                해당하는 학생이 없습니다.
+              </div>
             ) : (
               <div className="space-y-2">
                 {paginatedStudents.map(student => (
