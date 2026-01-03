@@ -11,7 +11,6 @@ export function ThemeSettings() {
   const [theme, setTheme] = useState<Theme>('system');
 
   useEffect(() => {
-    // 저장된 테마 설정 확인
     const savedTheme = localStorage.getItem('theme') as Theme;
     if (savedTheme) {
       setTheme(savedTheme);
