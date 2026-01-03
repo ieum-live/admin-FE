@@ -91,11 +91,6 @@ export function GroupManagement() {
   const myRole = me?.role;
   const isSuperAdmin = me?.role === "SUPER_ADMIN";
   
-  useEffect(() => {
-    if (!me) {
-      forceLogout("로그인이 만료되었습니다. 다시 로그인해주세요.");
-    }
-  }, []);
 
   const [admins, setAdmins] = useState<Admin[]>([]);
 

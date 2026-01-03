@@ -70,16 +70,11 @@ export function UserAnalytics() {
     setLoadingTrend(true);
     try {
       const period = mapRangeToPeriod(range);
-      const adminId = localStorage.getItem("adminId");
-
-      if (!adminId) {
-        forceLogout("로그인이 만료되었습니다. 다시 로그인해주세요.");
-        return; 
-      }
+      const myAdminId =  localStorage.getItem("adminId") ?? undefined;
 
       const data: DiagnosticsTrendItem[] = await getDiagnosticsTrend({
         period,
-        adminId: filter === "MY_GROUP" ? adminId : undefined,
+        adminId: filter === "MY_GROUP" ? myAdminId : undefined,
       });
 
       const mapped: TrendItem[] = data.map((item) => ({

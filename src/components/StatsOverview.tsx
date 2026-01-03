@@ -141,11 +141,6 @@ export function StatsOverview() {
     yauChangeRate: 0,
   });
   const myAdminId =  localStorage.getItem("adminId") ?? undefined;
-  useEffect(() => {
-      if (!myAdminId) {
-        forceLogout("로그인이 만료되었습니다. 다시 로그인해주세요.");
-      }
-    }, []);
 
   useEffect(() => {
     const currentAdminId = myAdminId;

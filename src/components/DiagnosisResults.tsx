@@ -138,13 +138,7 @@ export function DiagnosisResults() {
     setExporting(false);
   }, [scope]);
   
-  
 
-  useEffect(() => {
-      if (!me) {
-        forceLogout("로그인이 만료되었습니다. 다시 로그인해주세요.");
-      }
-    }, []);
 
   const TEST_TYPE_TO_API: Record<
       TestTypeUI,
