@@ -260,23 +260,18 @@ const addAdmin = async () => {
     }
   };
 
-  const deleteAdmins = async () => {
-    const targetAdminIds = selectedAdmins.filter(id => id !== myAdminId);
-    if (targetAdminIds.length === 0) {
-      setConfirmModal(null);
-      setSelectedAdmins([]);
-      return;
-    }
+  const deleteAdmins = async (admin: Admin) => {
     try {
-      await Promise.all(targetAdminIds.map(id => deleteAdminAPI(id)));
+      await deleteAdminAPI(admin.id);
       await fetchAdmins();
-      setSelectedAdmins([]);
       setConfirmModal(null);
+      alert(`${admin.name} 관리자가 삭제되었습니다.`);
     } catch (e) {
       console.error("관리자 삭제 실패", e);
+      alert("관리자 삭제에 실패했습니다.");
     }
   };
-
+  
   const handleSelectAdmin = (adminId: string) => {
     if (myRole != "SUPER_ADMIN" && adminId !== myAdminId) return;
     setSelectedAdminId(adminId);
@@ -344,14 +339,6 @@ const addAdmin = async () => {
                   <Button size="sm" onClick={() => setAddModal(true)}>
                     <ShieldPlus className="h-4 w-4 mr-1" /> 관리자 추가
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    disabled={!selectedAdmins.length}
-                    onClick={() => setConfirmModal({ type: "delete" })}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" /> 삭제
-                  </Button>
                 </div>
               )}
             </div>
@@ -366,7 +353,7 @@ const addAdmin = async () => {
   ) : (
     <>
       {/* 검색 */}
-      <div className="mb-2">
+      <div className="mb-4">
         <label className="flex items-center gap-1 text-sm font-medium text-muted-foreground mb-2">
           <Search className="w-4 h-4" /> 관리자 검색
         </label>
@@ -379,52 +366,53 @@ const addAdmin = async () => {
       </div>
 
       {filteredAdminsPaginated.map(admin => {
-        const isMe = admin.id === myAdminId;
-        return (
-          <div
-            key={admin.id}
-            onClick={() => handleSelectAdmin(admin.id)}
-            className={`p-3 rounded-lg border cursor-pointer transition ${
-              selectedAdminId === admin.id ? "bg-muted border-primary" : "hover:bg-muted"
-            }`}
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <div className="flex gap-2 items-center">
-                  <span className="font-medium">{admin.name}</span>
-                  {isMe && <Badge>내 그룹</Badge>}
-                  <Badge variant={admin.role === "SUPER_ADMIN" ? "destructive" : "secondary"}>
-                    {admin.role === "SUPER_ADMIN" ? "슈퍼 관리자" : "관리자"}
-                  </Badge>
-                </div>
-                <div className="text-xs text-muted-foreground">{admin.email}</div>
-              </div>
-              {myRole === "SUPER_ADMIN" && !isMe && (
-                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                  <input
-                    type="checkbox"
-                    checked={selectedAdmins.includes(admin.id)}
-                    onChange={() =>
-                      setSelectedAdmins(prev =>
-                        prev.includes(admin.id)
-                          ? prev.filter(v => v !== admin.id)
-                          : [...prev, admin.id]
-                      )
-                    }
-                  />
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => setConfirmModal({ type: "role", target: admin })}
-                  >
-                    <ShieldCheck className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
+  const isMe = admin.id === myAdminId;
+  return (
+    <div
+      key={admin.id}
+      onClick={() => handleSelectAdmin(admin.id)}
+      className={`p-3 rounded-lg border cursor-pointer transition ${
+        selectedAdminId === admin.id ? "bg-muted border-primary" : "hover:bg-muted"
+      }`}
+    >
+      <div className="flex justify-between items-start">
+        <div>
+          <div className="flex gap-2 items-center">
+            <span className="font-medium">{admin.name}</span>
+            {isMe && <Badge>내 그룹</Badge>}
+            <Badge variant={admin.role === "SUPER_ADMIN" ? "destructive" : "secondary"}>
+              {admin.role === "SUPER_ADMIN" ? "슈퍼 관리자" : "관리자"}
+            </Badge>
           </div>
-        );
-      })}
+          <div className="text-xs text-muted-foreground">{admin.email}</div>
+        </div>
+
+        {myRole === "SUPER_ADMIN" && !isMe && (
+          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+            {/* 권한 변경 */}
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => setConfirmModal({ type: "role", target: admin })}
+            >
+              <ShieldCheck className="h-4 w-4" />
+            </Button>
+
+            {/* 삭제 버튼 */}
+            <Button
+              size="icon"
+              variant="destructive"
+              onClick={() => setConfirmModal({ type: "delete", target: admin })}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+})}
+
 
       {/* 페이지네이션 */}
       <div className="flex justify-between mt-4">
@@ -462,7 +450,7 @@ const addAdmin = async () => {
   ) : (
     <>
       {/* 검색 */}
-      <div className="mb-2">
+      <div className="mb-4">
         <label className="flex items-center gap-1 text-sm font-medium text-muted-foreground mb-2">
           <Search className="w-4 h-4" /> 학생 검색
         </label>
@@ -542,11 +530,18 @@ const addAdmin = async () => {
         <ConfirmModal
           title={confirmModal.type === "delete" ? "관리자 삭제" : "권한 변경"}
           onClose={() => setConfirmModal(null)}
-          onConfirm={() => confirmModal.type === "delete" ? deleteAdmins() : confirmModal.target && changeRole(confirmModal.target)}
+          onConfirm={() => {
+            if (confirmModal.type === "delete" && confirmModal.target) {
+              deleteAdmins(confirmModal.target);
+            } else if (confirmModal.type === "role" && confirmModal.target) {
+              changeRole(confirmModal.target);
+            }
+          }}
         >
           정말 진행하시겠습니까?
         </ConfirmModal>
       )}
+
 
       <GroupManagementJoyride />
     </>
