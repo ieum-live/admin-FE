@@ -65,18 +65,6 @@ const RISK_LABEL_MAP: Record<string, string> = {
   HIGH: "위험",
 };
 
-export const forceLogout = (message?: string) => {
-  if (message) {
-    alert(message);
-  }
-
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
-  localStorage.removeItem("me");
-
-  window.location.href = "/login";
-};
-
 
 export function DiagnosisResults() {
   type TestTypeUI = "PHQ9" | "GAD7" | "CAGI";
