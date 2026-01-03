@@ -91,7 +91,8 @@ export function UserManagement() {
   const [notificationType, setNotificationType] = useState<AlertType>("GENERAL");
   const [allRawUsers, setAllRawUsers] = useState<any[]>([]);
   const [potSort, setPotSort] = useState<"none" | "desc" | "asc">("none");
-  const [scope, setScope] = useState<"ALL" | "MY_GROUP">("ALL");
+  const [scopeStatics, setScopeStatics] = useState<"ALL" | "MY_GROUP">("ALL");
+  const [scopeUsers, setScopeUsers] = useState<"ALL" | "MY_GROUP">("ALL");
   const [loadingSummary, setLoadingSummary] = useState(false);
 
   const myAdminId = me?.id;
@@ -109,7 +110,7 @@ export function UserManagement() {
           setLoadingSummary(true);
     
           const data = await getUserStatistics(
-            scope === "MY_GROUP" ? myAdminId : undefined
+            scopeStatics === "MY_GROUP" ? myAdminId : undefined
           );
     
           setTotalUsers(data.totalUsers);
@@ -124,7 +125,7 @@ export function UserManagement() {
       };
     
       fetchStatistics();
-    }, [scope]);
+    }, [scopeStatics]);
 
     useEffect(() => {
       const fetchAllUsers = async () => {
@@ -133,7 +134,7 @@ export function UserManagement() {
           const data = await getUsers({
             page: 0,
             size: 10000,
-            filterByAdminId: scope === "MY_GROUP" ? myAdminId : undefined,
+            filterByAdminId: scopeUsers === "MY_GROUP" ? myAdminId : undefined,
           });
     
           setAllRawUsers(data.content);
@@ -145,7 +146,7 @@ export function UserManagement() {
       };
     
       fetchAllUsers();
-    }, [scope]);
+    }, [scopeUsers]);
     
           const riskMap: Record<string, 'low' | 'medium' | 'high'> = {
             LOW: 'low',
@@ -229,7 +230,23 @@ export function UserManagement() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, depressionFilter, gamblingFilter, potSort]);
+  }, [searchTerm, depressionFilter, gamblingFilter, potSort, scopeUsers]);
+
+  useEffect(() => {
+    setSelectedUser(null);
+    setSelectedUsers([]); // 체크박스도 같이 초기화 추천
+  }, [
+    scopeUsers,
+    searchTerm,
+    depressionFilter,
+    gamblingFilter,
+    potSort,
+    currentPage,
+  ]);
+
+  
+
+
 
 
   const getStatusBadge = (status: string, type: 'depression' | 'gambling') => {
@@ -330,10 +347,10 @@ export function UserManagement() {
   
       <div className="flex gap-1">
         <button
-          onClick={() => setScope("ALL")}
+          onClick={() => setScopeStatics("ALL")}
           className={`px-2 py-1 text-xs rounded
             ${
-              scope === "ALL"
+              scopeStatics === "ALL"
                 ? "bg-primary text-white"
                 : "bg-muted text-muted-foreground"
             }`}
@@ -342,10 +359,10 @@ export function UserManagement() {
         </button>
   
         <button
-          onClick={() => setScope("MY_GROUP")}
+          onClick={() => setScopeStatics("MY_GROUP")}
           className={`px-2 py-1 text-xs rounded
             ${
-              scope === "MY_GROUP"
+              scopeStatics === "MY_GROUP"
                 ? "bg-primary text-white"
                 : "bg-muted text-muted-foreground"
             }`}
@@ -423,10 +440,10 @@ export function UserManagement() {
                   {/* 전체 / 내 그룹 토글 */}
                   <div className="flex gap-1">
                     <button
-                      onClick={() => setScope("ALL")}
+                      onClick={() => setScopeUsers("ALL")}
                       className={`px-2 py-1 text-xs rounded
                         ${
-                          scope === "ALL"
+                          scopeUsers === "ALL"
                             ? "bg-primary text-white"
                             : "bg-muted text-muted-foreground"
                         }`}
@@ -435,10 +452,10 @@ export function UserManagement() {
                     </button>
 
                     <button
-                      onClick={() => setScope("MY_GROUP")}
+                      onClick={() => setScopeUsers("MY_GROUP")}
                       className={`px-2 py-1 text-xs rounded
                         ${
-                          scope === "MY_GROUP"
+                          scopeUsers === "MY_GROUP"
                             ? "bg-primary text-white"
                             : "bg-muted text-muted-foreground"
                         }`}
@@ -582,7 +599,7 @@ export function UserManagement() {
             ) : (<CardContent className="overflow-auto">
               {filteredUsers.length === 0 ? (
                 <div className="py-12 text-center text-sm text-muted-foreground">
-                  일치하는 사용자가 없습니다.
+                  해당하는 사용자가 없습니다.
                 </div>
               ) : (
                 <Table>
