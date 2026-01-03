@@ -140,22 +140,20 @@ export function StatsOverview() {
     mauChangeRate: 0,
     yauChangeRate: 0,
   });
-  const me = JSON.parse(localStorage.getItem("me") || "null");
+  const myAdminId =  localStorage.getItem("adminId") ?? undefined;
   useEffect(() => {
-      if (!me) {
+      if (!myAdminId) {
         forceLogout("로그인이 만료되었습니다. 다시 로그인해주세요.");
       }
     }, []);
 
   useEffect(() => {
-    const currentAdminId = me?.id;
-    const isSuperAdmin = me?.role === "SUPER_ADMIN";
+    const currentAdminId = myAdminId;
   
     setLoadingSummary(true);
   
     getDiagnosisSummary({
       ...(summaryFilter === "MY_GROUP" &&
-        isSuperAdmin &&
         currentAdminId && {
           filterByAdminId: currentAdminId,
         }),

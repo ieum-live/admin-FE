@@ -7,6 +7,13 @@ import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { signIn } from "../API/authAPI";
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import {jwtDecode} from "jwt-decode";
+
+interface TokenPayload {
+  userId: string;
+  exp?: number;
+  iat?: number;
+}
 
 interface LoginPageProps {
     onLogin: () => void;
@@ -18,10 +25,10 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
     const handleLogin = async () => {
         setError("");
 
-        // 🔥 빈칸 체크
         if (!email.trim() || !password.trim()) {
             setError("모든 칸을 입력해주세요.");
             return;
@@ -31,6 +38,19 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
         try {
             await signIn(email, password);
+
+            const token = localStorage.getItem("accessToken");
+            if (token) {
+                try {
+                    const decoded = jwtDecode<TokenPayload>(token);
+                    if (decoded.userId) {
+                        localStorage.setItem("adminId", decoded.userId);
+                    }
+                } catch {
+                    console.warn("JWT 디코딩 실패");
+                }
+            }
+
             onLogin();
             navigate("/");
         } catch (err: any) {

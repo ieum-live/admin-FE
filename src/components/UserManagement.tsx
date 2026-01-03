@@ -54,7 +54,6 @@ export interface MappedUser {
   potLevel: number;
 }
 
-const me = JSON.parse(localStorage.getItem("me") || "null");
 
 export const forceLogout = (message?: string) => {
   if (message) {
@@ -95,13 +94,12 @@ export function UserManagement() {
   const [scopeUsers, setScopeUsers] = useState<"ALL" | "MY_GROUP">("ALL");
   const [loadingSummary, setLoadingSummary] = useState(false);
 
-  const myAdminId = me?.id;
+  const myAdminId =  localStorage.getItem("adminId") ?? undefined;
 
   useEffect(() => {
-      if (!me) {
-        forceLogout("로그인이 만료되었습니다. 다시 로그인해주세요.");
-      }
-    }, []);
+    if (!myAdminId) forceLogout("로그인이 만료되었습니다. 다시 로그인해주세요.");
+  }, []);
+
 
 
     useEffect(() => {

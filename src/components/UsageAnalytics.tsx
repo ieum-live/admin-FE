@@ -157,10 +157,10 @@ export function UsageAnalytics() {
   const [scopeTrend, setScopeTrend] = useState<ScopeFilter>("ALL");
   
 
-  const myAdminId = me?.id;
+  const myAdminId =  localStorage.getItem("adminId") ?? undefined;
     
     useEffect(() => {
-      if (!me) {
+      if (!myAdminId ) {
         forceLogout("로그인이 만료되었습니다. 다시 로그인해주세요.");
       }
     }, []);
@@ -172,7 +172,7 @@ export function UsageAnalytics() {
   
         const { from, to } = getTopDateRange(topPeriod);
   
-        const data = await getTop5Features(from, to, scopeTop === "MY_GROUP" ? myAdminId : undefined);
+        const data = await getTop5Features(from, to, scopeTop === "MY_GROUP" ? myAdminId  : undefined);
         setTopFeatures(data);
       } catch (e) {
         console.error("TOP5 기능 조회 실패", e);
