@@ -99,9 +99,6 @@ export function GroupManagement() {
       try {
         const data = await getAdminAPI(myAdminId);
         setMyRole(data.data.role);
-        console.log(data.data.role
-
-        )
       } catch (err) {
         console.error("내 역할 조회 실패", err);
       }
@@ -262,7 +259,6 @@ const addAdmin = async () => {
 
   const deleteAdmin = async (admin: Admin) => {
     try {
-      console.log(admin.id)
       await deleteAdminAPI(admin.id); 
       await fetchAdmins(); 
       setConfirmModal(null); // 모달 닫기
