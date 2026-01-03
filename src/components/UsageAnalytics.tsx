@@ -125,6 +125,19 @@ const getFeatureLabel = (f: string) => {
     default: return f;
   }
 };
+const me = JSON.parse(localStorage.getItem("me") || "null");
+
+export const forceLogout = (message?: string) => {
+  if (message) {
+    alert(message);
+  }
+
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("me");
+
+  window.location.href = "/login";
+};
 
 export function UsageAnalytics() {
   const [period, setPeriod] = useState<PeriodType>("2weeks");
@@ -139,15 +152,27 @@ export function UsageAnalytics() {
   const [loadingTop, setLoadingTop] = useState(false);
   const [loadingChart, setLoadingChart] = useState(false);
 
+  type ScopeFilter = "ALL" | "MY_GROUP";
+  const [scopeTop, setScopeTop] = useState<ScopeFilter>("ALL");
+  const [scopeTrend, setScopeTrend] = useState<ScopeFilter>("ALL");
+  
+
+  const myAdminId = me?.id;
+    
+    useEffect(() => {
+      if (!me) {
+        forceLogout("로그인이 만료되었습니다. 다시 로그인해주세요.");
+      }
+    }, []);
+
   useEffect(() => {
     const loadTop5 = async () => {
       try {
         setLoadingTop(true);
   
         const { from, to } = getTopDateRange(topPeriod);
-        console.log("TOP5 조회 범위:", { from, to });
   
-        const data = await getTop5Features(from, to);
+        const data = await getTop5Features(from, to, scopeTop === "MY_GROUP" ? myAdminId : undefined);
         setTopFeatures(data);
       } catch (e) {
         console.error("TOP5 기능 조회 실패", e);
@@ -157,7 +182,7 @@ export function UsageAnalytics() {
     };
   
     loadTop5();
-  }, [topPeriod]);
+  }, [topPeriod, scopeTop]);
   
 
   /* ---------- 그래프 ---------- */
@@ -168,7 +193,7 @@ useEffect(() => {
 
       const apiPeriod = periodToApi[period];
 
-      const res = await getFeatureUsageTrend(feature, apiPeriod);
+      const res = await getFeatureUsageTrend(feature, apiPeriod , scopeTrend === "MY_GROUP" ? myAdminId : undefined);
         setChartData(res.data);
 
     } catch (e) {
@@ -180,7 +205,7 @@ useEffect(() => {
 
   loadTrend();
 
-}, [feature, period]);
+}, [feature, period, scopeTrend]);
 
   
 
@@ -189,8 +214,17 @@ useEffect(() => {
       <Card className="joyride-top5">
         <CardHeader className="flex flex-row justify-between items-center">
           <CardTitle>활성 기능 순위</CardTitle>
+          <div className="flex gap-2">
+          <Select value={scopeTop} onValueChange={(v) => setScopeTop(v as ScopeFilter)}>
+          <SelectTrigger className="w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">전체</SelectItem>
+            <SelectItem value="MY_GROUP">내 그룹</SelectItem>
+          </SelectContent>
+        </Select>
 
-          {/* 기간 필터 */}
           <Select
             value={topPeriod}
             onValueChange={(v) => setTopPeriod(v as TopPeriod)}
@@ -204,7 +238,7 @@ useEffect(() => {
               <SelectItem value="1month">최근 1개월</SelectItem>
             </SelectContent>
           </Select>
-
+        </div>
         </CardHeader>
 
         <CardContent>
@@ -247,6 +281,15 @@ useEffect(() => {
         </CardHeader>
 
         <CardContent className="flex gap-4">
+        <Select value={scopeTrend} onValueChange={(v) => setScopeTrend(v as ScopeFilter)}>
+          <SelectTrigger className="w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">전체</SelectItem>
+            <SelectItem value="MY_GROUP">내 그룹</SelectItem>
+          </SelectContent>
+        </Select>
           <Select value={feature} onValueChange={(v) => setFeature(v as FeatureType)}>
             <SelectTrigger className="w-40 joyride-trend-filter1">
               <SelectValue />

@@ -1,8 +1,5 @@
 import instance from "./axios";
 
-/* =======================
-   TOP5 기능
-======================= */
 
 export type TopFeatureItem = {
   feature: string;
@@ -16,12 +13,14 @@ interface TopFeatureResponse {
 
 export async function getTop5Features(
   from: string,
-  to: string
+  to: string,
+  filterByAdminId?: string
 ): Promise<TopFeatureItem[]> {
   const res = await instance.get<TopFeatureResponse>(
     "/api/usage/features/top5",
     {
-      params: { from, to },
+      params: { from, to, ...(filterByAdminId ? { filterByAdminId } : {}),
+    },
     }
   );
 
@@ -55,12 +54,13 @@ export interface FeatureTrendPayload {
 
 export async function getFeatureUsageTrend(
     feature: string,
-    period: string
+    period: string,
+    filterByAdminId?: string
   ): Promise<FeatureTrendPayload> {
     const res = await instance.get(
       "/api/usage/features",
       {
-        params: { feature, period },
+        params: { feature, period, ...(filterByAdminId ? { filterByAdminId } : {}),},
         timeout: 150000, // 🔥 트렌드 전용
       }
     );
