@@ -58,8 +58,20 @@ export function UserManagementJoyride({ handleUserClick, users }: UserManagement
       disableBeacon: true,
     },
     {
+      target: ".joyride-user-summary-group",
+      content: "전체·내 그룹 필터로 데이터를 선택해 볼 수 있어요.",
+      placement: "right",
+      disableBeacon: true,
+    },
+    {
       target: ".joyride-user-table",
       content: "전체 사용자 목록에서 ID, 이메일, 나이 등 기본 정보와 우울증·도박 위험도까지 확인할 수 있어요.",
+      placement: "right",
+      disableBeacon: true,
+    },
+    {
+      target: ".joyride-user-table-group",
+      content: "전체·내 그룹 필터로 데이터를 선택해 볼 수 있어요.",
       placement: "right",
       disableBeacon: true,
     },

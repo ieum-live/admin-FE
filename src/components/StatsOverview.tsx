@@ -303,7 +303,7 @@ export function StatsOverview() {
   <CardHeader className="flex flex-row items-center justify-between pb-3">
     <CardTitle className="text-base">📊 진단 요약</CardTitle>
 
-    <div className="flex gap-1">
+    <div className="flex gap-1 joyride-summary-row-group">
       <button
         onClick={() => setSummaryFilter("ALL")}
         className={`px-2 py-1 text-xs rounded
@@ -415,45 +415,57 @@ export function StatsOverview() {
     <div className="flex gap-1 joyride-pot-rank-filter">
       <button
         onClick={() => setRankingPeriod("all_time")}
-        className={`px-2 py-1 text-xs rounded
-          ${
-            rankingPeriod === "all_time"
-              ? "bg-primary text-white"
-              : "bg-muted text-muted-foreground"
-                  }`}
-              >
-                전체
-              </button>
+        className={`px-2 py-1 text-xs rounded ${
+          rankingPeriod === "all_time"
+            ? "bg-primary text-white"
+            : "bg-muted text-muted-foreground"
+        }`}
+      >
+        전체
+      </button>
 
-              <button
-                onClick={() => setRankingPeriod("weekly")}
-                className={`px-2 py-1 text-xs rounded
-                  ${
-                    rankingPeriod === "weekly"
-                      ? "bg-primary text-white"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-              >
-                주간
-              </button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-          {rankingList.map((user, idx) => (
-          <div key={user.userId} className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <span className="w-5 text-center font-medium">
-                {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : idx + 1}
-              </span>
-              <span>{user.userName}</span>
-            </div>
-            <div className="flex gap-4">
-              <span className="text-muted-foreground">Lv.{user.potLevel}</span>
-            </div>
+      <button
+        onClick={() => setRankingPeriod("weekly")}
+        className={`px-2 py-1 text-xs rounded ${
+          rankingPeriod === "weekly"
+            ? "bg-primary text-white"
+            : "bg-muted text-muted-foreground"
+        }`}
+      >
+        주간
+      </button>
+    </div>
+  </CardHeader>
+
+  <CardContent className="space-y-2 text-sm">
+    {rankingList.length === 0 ? (
+      <div className="text-center text-muted-foreground py-4">
+        🛑 표시할 순위가 없습니다
+      </div>
+    ) : (
+      rankingList.map((user, idx) => (
+        <div key={user.userId} className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <span className="w-5 text-center font-medium">
+              {idx === 0
+                ? "🥇"
+                : idx === 1
+                ? "🥈"
+                : idx === 2
+                ? "🥉"
+                : idx + 1}
+            </span>
+            <span>{user.userName}</span>
           </div>
-        ))}
-        </CardContent>
-      </Card>
+          <div className="flex gap-4">
+            <span className="text-muted-foreground">Lv.{user.potLevel}</span>
+          </div>
+        </div>
+      ))
+    )}
+  </CardContent>
+</Card>
+
     </div>
     </>
   );

@@ -13,11 +13,8 @@ const instance = axios.create({
     timeout: 5000, // 타임아웃 설정 (선택사항)
 });
 
-// 2. 요청 인터셉터 (토큰 실어 보내기)
 instance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
-        // ⚠️ 여기서 async_hooks나 서버 전용 로직을 쓰면 안 됩니다.
-        // 브라우저용 localStorage만 사용하세요.
         const accessToken = localStorage.getItem("accessToken");
         if (accessToken && config.headers) {
             config.headers.Authorization = `Bearer ${accessToken}`;

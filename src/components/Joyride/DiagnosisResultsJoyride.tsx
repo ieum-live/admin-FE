@@ -58,8 +58,14 @@ export function DiagnosisResultsJoyride() {
         disableBeacon: true,
       },
       {
+        target: ".joyride-user-diagnosis-results-csv-filter",
+        content: "전체·내 그룹 필터로 데이터를 선택해 볼 수 있어요.",
+        placement: "right",
+        disableBeacon: true,
+      },
+      {
         target: ".joyride-user-diagnosis-results-csv",
-        content: "선택한 필터에 맞는 전체 사용자 목록을 csv파일로 다운로드 할 수 있어요.",
+        content: "선택한 필터에 맞는 사용자 목록을 csv파일로 다운로드 할 수 있어요.",
         placement: "right",
         disableBeacon: true,
       },

@@ -119,7 +119,6 @@ const getFeatureLabel = (f: string) => {
     case "DAILY_TOPIC": return "매일 1주제";
     case "DIARY": return "일기";
     case "IMPULSE_QUEST": return "충동 퀘스트";
-    case "EMOTION_QUEST": return "충동 퀘스트";
     case "MEDITATION_QUEST": return "명상 퀘스트";
     case "ACTIVITY_QUEST": return "산책 퀘스트";
     default: return f;
@@ -210,7 +209,7 @@ useEffect(() => {
           <CardTitle>활성 기능 순위</CardTitle>
           <div className="flex gap-2">
           <Select value={scopeTop} onValueChange={(v) => setScopeTop(v as ScopeFilter)}>
-          <SelectTrigger className="w-32">
+          <SelectTrigger className="w-32 joyride-top5-filter-group">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -276,7 +275,7 @@ useEffect(() => {
 
         <CardContent className="flex gap-4">
         <Select value={scopeTrend} onValueChange={(v) => setScopeTrend(v as ScopeFilter)}>
-          <SelectTrigger className="w-32">
+          <SelectTrigger className="w-32 joyride-trend-filter-group">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -295,7 +294,7 @@ useEffect(() => {
               <SelectItem value="DAILY_TOPIC">매일 1주제</SelectItem>
               <SelectItem value="POT_WATERING">마음정원</SelectItem>
               <SelectItem value="DIARY">일기</SelectItem>
-              <SelectItem value="EMOTION_QUEST">충동 퀘스트</SelectItem>
+              <SelectItem value="IMPULSE_QUEST">충동 퀘스트</SelectItem>
               <SelectItem value="MEDITATION_QUEST">명상 퀘스트</SelectItem>
               <SelectItem value="ACTIVITY_QUEST">산책 퀘스트</SelectItem>
             </SelectContent>
@@ -324,31 +323,38 @@ useEffect(() => {
 
         <CardContent>
   <div style={{ width: "100%", height: 350 }}>
-    <ResponsiveContainer>
-      <AreaChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis
-          dataKey="date"
-          tickFormatter={(v) => v.slice(5)}
-        />
-        <YAxis domain={[0, "dataMax + 10"]} />
-        <Tooltip />
-        <Area
-          type="monotone"
-          dataKey="count"
-          stroke="#3b82f6"
-          fill="#93c5fd"
-          isAnimationActive={false}
-        />
-      </AreaChart>
-    </ResponsiveContainer>
+    {chartData.length === 0 || chartData.every((d) => d.count === 0) ? (
+      <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+        📭 사용 데이터가 없습니다
+      </div>
+    ) : (
+      <ResponsiveContainer>
+        <AreaChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis
+            dataKey="date"
+            tickFormatter={(v) => v.slice(5)}
+          />
+          <YAxis domain={[0, "dataMax + 10"]} />
+          <Tooltip />
+          <Area
+            type="monotone"
+            dataKey="count"
+            stroke="#3b82f6"
+            fill="#93c5fd"
+            isAnimationActive={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    )}
   </div>
 </CardContent>
 
 
+
       </Card>
     </div>
-    <UsageAnalyticsJoyride />
+    {!loadingTop && !loadingChart && <UsageAnalyticsJoyride />}
     </div>
   );
 }
