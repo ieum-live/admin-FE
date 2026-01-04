@@ -60,10 +60,11 @@ export type RankingPeriod = "all_time" | "weekly";
 
 export const getUserRanking = async (
   period: RankingPeriod = "all_time",
-  limit: number = 5
+  limit: number = 5,
+  filterByAdminId?: string,
 ) => {
   const response = await instance.get("/api/ranking", {
-    params: { period, limit },
+    params: { period, limit,...(filterByAdminId && { filterByAdminId }), },
   });
   return response.data.data;
 };

@@ -65,13 +65,19 @@ export function OverviewJoyride() {
       },
       {
         target: ".joyride-pot-toprank",
-        content: "화분 레벨 1위의 상세 정보 및 TOP 5 사용자를 확인할 수 있어요.",
+        content: "레벨(마음 정원) 1위의 상세 정보 및 TOP 5 사용자를 확인할 수 있어요.",
+        placement: "right",
+        disableBeacon: true,
+      },
+      {
+        target: ".joyride-pot-group",
+        content: "전체·내 그룹 필터로 데이터를 선택해 볼 수 있어요.",
         placement: "right",
         disableBeacon: true,
       },
       {
         target: ".joyride-pot-rank-filter",
-        content: "주간·전체 필터를 통해 화분 레벨 1위 및 TOP 5 사용자를 확인할 수 있어요.",
+        content: "주간·전체 필터를 통해 레벨 1위 및 TOP 5 사용자를 확인할 수 있어요.",
         placement: "right",
         disableBeacon: true,
       },
