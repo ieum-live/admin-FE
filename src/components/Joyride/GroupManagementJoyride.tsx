@@ -50,7 +50,7 @@ export function GroupManagementJoyride() {
       },
       {
         target: ".joyride-admin-badge",
-        content: "내 그룹과 내 권한은 항상 상단에 표시되고, 그 뒤로는 슈퍼관리자 > 관리자 순으로 자동 정렬돼요.",
+        content: "내 그룹과 내 권한은 항상 상단에 표시돼요.",
         placement: "right",
         disableBeacon: true,
       },
