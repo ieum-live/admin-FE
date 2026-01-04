@@ -374,26 +374,33 @@ const getStatusBadge = (risk: "LOW" | "MID" | "HIGH") => {
         <CardTitle>위험도별 사용자 분포 추이</CardTitle>
       </CardHeader>
 
-        <CardContent>
-        <div style={{ width: '100%', height: 400 }}>
-        <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={riskTrend}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="label" />
-            <YAxis />
-            <Tooltip
-              formatter={(value: number, name: string) => [
-                `${value}%`,
-                RISK_LABEL_MAP[name] ?? name,
-              ]}
-            />
-            <Area type="monotone" dataKey="LOW" stackId="1" stroke="#10b981" fill="#10b981" />
-            <Area type="monotone" dataKey="MID" stackId="1" stroke="#f59e0b" fill="#f59e0b" />
-            <Area type="monotone" dataKey="HIGH" stackId="1" stroke="#ef4444" fill="#ef4444" />
-          </AreaChart>
-        </ResponsiveContainer>
+      <CardContent>
+  <div style={{ width: '100%', height: 400 }}>
+    {isNoRiskData(riskTrend) ? (
+      <div className="flex justify-center items-center h-full text-sm text-muted-foreground">
+        📭 위험도 데이터가 없습니다
       </div>
+    ) : (
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={riskTrend}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="label" />
+          <YAxis />
+          <Tooltip
+            formatter={(value: number, name: string) => [
+              `${value}%`,
+              RISK_LABEL_MAP[name] ?? name,
+            ]}
+          />
+          <Area type="monotone" dataKey="LOW" stackId="1" stroke="#10b981" fill="#10b981" />
+          <Area type="monotone" dataKey="MID" stackId="1" stroke="#f59e0b" fill="#f59e0b" />
+          <Area type="monotone" dataKey="HIGH" stackId="1" stroke="#ef4444" fill="#ef4444" />
+        </AreaChart>
+      </ResponsiveContainer>
+    )}
+  </div>
 </CardContent>
+
 </Card>
 </div>
 

@@ -323,26 +323,33 @@ useEffect(() => {
 
         <CardContent>
   <div style={{ width: "100%", height: 350 }}>
-    <ResponsiveContainer>
-      <AreaChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis
-          dataKey="date"
-          tickFormatter={(v) => v.slice(5)}
-        />
-        <YAxis domain={[0, "dataMax + 10"]} />
-        <Tooltip />
-        <Area
-          type="monotone"
-          dataKey="count"
-          stroke="#3b82f6"
-          fill="#93c5fd"
-          isAnimationActive={false}
-        />
-      </AreaChart>
-    </ResponsiveContainer>
+    {chartData.length === 0 || chartData.every((d) => d.count === 0) ? (
+      <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+        📭 사용 데이터가 없습니다
+      </div>
+    ) : (
+      <ResponsiveContainer>
+        <AreaChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis
+            dataKey="date"
+            tickFormatter={(v) => v.slice(5)}
+          />
+          <YAxis domain={[0, "dataMax + 10"]} />
+          <Tooltip />
+          <Area
+            type="monotone"
+            dataKey="count"
+            stroke="#3b82f6"
+            fill="#93c5fd"
+            isAnimationActive={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    )}
   </div>
 </CardContent>
+
 
 
       </Card>

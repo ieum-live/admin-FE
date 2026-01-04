@@ -22,7 +22,7 @@ export const getDiagnosisSummary = async (
       params: {
         from,
         to,
-        ...params, // ⭐ 여기 핵심
+        ...params, 
       },
     });
 
@@ -30,7 +30,7 @@ export const getDiagnosisSummary = async (
       console.warn("📌 진단 요약 API: 데이터 없음");
       return {};
     }
-
+    console.log(res.data.data);
     return res.data.data;
   } catch (err) {
     console.error("❌ 진단 요약 요청 실패", err);

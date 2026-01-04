@@ -74,7 +74,7 @@ export function UserAnalytics() {
 
       const data: DiagnosticsTrendItem[] = await getDiagnosticsTrend({
         period,
-        adminId: filter === "MY_GROUP" ? myAdminId : undefined,
+        filterByAdminId: filter === "MY_GROUP" ? myAdminId : undefined,
       });
 
       const mapped: TrendItem[] = data.map((item) => ({
@@ -146,27 +146,40 @@ export function UserAnalytics() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="label" />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <Tooltip />
-                <Legend />
+  <LineChart data={trendData}>
+    <CartesianGrid strokeDasharray="3 3" />
+    <XAxis dataKey="label" />
+    <YAxis
+      yAxisId="left"
+      tickFormatter={(value) => value.toFixed(1)} // 소수점 1자리
+    />
+    <YAxis
+      yAxisId="right"
+      orientation="right"
+      tickFormatter={(value) => value.toFixed(0)} // 사용자 수는 정수
+    />
+    <Tooltip
+      formatter={(value: number, name: string) => {
+        if (name === "총 사용자 수") return [value.toFixed(0), name];
+        return [value.toFixed(1), name]; // 소수점 1자리
+      }}
+    />
+    <Legend />
 
-                <Line yAxisId="left" type="monotone" dataKey="phq9" name="PHQ-9" stroke="#8884d8" />
-                <Line yAxisId="left" type="monotone" dataKey="gad7" name="GAD-7" stroke="#82ca9d" />
-                <Line yAxisId="left" type="monotone" dataKey="cagi" name="CAGI" stroke="#ffc658" />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="totalUsers"
-                  name="총 사용자 수"
-                  stroke="#ff7c7c"
-                  strokeDasharray="5 5"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+    <Line yAxisId="left" type="monotone" dataKey="phq9" name="PHQ-9" stroke="#8884d8" />
+    <Line yAxisId="left" type="monotone" dataKey="gad7" name="GAD-7" stroke="#82ca9d" />
+    <Line yAxisId="left" type="monotone" dataKey="cagi" name="CAGI" stroke="#ffc658" />
+    <Line
+      yAxisId="right"
+      type="monotone"
+      dataKey="totalUsers"
+      name="총 사용자 수"
+      stroke="#ff7c7c"
+      strokeDasharray="5 5"
+    />
+  </LineChart>
+</ResponsiveContainer>
+
           )}
         </CardContent>
       </Card>

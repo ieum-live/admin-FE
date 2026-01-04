@@ -17,7 +17,7 @@ interface DiagnosticsTrendResponse {
 
 export interface DiagnosticsTrendParams {
   period: PeriodType;
-  adminId?: string;
+  filterByAdminId?: string;
 }
 
 export async function getDiagnosticsTrend(
