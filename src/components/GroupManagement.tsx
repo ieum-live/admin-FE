@@ -325,176 +325,176 @@ const addAdmin = async () => {
   return (
     <>
       <div className="grid grid-cols-[360px,1fr] gap-6">
-        {/* 관리자 목록 */}
-        <Card className="joyride-admin-list">
-          <CardHeader className="space-y-3">
-            <div className="flex justify-between items-center">
-              <CardTitle>관리자 목록</CardTitle>
-              {myRole === "SUPER_ADMIN"&& (
-                <div className="flex gap-2">
-                  <Button className="joyride-admin-add" size="sm" onClick={() => setAddModal(true)}>
-                    <ShieldPlus className="h-4 w-4 mr-1" /> 관리자 추가
-                  </Button>
-                </div>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-2">
-  {loadingAdmins ? (
-    <LoadingSpinner />
-  ) : filteredAdminsPaginated.length === 0 ? (
-    <div className="text-center text-sm text-muted-foreground py-4">
-      등록된 관리자가 없습니다.
-    </div>
-  ) : (
-    <>
-      {/* 검색 */}
-      <div className="mb-4 joyride-admin-search">
-        <label className="flex items-center gap-1 text-sm font-medium text-muted-foreground mb-2">
-          <Search className="w-4 h-4" /> 관리자 검색
-        </label>
-        <Input
-          placeholder="이름, 이메일"
-          value={adminSearch}
-          onChange={(e) => setAdminSearch(e.target.value)}
-          className="text-sm placeholder:text-sm"
-        />
-      </div>
-
-      {filteredAdminsPaginated.map(admin => {
-  const isMe = admin.id === myAdminId;
-  return (
-    <div
-      key={admin.id}
-      onClick={() => handleSelectAdmin(admin.id)}
-      className={`p-3 rounded-lg border cursor-pointer transition ${
-        selectedAdminId === admin.id ? "bg-muted border-primary" : "hover:bg-muted"
-      }`}
-    >
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="flex gap-2 items-center joyride-admin-badge">
-            <span className="font-medium">{admin.name}</span>
-            {isMe && <Badge>내 그룹</Badge>}
-            <Badge variant={admin.role === "SUPER_ADMIN" ? "destructive" : "secondary"}>
-              {admin.role === "SUPER_ADMIN" ? "슈퍼 관리자" : "관리자"}
-            </Badge>
-          </div>
-          <div className="text-xs text-muted-foreground">{admin.email}</div>
+      {/* 관리자 목록 */}
+<Card className="joyride-admin-list">
+  <CardHeader className="space-y-3">
+    <div className="flex justify-between items-center">
+      <CardTitle>관리자 목록</CardTitle>
+      {myRole === "SUPER_ADMIN" && (
+        <div className="flex gap-2">
+          <Button className="joyride-admin-add" size="sm" onClick={() => setAddModal(true)}>
+            <ShieldPlus className="h-4 w-4 mr-1" /> 관리자 추가
+          </Button>
         </div>
-
-        {myRole === "SUPER_ADMIN" && !isMe && (
-          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-            {/* 권한 변경 */}
-            <Button className="joyride-admin-change-role"
-              size="icon"
-              variant="ghost"
-              onClick={() => setConfirmModal({ type: "role", target: admin })}
-            >
-              <ShieldCheck className="h-4 w-4" />
-            </Button>
-
-            {/* 삭제 버튼 */}
-            <Button className="joyride-admin-delete"
-              size="icon"
-              variant="destructive"
-              onClick={() => setConfirmModal({ type: "delete", target: admin })}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-      </div>
+      )}
     </div>
-  );
-})}
+  </CardHeader>
+  <CardContent className="space-y-2">
+    {/* 검색창 항상 보이기 */}
+    <div className="mb-4 joyride-admin-search">
+      <label className="flex items-center gap-1 text-sm font-medium text-muted-foreground mb-2">
+        <Search className="w-4 h-4" /> 관리자 검색
+      </label>
+      <Input
+        placeholder="이름, 이메일"
+        value={adminSearch}
+        onChange={(e) => setAdminSearch(e.target.value)}
+        className="text-sm placeholder:text-sm"
+      />
+    </div>
 
-
-      {/* 페이지네이션 */}
-      <div className="flex justify-between mt-4">
-        <Button
-          onClick={() => setAdminCurrentPage(p => Math.max(1, p - 1))}
-          disabled={adminCurrentPage === 1}
-        >
-          이전
-        </Button>
-        <span className="text-sm">{adminCurrentPage} / {adminTotalPages}</span>
-        <Button
-          onClick={() => setAdminCurrentPage(p => Math.min(adminTotalPages, p + 1))}
-          disabled={adminCurrentPage === adminTotalPages}
-        >
-          다음
-        </Button>
+    {/* 관리자 리스트/로딩/없음 */}
+    {loadingAdmins ? (
+      <LoadingSpinner />
+    ) : filteredAdminsPaginated.length === 0 ? (
+      <div className="text-center text-sm text-muted-foreground py-4">
+        등록된 관리자가 없습니다.
       </div>
-    </>
-  )}
-</CardContent>
-        </Card>
+    ) : (
+      <>
+        {filteredAdminsPaginated.map(admin => {
+          const isMe = admin.id === myAdminId;
+          return (
+            <div
+              key={admin.id}
+              onClick={() => handleSelectAdmin(admin.id)}
+              className={`p-3 rounded-lg border cursor-pointer transition ${
+                selectedAdminId === admin.id ? "bg-muted border-primary" : "hover:bg-muted"
+              }`}
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="flex gap-2 items-center joyride-admin-badge">
+                    <span className="font-medium">{admin.name}</span>
+                    {isMe && <Badge>내 그룹</Badge>}
+                    <Badge variant={admin.role === "SUPER_ADMIN" ? "destructive" : "secondary"}>
+                      {admin.role === "SUPER_ADMIN" ? "슈퍼 관리자" : "관리자"}
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">{admin.email}</div>
+                </div>
+
+                {myRole === "SUPER_ADMIN" && !isMe && (
+                  <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                    <Button className="joyride-admin-change-role"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setConfirmModal({ type: "role", target: admin })}
+                    >
+                      <ShieldCheck className="h-4 w-4" />
+                    </Button>
+
+                    <Button className="joyride-admin-delete"
+                      size="icon"
+                      variant="destructive"
+                      onClick={() => setConfirmModal({ type: "delete", target: admin })}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+        {/* 페이지네이션 */}
+        <div className="flex justify-between mt-4">
+          <Button
+            onClick={() => setAdminCurrentPage(p => Math.max(1, p - 1))}
+            disabled={adminCurrentPage === 1}
+          >
+            이전
+          </Button>
+          <span className="text-sm">{adminCurrentPage} / {adminTotalPages}</span>
+          <Button
+            onClick={() => setAdminCurrentPage(p => Math.min(adminTotalPages, p + 1))}
+            disabled={adminCurrentPage === adminTotalPages}
+          >
+            다음
+          </Button>
+        </div>
+      </>
+    )}
+  </CardContent>
+</Card>
 
         {/* 학생 관리 */}
-        <Card className="joyride-student-list">
-          <CardHeader>
-            <CardTitle>{selectedAdmin ? `${selectedAdmin.name} 담당 그룹` : "담당 그룹"}</CardTitle>
-          </CardHeader>
-          <CardContent>
-  {loadingStudents || saving ? (
-    <LoadingSpinner />
-  ) : paginatedStudents.length === 0 ? (
-    <div className="text-center text-sm text-muted-foreground py-4">
-      등록된 학생이 없습니다.
+<Card className="joyride-student-list">
+  <CardHeader>
+    <CardTitle>{selectedAdmin ? `${selectedAdmin.name} 담당 그룹` : "담당 그룹"}</CardTitle>
+  </CardHeader>
+  <CardContent>
+    {/* 검색창은 항상 렌더링 */}
+    <div className="mb-4 joyride-group-student-search">
+      <label className="flex items-center gap-1 text-sm font-medium text-muted-foreground mb-2">
+        <Search className="w-4 h-4" /> 학생 검색
+      </label>
+      <Input
+        placeholder="이름, 이메일"
+        value={studentSearch}
+        onChange={(e) => setStudentSearch(e.target.value)}
+        className="text-sm placeholder:text-sm"
+      />
     </div>
-  ) : (
-    <>
-      {/* 검색 */}
-      <div className="mb-4 joyride-group-student-search">
-        <label className="flex items-center gap-1 text-sm font-medium text-muted-foreground mb-2">
-          <Search className="w-4 h-4" /> 학생 검색
-        </label>
-        <Input
-          placeholder="이름, 이메일"
-          value={studentSearch}
-          onChange={(e) => setStudentSearch(e.target.value)}
-          className="text-sm placeholder:text-sm"
-        />
-      </div>
 
-      <div className="space-y-2">
-        {paginatedStudents.map(student => (
-          <label key={student.id} className="flex gap-2 p-2 hover:bg-muted rounded">
-            <input
-              type="checkbox"
-              checked={checkedStudents.includes(student.id)}
-              onChange={() => toggleStudent(student.id)}
-            />
-            <div>
-              <div className="text-sm font-medium">{student.name}</div>
-              <div className="text-xs text-muted-foreground">{student.email}</div>
-            </div>
-          </label>
-        ))}
+    {/* 리스트/로딩/없음 메시지 */}
+    {loadingStudents || saving ? (
+      <LoadingSpinner />
+    ) : paginatedStudents.length === 0 ? (
+      <div className="text-center text-sm text-muted-foreground py-4">
+        등록된 학생이 없습니다.
       </div>
+    ) : (
+      <>
+        <div className="space-y-2">
+          {paginatedStudents.map(student => (
+            <label key={student.id} className="flex gap-2 p-2 hover:bg-muted rounded">
+              <input
+                type="checkbox"
+                checked={checkedStudents.includes(student.id)}
+                onChange={() => toggleStudent(student.id)}
+              />
+              <div>
+                <div className="text-sm font-medium">{student.name}</div>
+                <div className="text-xs text-muted-foreground">{student.email}</div>
+              </div>
+            </label>
+          ))}
+        </div>
 
-      {/* 페이지네이션 */}
-      <div className="flex justify-between mt-4">
-        <Button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>이전</Button>
-        <span className="text-sm">{currentPage} / {totalPages}</span>
-        <Button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>다음</Button>
-      </div>
+        {/* 페이지네이션 */}
+        <div className="flex justify-between mt-4">
+          <Button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>이전</Button>
+          <span className="text-sm">{currentPage} / {totalPages}</span>
+          <Button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>다음</Button>
+        </div>
 
-      {/* 학생 저장 버튼 */}
-      <Button
-        className="w-full mt-4"
-        onClick={saveAssignment}
-        disabled={
-          !selectedAdminId || JSON.stringify(checkedStudents) === JSON.stringify(assignedStudents)
-        }
-      >
-        담당 학생 저장
-      </Button>
-    </>
-  )}
-</CardContent>
-        </Card>
+        {/* 학생 저장 버튼 */}
+        <Button
+          className="w-full mt-4"
+          onClick={saveAssignment}
+          disabled={
+            !selectedAdminId || JSON.stringify(checkedStudents) === JSON.stringify(assignedStudents)
+          }
+        >
+          담당 학생 저장
+        </Button>
+      </>
+    )}
+  </CardContent>
+</Card>
+
       </div>
 
       {/* 모달 */}
