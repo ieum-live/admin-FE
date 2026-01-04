@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate, Outlet, useNavigate } from "react-router-dom";
 import { AdminSidebar } from "./components/AdminSidebar";
 import { LoginPage } from "./components/LoginPage";
+import { LandingPage } from "./components/LandingPage";
 import LoadingSpinner from "./components/LoadingSpinner";
 import { signOut } from "./API/authAPI";
 import { routes } from "./routes";
@@ -52,28 +53,34 @@ export default function App() {
 
   return (
     <Routes>
+      {/* 랜딩 페이지 */}
+      <Route
+        path="/"
+        element={!isAuthenticated ? <LandingPage /> : <Navigate to="/admin" />}
+      />
+
       {/* 로그인 페이지 */}
       <Route
         path="/login"
-        element={!isAuthenticated ? <LoginPage onLogin={handleLogin} /> : <Navigate to="/" />}
+        element={!isAuthenticated ? <LoginPage onLogin={handleLogin} /> : <Navigate to="/admin" />}
       />
 
       {/* 인증 필요 레이아웃 */}
       {isAuthenticated ? (
-        <Route path="/" element={<AdminLayout />}>
+        <Route path="/admin" element={<AdminLayout />}>
         {routes.map((route, idx) => (
           <Route
             key={idx}
-            path={route.path === "/" ? "" : route.path}
+            path={route.path === "/" ? "" : route.path.replace(/^\//, "")}
             element={route.element}
           />
         ))}
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/admin" replace />} />
       </Route>
       ) : (
-        // 인증 안 됐으면 로그인 페이지로 강제 이동
-        <Route path="*" element={<Navigate to="/login" />} />
+        // 인증 안 됐으면 랜딩 페이지로 리다이렉트
+        <Route path="*" element={<Navigate to="/" />} />
       )}
     </Routes>
   );
