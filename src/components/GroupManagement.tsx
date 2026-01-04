@@ -340,7 +340,7 @@ const addAdmin = async () => {
     </div>
   </CardHeader>
   <CardContent className="space-y-2">
-    {/* 검색창 항상 보이기 */}
+  {myRole === "SUPER_ADMIN" && (
     <div className="mb-4 joyride-admin-search">
       <label className="flex items-center gap-1 text-sm font-medium text-muted-foreground mb-2">
         <Search className="w-4 h-4" /> 관리자 검색
@@ -352,6 +352,7 @@ const addAdmin = async () => {
         className="text-sm placeholder:text-sm"
       />
     </div>
+  )}
 
     {/* 관리자 리스트/로딩/없음 */}
     {loadingAdmins ? (
@@ -409,6 +410,7 @@ const addAdmin = async () => {
         })}
 
         {/* 페이지네이션 */}
+        {myRole === "SUPER_ADMIN" && (
         <div className="flex justify-between mt-4">
           <Button
             onClick={() => setAdminCurrentPage(p => Math.max(1, p - 1))}
@@ -424,6 +426,7 @@ const addAdmin = async () => {
             다음
           </Button>
         </div>
+      )}
       </>
     )}
   </CardContent>

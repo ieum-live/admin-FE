@@ -30,6 +30,7 @@ export const getUsers = async ({
         },
         timeout: 15000
     });
+    console.log(response.data.data)
     return response.data.data;
 };
 

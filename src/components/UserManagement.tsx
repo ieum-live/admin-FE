@@ -129,9 +129,10 @@ export function UserManagement() {
             filterByAdminId: scopeUsers === "MY_GROUP" ? myAdminId : undefined,
           });
     
-          setAllRawUsers(data.content);
+          setAllRawUsers(data.content || []); // content 없으면 빈 배열
         } catch (error) {
           console.error("전체 유저 목록 불러오기 실패:", error);
+          setAllRawUsers([]); // 실패하면 빈 배열로 초기화
         } finally {
           setComponentLoading(false);
         }
@@ -139,6 +140,7 @@ export function UserManagement() {
     
       fetchAllUsers();
     }, [scopeUsers]);
+    
     
           const riskMap: Record<string, 'low' | 'medium' | 'high'> = {
             LOW: 'low',
@@ -148,8 +150,11 @@ export function UserManagement() {
 
           useEffect(() => {
             const processUsers = async () => {
-              if (allRawUsers.length === 0) return;
-          
+              if (allRawUsers.length === 0) {
+                setUsers([]);
+                setTotalPages(0);
+                return;
+              }
               setComponentLoading(true);
               try {
                 let filtered = allRawUsers.filter((u: any) => {
