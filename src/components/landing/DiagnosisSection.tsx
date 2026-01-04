@@ -16,7 +16,7 @@ export function DiagnosisSection() {
                     <div className="text-center mb-12">
                         <p className="text-xl text-gray-700">
                             정식 우울 진단(PHQ-9, GAD-7)과 도박 중독
-                            진단(CPGI)을 통해
+                            진단(CAGI)을 통해
                             <br />
                             현재 나의 상태를 객관적으로 파악하고, 변화 추이를
                             확인할 수 있습니다.
@@ -62,7 +62,7 @@ export function DiagnosisSection() {
 
                         <Card className="border-2 border-pink-200 bg-pink-50">
                             <CardContent className="pt-6 text-center">
-                                <h4 className="font-bold text-lg mb-2">CPGI</h4>
+                                <h4 className="font-bold text-lg mb-2">CAGI</h4>
                                 <p className="text-sm text-gray-600 mb-2">
                                     도박 문제 선별 검사
                                 </p>

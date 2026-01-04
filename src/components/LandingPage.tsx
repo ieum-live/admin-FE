@@ -12,7 +12,6 @@ import { QuestSection } from "./landing/QuestSection";
 import { WeeklyChatSection } from "./landing/WeeklyChatSection";
 import { DiagnosisSection } from "./landing/DiagnosisSection";
 import { HelplineSection } from "./landing/HelplineSection";
-import { FAQSection } from "./landing/FAQSection";
 import { ClosingSection } from "./landing/ClosingSection";
 import { Footer } from "./landing/Footer";
 
@@ -38,7 +37,6 @@ export function LandingPage() {
                     <WeeklyChatSection />
                     <DiagnosisSection />
                     <HelplineSection />
-                    <FAQSection />
                     <ClosingSection />
                 </div>
             </div>

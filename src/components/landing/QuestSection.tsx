@@ -86,7 +86,7 @@ export function QuestSection() {
                                         <span className="text-2xl">🎯</span>
                                     </div>
                                     <h4 className="font-bold text-lg">
-                                        중독 조절 퀘스트
+                                        충동 조절 퀘스트
                                     </h4>
                                 </div>
                                 <ul className="space-y-2 text-sm text-gray-700">

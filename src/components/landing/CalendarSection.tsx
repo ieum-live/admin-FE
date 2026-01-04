@@ -47,7 +47,7 @@ export function CalendarSection() {
                                                 진단 기록
                                             </h4>
                                             <p className="text-sm text-gray-600">
-                                                PHQ-9, GAD-7, CPGI 진단 결과
+                                                PHQ-9, GAD-7, CAGI 진단 결과
                                                 날짜 표시
                                             </p>
                                         </div>

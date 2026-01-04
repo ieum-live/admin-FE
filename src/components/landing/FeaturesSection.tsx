@@ -90,7 +90,7 @@ export function FeaturesSection() {
                         </div>
                         <ul className="space-y-2 text-sm text-gray-600">
                             <li>• 정식 우울 진단(PHQ-9)</li>
-                            <li>• 도박 중독 진단 (CPGI)</li>
+                            <li>• 도박 중독 진단 (CAGI)</li>
                             <li>• 변화 추이 확인</li>
                         </ul>
                     </CardContent>
